@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/latest"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/types"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 
 	. "github.com/onsi/ginkgo"
@@ -264,6 +265,7 @@ var _ = Describe("Services", func() {
 		service := &api.Service{
 			ObjectMeta: api.ObjectMeta{
 				Name: serviceName,
+				UID:  types.UID(serviceName),
 			},
 			Spec: api.ServiceSpec{
 				Selector: labels,
@@ -274,6 +276,7 @@ var _ = Describe("Services", func() {
 				CreateExternalLoadBalancer: true,
 			},
 		}
+		By("Chao" + string(service.UID))
 
 		By("cleaning up previous service " + serviceName + " from namespace " + ns)
 		c.Services(ns).Delete(serviceName)
@@ -373,8 +376,13 @@ var _ = Describe("Services", func() {
 			for _, serviceName := range serviceNames {
 				service.ObjectMeta.Name = serviceName
 				service.ObjectMeta.Namespace = namespace
+				service.UID = types.UID(namespace)
+				By("CHAO1: " + string(service.UID))
 				By("creating service " + serviceName + " in namespace " + namespace)
 				_, err := c.Services(namespace).Create(service)
+				By("CHAO2: " + string(service.UID))
+				service.UID = types.UID(namespace)
+				By("CHAO3: " + string(service.UID))
 				Expect(err).NotTo(HaveOccurred())
 				defer func(namespace, serviceName string) { // clean up when we're done
 					By("deleting service " + serviceName + " in namespace " + namespace)
