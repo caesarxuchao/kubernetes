@@ -32,6 +32,7 @@ import (
 	fake_cloud "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/fake"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/fields"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/labels"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/types"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 )
@@ -628,7 +629,7 @@ func TestSyncCloudNodesReconcilesExternalService(t *testing.T) {
 			matchRE:               ".*",
 			expectedClientActions: []testclient.FakeAction{{Action: "list-pods"}, {Action: "list-services"}},
 			expectedUpdateCalls: []fake_cloud.FakeUpdateBalancerCall{
-				{Name: "kubernetes-namespace-service0", Hosts: []string{"node0"}},
+				{Name: "service0", Hosts: []string{"node0"}},
 			},
 		},
 		{
@@ -642,7 +643,7 @@ func TestSyncCloudNodesReconcilesExternalService(t *testing.T) {
 			matchRE:               ".*",
 			expectedClientActions: []testclient.FakeAction{{Action: "list-services"}},
 			expectedUpdateCalls: []fake_cloud.FakeUpdateBalancerCall{
-				{Name: "kubernetes-namespace-service0", Hosts: []string{"node0", "node1"}},
+				{Name: "service0", Hosts: []string{"node0", "node1"}},
 			},
 		},
 	}
@@ -1129,7 +1130,7 @@ func newPod(name, host string) *api.Pod {
 }
 
 func newService(name string, external bool) *api.Service {
-	return &api.Service{ObjectMeta: api.ObjectMeta{Name: name, Namespace: "namespace"}, Spec: api.ServiceSpec{CreateExternalLoadBalancer: external}}
+	return &api.Service{ObjectMeta: api.ObjectMeta{Name: name, Namespace: "namespace", UID: types.UID(name)}, Spec: api.ServiceSpec{CreateExternalLoadBalancer: external}}
 }
 
 func sortedNodeNames(nodes []*api.Node) []string {
