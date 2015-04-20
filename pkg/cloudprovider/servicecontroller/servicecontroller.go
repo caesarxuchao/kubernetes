@@ -214,6 +214,7 @@ func (s *ServiceController) processDelta(delta *cache.Delta) (error, bool) {
 // Returns whatever error occurred along with a boolean indicator of whether it
 // should be retried.
 func (s *ServiceController) createLoadBalancerIfNeeded(namespacedName types.NamespacedName, service, cachedService *api.Service) (error, bool) {
+	fmt.Println("CHAO: insdie createLoadBalancerIfNeeded")
 	if cachedService != nil && !needsUpdate(cachedService, service) {
 		glog.Infof("LB already exists and doesn't need update for service %s", namespacedName)
 		return nil, notRetryable
@@ -260,6 +261,7 @@ func (s *ServiceController) createLoadBalancerIfNeeded(namespacedName types.Name
 
 	// The load balancer doesn't exist yet, so create it.
 	publicIPstring := fmt.Sprint(service.Spec.PublicIPs)
+	fmt.Println("CHAO: in createLoadBalancerIfNeeded, before calling createExternalLoadBalancer")
 	err := s.createExternalLoadBalancer(service)
 	if err != nil {
 		return fmt.Errorf("failed to create external load balancer for service %s: %v", namespacedName, err), retryable

@@ -47,7 +47,6 @@ type Clusters interface {
 // TODO(#6812): Use a shorter name that's less likely to be longer than cloud
 // providers' name length limits.
 func GetLoadBalancerName(service *api.Service) string {
-	fmt.Println("UID: ", service.UID)
 	fmt.Printf("Chao: %s\n", string(service.UID))
 	fmt.Println("UID stringlen: ", len(string(service.UID)))
 	fmt.Println("service name: ", service.Name)

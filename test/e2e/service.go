@@ -27,7 +27,6 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/latest"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/types"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 
 	. "github.com/onsi/ginkgo"
@@ -265,7 +264,8 @@ var _ = Describe("Services", func() {
 		service := &api.Service{
 			ObjectMeta: api.ObjectMeta{
 				Name: serviceName,
-				UID:  types.UID(serviceName),
+				UID:  util.NewUUID(),
+				//UID:  types.UID(serviceNames),
 			},
 			Spec: api.ServiceSpec{
 				Selector: labels,
@@ -281,8 +281,11 @@ var _ = Describe("Services", func() {
 
 		By("creating service " + serviceName + " with external load balancer in namespace " + ns)
 		result, err := c.Services(ns).Create(service)
-		By("CHAO: version: " + service.ResourceVersion)
-		By("CHAO: timestamp: " + fmt.Sprintf("%04d", service.CreationTimestamp.Year()))
+
+		By("CHAO: result UID: " + string(result.UID))
+		By("CHAO: result version: " + result.ResourceVersion)
+		By("CHAO: result timestamp: " + fmt.Sprintf("%04d", result.CreationTimestamp.Year()))
+
 		Expect(err).NotTo(HaveOccurred())
 		defer func(ns, serviceName string) { // clean up when we're done
 			By("deleting service " + serviceName + " in namespace " + ns)
@@ -376,12 +379,14 @@ var _ = Describe("Services", func() {
 			for _, serviceName := range serviceNames {
 				service.ObjectMeta.Name = serviceName
 				service.ObjectMeta.Namespace = namespace
-				service.UID = types.UID(namespace)
+				service.UID = util.NewUUID()
+				//service.UID = types.UID(namespace)
 				By("CHAO1: " + string(service.UID))
 				By("creating service " + serviceName + " in namespace " + namespace)
-				_, err := c.Services(namespace).Create(service)
-				By("CHAO: version: " + service.ResourceVersion)
-				By("CHAO: timestamp: " + fmt.Sprintf("%04d", service.CreationTimestamp.Year()))
+				result, err := c.Services(namespace).Create(service)
+				By("CHAO: result UID: " + string(result.UID))
+				By("CHAO: result version: " + result.ResourceVersion)
+				By("CHAO: result timestamp: " + fmt.Sprintf("%04d", result.CreationTimestamp.Year()))
 
 				Expect(err).NotTo(HaveOccurred())
 				defer func(namespace, serviceName string) { // clean up when we're done
