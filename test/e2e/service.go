@@ -276,18 +276,18 @@ var _ = Describe("Services", func() {
 				CreateExternalLoadBalancer: true,
 			},
 		}
-		By("Chao" + string(service.UID))
-
 		By("cleaning up previous service " + serviceName + " from namespace " + ns)
 		c.Services(ns).Delete(serviceName)
 
 		By("creating service " + serviceName + " with external load balancer in namespace " + ns)
 		result, err := c.Services(ns).Create(service)
+		By("CHAO: version: " + service.ResourceVersion)
+		By("CHAO: timestamp: " + fmt.Sprintf("%04d", service.CreationTimestamp.Year()))
 		Expect(err).NotTo(HaveOccurred())
 		defer func(ns, serviceName string) { // clean up when we're done
 			By("deleting service " + serviceName + " in namespace " + ns)
-			err := c.Services(ns).Delete(serviceName)
-			Expect(err).NotTo(HaveOccurred())
+			//err := c.Services(ns).Delete(serviceName)
+			//Expect(err).NotTo(HaveOccurred())
 		}(ns, serviceName)
 
 		// Wait for the load balancer to be created asynchronously, which is
@@ -380,14 +380,14 @@ var _ = Describe("Services", func() {
 				By("CHAO1: " + string(service.UID))
 				By("creating service " + serviceName + " in namespace " + namespace)
 				_, err := c.Services(namespace).Create(service)
-				By("CHAO2: " + string(service.UID))
-				service.UID = types.UID(namespace)
-				By("CHAO3: " + string(service.UID))
+				By("CHAO: version: " + service.ResourceVersion)
+				By("CHAO: timestamp: " + fmt.Sprintf("%04d", service.CreationTimestamp.Year()))
+
 				Expect(err).NotTo(HaveOccurred())
 				defer func(namespace, serviceName string) { // clean up when we're done
-					By("deleting service " + serviceName + " in namespace " + namespace)
-					err := c.Services(namespace).Delete(serviceName)
-					Expect(err).NotTo(HaveOccurred())
+					By("CHAO don't deleting service " + serviceName + " in namespace " + namespace)
+					//err := c.Services(namespace).Delete(serviceName)
+					//Expect(err).NotTo(HaveOccurred())
 				}(namespace, serviceName)
 			}
 		}
@@ -403,7 +403,7 @@ var _ = Describe("Services", func() {
 })
 
 func waitForPublicIPs(c *client.Client, serviceName, namespace string) (*api.Service, error) {
-	const timeout = 4 * time.Minute
+	const timeout = 1 * time.Minute
 	var service *api.Service
 	By(fmt.Sprintf("waiting up to %v for service %s in namespace %s to have a public IP", timeout, serviceName, namespace))
 	for start := time.Now(); time.Since(start) < timeout; time.Sleep(5 * time.Second) {
