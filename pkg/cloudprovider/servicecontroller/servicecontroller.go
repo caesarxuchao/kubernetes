@@ -421,7 +421,8 @@ func needsUpdate(oldService *api.Service, newService *api.Service) bool {
 }
 
 func (s *ServiceController) loadBalancerName(service *api.Service) string {
-	return cloudprovider.GetLoadBalancerName(service)
+	//return cloudprovider.GetLoadBalancerName(service)
+	return cloudprovider.GetLoadBalancerName(s.clusterName, service.Namespace, service.Name)
 }
 
 func getTCPPorts(service *api.Service) ([]int, error) {
