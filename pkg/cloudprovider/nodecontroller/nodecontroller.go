@@ -266,8 +266,8 @@ func (nc *NodeController) reconcileExternalServices(nodes *api.NodeList) (should
 				glog.Errorf("External load balancers for non TCP services are not currently supported: %v.", service)
 				continue
 			}
-			//name := cloudprovider.GetLoadBalancerName(&service)
-			name := cloudprovider.GetLoadBalancerName(nc.clusterName, service.Namespace, service.Name)
+			name := cloudprovider.GetLoadBalancerName(&service)
+			//name := cloudprovider.GetLoadBalancerName(nc.clusterName, service.Namespace, service.Name)
 			err := balancer.UpdateTCPLoadBalancer(name, zone.Region, hosts)
 			if err != nil {
 				glog.Errorf("External error while updating TCP load balancer: %v.", err)

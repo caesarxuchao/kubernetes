@@ -17,6 +17,7 @@ limitations under the License.
 package cloudprovider
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
@@ -44,17 +45,17 @@ type Clusters interface {
 
 // TODO(#6812): Use a shorter name that's less likely to be longer than cloud
 // providers' name length limits.
-//func GetLoadBalancerName(service *api.Service) string {
-//	fmt.Printf("Chao: %s\n", string(service.UID))
-//	fmt.Println("UID stringlen: ", len(string(service.UID)))
-//	fmt.Println("service name: ", service.Name)
-//	debug.PrintStack()
-//	return string(service.UID)
-//}
-
-func GetLoadBalancerName(clusterName, serviceNamespace, serviceName string) string {
-	return clusterName + "-" + serviceNamespace + "-" + serviceName
+func GetLoadBalancerName(service *api.Service) string {
+	fmt.Printf("Chao: %s\n", string(service.UID))
+	//	fmt.Println("UID stringlen: ", len(string(service.UID)))
+	fmt.Println("service name: ", service.Name)
+	//	debug.PrintStack()
+	return string(service.UID)
 }
+
+//func GetLoadBalancerName(clusterName, serviceNamespace, serviceName string) string {
+//	return clusterName + "-" + serviceNamespace + "-" + serviceName
+//}
 
 // TCPLoadBalancer is an abstract, pluggable interface for TCP load balancers.
 type TCPLoadBalancer interface {
