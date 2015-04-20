@@ -289,8 +289,8 @@ var _ = Describe("Services", func() {
 		Expect(err).NotTo(HaveOccurred())
 		defer func(ns, serviceName string) { // clean up when we're done
 			By("deleting service " + serviceName + " in namespace " + ns)
-			//err := c.Services(ns).Delete(serviceName)
-			//Expect(err).NotTo(HaveOccurred())
+			err := c.Services(ns).Delete(serviceName)
+			Expect(err).NotTo(HaveOccurred())
 		}(ns, serviceName)
 
 		// Wait for the load balancer to be created asynchronously, which is
@@ -391,8 +391,8 @@ var _ = Describe("Services", func() {
 				Expect(err).NotTo(HaveOccurred())
 				defer func(namespace, serviceName string) { // clean up when we're done
 					By("CHAO don't deleting service " + serviceName + " in namespace " + namespace)
-					//err := c.Services(namespace).Delete(serviceName)
-					//Expect(err).NotTo(HaveOccurred())
+					err := c.Services(namespace).Delete(serviceName)
+					Expect(err).NotTo(HaveOccurred())
 				}(namespace, serviceName)
 			}
 		}
