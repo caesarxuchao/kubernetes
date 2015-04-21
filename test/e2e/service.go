@@ -264,7 +264,7 @@ var _ = Describe("Services", func() {
 		service := &api.Service{
 			ObjectMeta: api.ObjectMeta{
 				Name: serviceName,
-				UID:  util.NewUUID(),
+				//UID:  util.NewUUID(),
 				//UID:  types.UID(serviceNames),
 			},
 			Spec: api.ServiceSpec{
@@ -379,7 +379,7 @@ var _ = Describe("Services", func() {
 			for _, serviceName := range serviceNames {
 				service.ObjectMeta.Name = serviceName
 				service.ObjectMeta.Namespace = namespace
-				service.UID = util.NewUUID()
+				//service.UID = util.NewUUID()
 				//service.UID = types.UID(namespace)
 				By("CHAO1: " + string(service.UID))
 				By("creating service " + serviceName + " in namespace " + namespace)

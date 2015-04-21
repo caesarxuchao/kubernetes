@@ -242,6 +242,8 @@ func (gce *GCECloud) waitForRegionOp(op *compute.Operation, region string) error
 // TCPLoadBalancerExists is an implementation of TCPLoadBalancer.TCPLoadBalancerExists.
 func (gce *GCECloud) TCPLoadBalancerExists(name, region string) (bool, error) {
 	fmt.Println("CHAO: in TCPLoadBalancerExists, name= ", name)
+	fmt.Println("CHAO: gce.projectID = ", gce.projectID)
+	fmt.Println("CHAO: region = ", region)
 	_, err := gce.service.ForwardingRules.Get(gce.projectID, region, name).Do()
 	if err == nil {
 		return true, nil
@@ -250,7 +252,8 @@ func (gce *GCECloud) TCPLoadBalancerExists(name, region string) (bool, error) {
 		fmt.Println("CHAO: in TCPLoadBalancerExists, service not found")
 		return false, nil
 	}
-	fmt.Println("CHAO: in TCPLoadBalancerExists, other error!!!")
+	apiErr, ok := err.(*googleapi.Error)
+	fmt.Printf("CHAO: in TCPLoadBalancerExists, other error!!! error: %d, ok: %v", apiErr.Code, ok)
 	return false, err
 }
 

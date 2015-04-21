@@ -50,7 +50,7 @@ func GetLoadBalancerName(service *api.Service) string {
 	//	fmt.Println("UID stringlen: ", len(string(service.UID)))
 	fmt.Println("service name: ", service.Name)
 	//	debug.PrintStack()
-	return string(service.UID)
+	return "a" + string(service.UID)
 }
 
 //func GetLoadBalancerName(clusterName, serviceNamespace, serviceName string) string {
