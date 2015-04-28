@@ -18,6 +18,7 @@ package v1beta3
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	newer "github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/resource"
@@ -969,11 +970,16 @@ func init() {
 			return nil
 		},
 		func(in *ListMeta, out *newer.ListMeta, s conversion.Scope) error {
+			fmt.Println("CHAO: !!!!!")
 			out.SelfLink = in.SelfLink
 			out.ResourceVersion = in.ResourceVersion
 			return nil
 		},
 		func(in *newer.ListMeta, out *ListMeta, s conversion.Scope) error {
+			fmt.Println("CHAO: !!!!!!!!!")
+			debug.PrintStack()
+			fmt.Println("CHAO: SelfLink =", in.SelfLink)
+			fmt.Println("CHAO: len(SelfLink) =", len(in.SelfLink))
 			out.SelfLink = in.SelfLink
 			out.ResourceVersion = in.ResourceVersion
 			return nil

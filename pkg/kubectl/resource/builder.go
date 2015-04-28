@@ -404,8 +404,11 @@ func (b *Builder) visitorResult() *Result {
 		b.selector = labels.Everything()
 	}
 
+	fmt.Println("CHAO: in visitorResult")
+
 	// visit selectors
 	if b.selector != nil {
+		fmt.Println("CHAO: in selectors")
 		if len(b.names) != 0 {
 			return &Result{err: fmt.Errorf("name cannot be provided when a selector is specified")}
 		}
@@ -435,6 +438,9 @@ func (b *Builder) visitorResult() *Result {
 				return &Result{err: err}
 			}
 			selectorNamespace := b.namespace
+			fmt.Println("CHAO: selectorNamespace =", selectorNamespace)
+			fmt.Println("CHAO: mapping.Scope.Name() =", mapping.Scope.Name())
+			fmt.Println("CHAO: meta.RESTScopeNameNamespace = ", meta.RESTScopeNameNamespace)
 			if mapping.Scope.Name() != meta.RESTScopeNameNamespace {
 				selectorNamespace = ""
 			}
@@ -448,6 +454,7 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit items specified by resource and name
 	if len(b.resourceTuples) != 0 {
+		fmt.Println("CHAO: in resourceTuples")
 		isSingular := len(b.resourceTuples) == 1
 
 		if len(b.paths) != 0 {
@@ -511,6 +518,8 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit items specified by name
 	if len(b.names) != 0 {
+		fmt.Println("CHAO: in names")
+
 		isSingular := len(b.names) == 1
 
 		if len(b.paths) != 0 {
@@ -553,6 +562,7 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit items specified by paths
 	if len(b.paths) != 0 {
+		fmt.Println("CHAO: in paths")
 		singular := !b.dir && !b.stream && len(b.paths) == 1
 		if len(b.resources) != 0 {
 			return &Result{singular: singular, err: fmt.Errorf("when paths, URLs, or stdin is provided as input, you may not specify resource arguments as well")}
@@ -601,6 +611,10 @@ func (b *Builder) Do() *Result {
 	helpers = append(helpers, FilterNamespace)
 	if b.requireObject {
 		helpers = append(helpers, RetrieveLazy)
+	}
+	if b.latest {
+		fmt.Println("CHAO: append RetrieveLatest")
+		helpers = append(helpers, RetrieveLatest)
 	}
 	r.visitor = NewDecoratedVisitor(r.visitor, helpers...)
 	return r

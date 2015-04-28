@@ -82,10 +82,17 @@ func NewCmdGet(f *cmdutil.Factory, out io.Writer) *cobra.Command {
 // RunGet implements the generic Get command
 // TODO: convert all direct flag accessors to a struct and pass that instead of cmd
 func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string) error {
+	fmt.Println("CHAO: in RunGet")
+	for _, s := range args {
+		fmt.Println("CHAO:", s)
+	}
 	selector := cmdutil.GetFlagString(cmd, "selector")
+	fmt.Println("CHAO: selector =", selector)
 	mapper, typer := f.Object()
 
 	cmdNamespace, err := f.DefaultNamespace()
+	fmt.Println("CHAO: cnmdNamespace =", cmdNamespace)
+
 	if err != nil {
 		return err
 	}
@@ -93,6 +100,7 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 	// handle watch separately since we cannot watch multiple resource types
 	isWatch, isWatchOnly := cmdutil.GetFlagBool(cmd, "watch"), cmdutil.GetFlagBool(cmd, "watch-only")
 	if isWatch || isWatchOnly {
+		fmt.Println("CHAO: in watch")
 		r := resource.NewBuilder(mapper, typer, f.ClientMapperForCommand()).
 			NamespaceParam(cmdNamespace).DefaultNamespace().
 			SelectorParam(selector).
@@ -154,12 +162,13 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 	}
 
 	if generic {
+		fmt.Println("CHAO: in the generic branch")
 		clientConfig, err := f.ClientConfig()
 		if err != nil {
 			return err
 		}
 		defaultVersion := clientConfig.Version
-
+		fmt.Println("CHAO: defaultVersion =", defaultVersion)
 		singular := false
 		r := b.Flatten().Do()
 		infos, err := r.IntoSingular(&singular).Infos()
@@ -170,12 +179,16 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 		// the outermost object will be converted to the output-version, but inner
 		// objects can use their mappings
 		version := cmdutil.OutputVersion(cmd, defaultVersion)
+		fmt.Println("CHAO: version =", version)
 		obj, err := resource.AsVersionedObject(infos, !singular, version)
 		if err != nil {
 			return err
 		}
 
-		return printer.PrintObj(obj, out)
+		print_error := printer.PrintObj(obj, out)
+		fmt.Println("CHAO: after PrintObj")
+		return print_error
+		//return printer.PrintObj(obj, out)
 	}
 
 	// use the default printer for each object

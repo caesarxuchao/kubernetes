@@ -98,6 +98,7 @@ func (r *Result) Infos() ([]*Info, error) {
 	}
 
 	infos := []*Info{}
+	fmt.Println("CHAO: visitor.value =", reflect.ValueOf(r.visitor))
 	err := r.visitor.Visit(func(info *Info) error {
 		infos = append(infos, info)
 		return nil
@@ -218,6 +219,7 @@ func AsVersionedObject(infos []*Info, forceList bool, version string) (runtime.O
 		if len(version) > 0 {
 			if _, _, err := api.Scheme.ObjectVersionAndKind(info.Object); runtime.IsNotRegisteredError(err) {
 				// TODO: ideally this would encode to version, but we don't expose multiple codecs here.
+				fmt.Println("CHAO: Encode.value =", reflect.ValueOf(info.Mapping.Codec.Encode))
 				data, err := info.Mapping.Codec.Encode(info.Object)
 				if err != nil {
 					return nil, err

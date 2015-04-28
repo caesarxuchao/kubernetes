@@ -22,6 +22,7 @@ import (
 	"net/url"
 	gpath "path"
 	"reflect"
+	"runtime/debug"
 	"sort"
 	"strings"
 
@@ -629,6 +630,7 @@ func (n scopeNaming) Name(req *restful.Request) (namespace, name string, err err
 
 // GenerateLink returns the appropriate path and query to locate an object by its canonical path.
 func (n scopeNaming) GenerateLink(req *restful.Request, obj runtime.Object) (path, query string, err error) {
+	fmt.Println("CHAO: in scopeNaming.GenerateLink")
 	namespace, name, err := n.ObjectName(obj)
 	if err != nil {
 		return "", "", err
@@ -639,8 +641,11 @@ func (n scopeNaming) GenerateLink(req *restful.Request, obj runtime.Object) (pat
 			return "", "", err
 		}
 	}
+	fmt.Println("CHAO: n.itemPath=", n.itemPath)
 	path = strings.Replace(n.itemPath, "{name}", name, 1)
 	path = strings.Replace(path, "{"+n.scope.ParamName()+"}", namespace, 1)
+	fmt.Println("CHAO: path=", path)
+	debug.PrintStack()
 	return path, "", nil
 }
 
@@ -659,6 +664,7 @@ func (n scopeNaming) ObjectName(obj runtime.Object) (namespace, name string, err
 		return "", "", err
 	}
 	namespace, err = n.SelfLinker.Namespace(obj)
+	fmt.Println("CHAO: in scopeNaming.ObjectName, SelfLinker.type", reflect.TypeOf(n.SelfLinker))
 	if err != nil {
 		return "", "", err
 	}
