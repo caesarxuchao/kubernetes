@@ -83,7 +83,9 @@ type Factory struct {
 // if optionalClientConfig is not nil, then this factory will make use of it.
 func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 	mapper := kubectl.ShortcutExpander{latest.RESTMapper}
+	//meta, ok := reflect.ValueOf(mapper).Elem().FieldByName("mapping")["endpoints"]
 
+	//fmt.Println("CHAO: in NewFactory, meta.APIVersion", meta.APIVersion)
 	flags := pflag.NewFlagSet("", pflag.ContinueOnError)
 
 	clientConfig := optionalClientConfig
@@ -101,10 +103,11 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 		flags:   flags,
 
 		Object: func() (meta.RESTMapper, runtime.ObjectTyper) {
+			fmt.Println("CHAO!!!!!!!!!!!!!: in Obejct")
 			cfg, err := clientConfig.ClientConfig()
 			CheckErr(err)
 			cmdApiVersion := cfg.Version
-
+			fmt.Println("CHAO: cmdApiVersion =", cmdApiVersion)
 			return kubectl.OutputVersionMapper{mapper, cmdApiVersion}, api.Scheme
 		},
 		Client: func() (*client.Client, error) {

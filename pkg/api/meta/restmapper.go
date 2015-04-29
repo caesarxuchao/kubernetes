@@ -155,7 +155,9 @@ func kindToResource(kind string, mixedCase bool) (plural, singular string) {
 
 // VersionAndKindForResource implements RESTMapper
 func (m *DefaultRESTMapper) VersionAndKindForResource(resource string) (defaultVersion, kind string, err error) {
+	fmt.Println("CHAO: in DefualtRESTMapper.VKFR")
 	meta, ok := m.mapping[resource]
+	fmt.Println("CHAO: in DefaultRESTMapper, resource =", resource)
 	if !ok {
 		return "", "", fmt.Errorf("no resource %q has been defined", resource)
 	}
@@ -259,6 +261,7 @@ type MultiRESTMapper []RESTMapper
 // REST resources. This implementation supports multiple REST schemas and return
 // the first match.
 func (m MultiRESTMapper) VersionAndKindForResource(resource string) (defaultVersion, kind string, err error) {
+	fmt.Println("CHAO: in MultiRESTMapper.VKFR")
 	for _, t := range m {
 		defaultVersion, kind, err = t.VersionAndKindForResource(resource)
 		if err == nil {

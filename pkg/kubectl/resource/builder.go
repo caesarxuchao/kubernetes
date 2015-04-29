@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/meta"
@@ -378,6 +379,12 @@ func (b *Builder) resourceTupleMappings() (map[string]*meta.RESTMapping, error) 
 			continue
 		}
 		version, kind, err := b.mapper.VersionAndKindForResource(r.Resource)
+		//pc := reflect.ValueOf(b.mapper.VersionAndKindForResource).Pointer()
+		//file, line := goruntime.FuncForPC(pc).FileLine(pc)
+		//name := goruntime.FuncForPC(pc).Name
+		//fmt.Printf("CHAO: VKFR %v, %v, %v\n", file, line, name)
+		fmt.Println("CHAO: in resourceTupleMappings, b.mapper =", reflect.ValueOf(b.mapper))
+		fmt.Println("CHAO: in resourceTupleMappings, version =", version)
 		if err != nil {
 			return nil, err
 		}
@@ -471,11 +478,14 @@ func (b *Builder) visitorResult() *Result {
 		}
 		clients := make(map[string]RESTClient)
 		for _, mapping := range mappings {
+			fmt.Println("CHAO: in builder.go, mapping.APIVersion =", mapping.APIVersion)
 			s := fmt.Sprintf("%s/%s", mapping.APIVersion, mapping.Resource)
 			if _, ok := clients[s]; ok {
 				continue
 			}
 			client, err := b.mapper.ClientForMapping(mapping)
+			fmt.Println("CHAO: in builder.go, client.apiVersion=", reflect.ValueOf(client).Elem().FieldByName("apiVersion"))
+
 			if err != nil {
 				return &Result{err: err}
 			}

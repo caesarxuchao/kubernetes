@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl"
 	cmdutil "github.com/GoogleCloudPlatform/kubernetes/pkg/kubectl/cmd/util"
@@ -171,6 +172,9 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 		fmt.Println("CHAO: defaultVersion =", defaultVersion)
 		singular := false
 		r := b.Flatten().Do()
+		vr := reflect.ValueOf(r)
+		visitor := vr.Elem().FieldByName("visitor")
+		fmt.Println("CHAO: r, valueof r.visitor=", reflect.ValueOf(visitor))
 		infos, err := r.IntoSingular(&singular).Infos()
 		if err != nil {
 			return err

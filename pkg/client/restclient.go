@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -101,6 +102,7 @@ func (c *RESTClient) Verb(verb string) *Request {
 	if c.Throttle != nil {
 		c.Throttle.Accept()
 	}
+	fmt.Printf("!!!!!!CHAO: in restclient.go, c.baseURL = %v, c.apiVersion = %v\n", c.baseURL, c.apiVersion)
 	return NewRequest(c.Client, verb, c.baseURL, c.apiVersion, c.Codec, c.LegacyBehavior, c.LegacyBehavior).Timeout(c.Timeout)
 }
 

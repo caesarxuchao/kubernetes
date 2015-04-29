@@ -103,7 +103,7 @@ func init() {
 		},
 	)
 	// list of versions we support on the server
-	versions := []string{"v1beta1", "v1beta2", "v1beta3"}
+	versions := []string{"v1beta3", "v1beta2", "v1beta1"}
 
 	// versions that used mixed case URL formats
 	versionMixedCase := map[string]bool{
@@ -142,8 +142,11 @@ func init() {
 
 	// enumerate all supported versions, get the kinds, and register with the mapper how to address our resources
 	for _, version := range versions {
+		fmt.Println("CHAO: version =", version)
 		for kind := range api.Scheme.KnownTypes(version) {
+			fmt.Println("	CHAO: kind = ", kind)
 			if ignoredKinds.Has(kind) {
+				fmt.Println("	CHAO: ignored")
 				continue
 			}
 			mixedCase, found := versionMixedCase[version]

@@ -25,6 +25,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/golang/glog"
 
@@ -89,6 +90,8 @@ func (i *Info) Visit(fn VisitorFunc) error {
 
 // Get retrieves the object from the Namespace and Name fields
 func (i *Info) Get() error {
+	fmt.Println("CHAO: in visitor.go, Get(), i.Client.ValueOf =", reflect.ValueOf(i.Client).Elem().FieldByName("apiVersion"))
+
 	obj, err := NewHelper(i.Client, i.Mapping).Get(i.Namespace, i.Name)
 	if err != nil {
 		return err
@@ -168,6 +171,7 @@ type EagerVisitorList []Visitor
 func (l EagerVisitorList) Visit(fn VisitorFunc) error {
 	errs := []error(nil)
 	for i := range l {
+		fmt.Println("CHAO: EagerVisitor, l[i].vistor type =", reflect.ValueOf(l[i]))
 		if err := l[i].Visit(func(info *Info) error {
 			if err := fn(info); err != nil {
 				errs = append(errs, err)
@@ -311,6 +315,7 @@ func NewDecoratedVisitor(v Visitor, fn ...VisitorFunc) Visitor {
 
 // Visit implements Visitor
 func (v DecoratedVisitor) Visit(fn VisitorFunc) error {
+	fmt.Println("CHAO: Decorated, v.vistor type =", reflect.ValueOf(v.visitor))
 	return v.visitor.Visit(func(info *Info) error {
 		for i := range v.decorators {
 			if err := v.decorators[i](info); err != nil {
@@ -339,6 +344,7 @@ func NewFlattenListVisitor(v Visitor, mapper *Mapper) Visitor {
 }
 
 func (v FlattenListVisitor) Visit(fn VisitorFunc) error {
+	fmt.Println("CHAO: Flatten v.Visitor type =", reflect.ValueOf(v.Visitor))
 	return v.Visitor.Visit(func(info *Info) error {
 		if info.Object == nil {
 			return fn(info)

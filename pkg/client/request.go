@@ -20,6 +20,17 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"mime"
+	"net/http"
+	"net/url"
+	"path"
+	"runtime/debug"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/errors"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client/metrics"
@@ -31,15 +42,6 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	watchjson "github.com/GoogleCloudPlatform/kubernetes/pkg/watch/json"
 	"github.com/golang/glog"
-	"io"
-	"io/ioutil"
-	"mime"
-	"net/http"
-	"net/url"
-	"path"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // specialParams lists parameters that are handled specially and which users of Request
@@ -446,9 +448,11 @@ func (r *Request) Body(obj interface{}) *Request {
 
 func (r *Request) finalURL() string {
 	p := r.path
+	fmt.Println("CHAO: r.path=", r.path)
 	if r.namespaceSet && !r.namespaceInQuery && len(r.namespace) > 0 {
 		p = path.Join(p, "namespaces", r.namespace)
 	}
+	fmt.Println("CHAO: after join namespaces p=", p)
 	if len(r.resource) != 0 {
 		resource := r.resource
 		if !r.preserveResourceCase {
@@ -456,10 +460,12 @@ func (r *Request) finalURL() string {
 		}
 		p = path.Join(p, resource)
 	}
+	fmt.Println("CHAO: after join path p=", p)
 	// Join trims trailing slashes, so preserve r.path's trailing slash for backwards compat if nothing was changed
 	if len(r.resourceName) != 0 || len(r.subpath) != 0 || len(r.subresource) != 0 {
 		p = path.Join(p, r.resourceName, r.subresource, r.subpath)
 	}
+	fmt.Println("CHAO: after join resourceNmae p=", p)
 
 	finalURL := url.URL{}
 	if r.baseURL != nil {
@@ -470,11 +476,13 @@ func (r *Request) finalURL() string {
 	query := url.Values{}
 	for key, values := range r.params {
 		for _, value := range values {
+			fmt.Printf("CHAO: insert query: key=%v, value=%v\n", key, value)
 			query.Add(key, value)
 		}
 	}
 
 	if r.namespaceSet && r.namespaceInQuery {
+		fmt.Println("CHAO: insert namespace=", r.namespace)
 		query.Set("namespace", r.namespace)
 	}
 
@@ -483,6 +491,7 @@ func (r *Request) finalURL() string {
 		query.Set("timeout", r.timeout.String())
 	}
 	finalURL.RawQuery = query.Encode()
+	fmt.Println("CHAO: the finalURL is", finalURL.String())
 	return finalURL.String()
 }
 
@@ -614,6 +623,8 @@ func (r *Request) Upgrade(config *Config, newRoundTripperFunc func(*tls.Config) 
 // fn at most once. It will return an error if a problem occured prior to connecting to the
 // server - the provided function is responsible for handling server errors.
 func (r *Request) request(fn func(*http.Request, *http.Response)) error {
+	fmt.Println("CHAO: in the request")
+	debug.PrintStack()
 	if r.err != nil {
 		return r.err
 	}
