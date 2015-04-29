@@ -115,7 +115,9 @@ func NewDefaultRESTMapper(versions []string, f VersionInterfacesFunc) *DefaultRE
 func (m *DefaultRESTMapper) Add(scope RESTScope, kind string, version string, mixedCase bool) {
 	plural, singular := kindToResource(kind, mixedCase)
 	meta := typeMeta{APIVersion: version, Kind: kind}
-	if _, ok := m.mapping[plural]; !ok {
+	_, ok1 := m.mapping[plural]
+	_, ok2 := m.mapping[strings.ToLower(plural)]
+	if !ok1 && !ok2 {
 		m.mapping[plural] = meta
 		m.mapping[singular] = meta
 		if strings.ToLower(plural) != plural {
