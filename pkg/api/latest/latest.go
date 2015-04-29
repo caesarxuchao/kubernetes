@@ -103,6 +103,7 @@ func init() {
 		},
 	)
 	// list of versions we support on the server
+	// versions should be listed in the order of perferred versions first
 	versions := []string{"v1beta1", "v1beta2", "v1beta3"}
 
 	// versions that used mixed case URL formats
