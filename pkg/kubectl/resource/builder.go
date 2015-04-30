@@ -362,8 +362,10 @@ func (b *Builder) resourceMappings() ([]*meta.RESTMapping, error) {
 		if err != nil {
 			return nil, err
 		}
+		//version = "v1beta1"
 		fmt.Println("CHAO: version=", version, "kind=", kind)
 		mapping, err := b.mapper.RESTMapping(kind, version)
+		fmt.Println("CHAO: mapping.Resource=", mapping.Resource)
 		if err != nil {
 			return nil, err
 		}
@@ -444,6 +446,7 @@ func (b *Builder) visitorResult() *Result {
 			if mapping.Scope.Name() != meta.RESTScopeNameNamespace {
 				selectorNamespace = ""
 			}
+			fmt.Println("CHAO: selectorNamespace=", selectorNamespace)
 			visitors = append(visitors, NewSelector(client, mapping, selectorNamespace, b.selector))
 		}
 		if b.continueOnError {

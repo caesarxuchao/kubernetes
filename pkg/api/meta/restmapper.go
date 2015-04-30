@@ -182,6 +182,7 @@ func (m *DefaultRESTMapper) RESTMapping(kind string, versions ...string) (*RESTM
 			break
 		}
 	}
+	fmt.Println("CHAO: in RESTMapping, version=", version)
 	// Use the default preferred versions
 	if !hadVersion && len(version) == 0 {
 		for _, v := range m.versions {
@@ -198,6 +199,7 @@ func (m *DefaultRESTMapper) RESTMapping(kind string, versions ...string) (*RESTM
 	// Ensure we have a REST mapping
 	resource, ok := m.reverse[typeMeta{APIVersion: version, Kind: kind}]
 	if !ok {
+		fmt.Println("CHAO: in !ok, mapping")
 		found := []string{}
 		for _, v := range m.versions {
 			if _, ok := m.reverse[typeMeta{APIVersion: v, Kind: kind}]; ok {
@@ -212,7 +214,9 @@ func (m *DefaultRESTMapper) RESTMapping(kind string, versions ...string) (*RESTM
 
 	// Ensure we have a REST scope
 	scope, ok := m.scopes[typeMeta{APIVersion: version, Kind: kind}]
+	fmt.Println("CHAO: scope=", scope)
 	if !ok {
+		fmt.Println("CHAO: in !ok, scope")
 		return nil, fmt.Errorf("the provided version %q and kind %q cannot be mapped to a supported scope", version, kind)
 	}
 
@@ -231,6 +235,8 @@ func (m *DefaultRESTMapper) RESTMapping(kind string, versions ...string) (*RESTM
 		ObjectConvertor:  interfaces.ObjectConvertor,
 		MetadataAccessor: interfaces.MetadataAccessor,
 	}
+
+	fmt.Println("retVal=", retVal)
 
 	return retVal, nil
 }
