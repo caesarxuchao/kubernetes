@@ -52,7 +52,7 @@ func TestDeleteObjectByTuple(t *testing.T) {
 	cmd.Flags().Set("namespace", "test")
 	cmd.Run(cmd, []string{"replicationcontrollers/redis-master-controller"})
 
-	if buf.String() != "replicationControllers/redis-master-controller\n" {
+	if buf.String() != "replicationcontrollers/redis-master-controller\n" {
 		t.Errorf("unexpected output: %s", buf.String())
 	}
 }
@@ -82,7 +82,7 @@ func TestDeleteNamedObject(t *testing.T) {
 	cmd.Flags().Set("namespace", "test")
 	cmd.Run(cmd, []string{"replicationcontrollers", "redis-master-controller"})
 
-	if buf.String() != "replicationControllers/redis-master-controller\n" {
+	if buf.String() != "replicationcontrollers/redis-master-controller\n" {
 		t.Errorf("unexpected output: %s", buf.String())
 	}
 }
