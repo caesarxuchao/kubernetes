@@ -406,6 +406,10 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit selectors
 	if b.selector != nil {
+		fmt.Println("b.selector =", b.selector)
+		fmt.Println("b.resourceTuple =", b.ResourceTypes)
+		fmt.Println("b.names =", b.names)
+		fmt.Println("b.paths =", b.paths)
 		if len(b.names) != 0 {
 			return &Result{err: fmt.Errorf("name cannot be provided when a selector is specified")}
 		}
@@ -448,6 +452,7 @@ func (b *Builder) visitorResult() *Result {
 
 	// visit items specified by resource and name
 	if len(b.resourceTuples) != 0 {
+		fmt.Println("CHAO: in resourceTuples")
 		isSingular := len(b.resourceTuples) == 1
 
 		if len(b.paths) != 0 {
