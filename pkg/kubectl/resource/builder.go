@@ -357,10 +357,12 @@ func (b *Builder) resourceMappings() ([]*meta.RESTMapping, error) {
 	}
 	mappings := []*meta.RESTMapping{}
 	for _, r := range b.resources {
+		fmt.Println("CHAO: in resourceMappings, r=", r)
 		version, kind, err := b.mapper.VersionAndKindForResource(r)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("CHAO: version=", version, "kind=", kind)
 		mapping, err := b.mapper.RESTMapping(kind, version)
 		if err != nil {
 			return nil, err
@@ -407,7 +409,7 @@ func (b *Builder) visitorResult() *Result {
 	// visit selectors
 	if b.selector != nil {
 		fmt.Println("b.selector =", b.selector)
-		fmt.Println("b.resourceTuple =", b.ResourceTypes)
+		fmt.Println("b.resourceTuples =", b.resourceTuples)
 		fmt.Println("b.names =", b.names)
 		fmt.Println("b.paths =", b.paths)
 		if len(b.names) != 0 {
