@@ -149,6 +149,7 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 		ContinueOnError().
 		Latest()
 	printer, generic, err := cmdutil.PrinterForCommand(cmd)
+	fmt.Println("CHAO: printer=", printer, ", generic=", generic)
 	if err != nil {
 		return err
 	}
@@ -181,6 +182,7 @@ func RunGet(f *cmdutil.Factory, out io.Writer, cmd *cobra.Command, args []string
 	// use the default printer for each object
 	return b.Do().Visit(func(r *resource.Info) error {
 		printer, err := f.PrinterForMapping(cmd, r.Mapping)
+		//		ChaoPrintln(printer, "Hi")
 		if err != nil {
 			return err
 		}
