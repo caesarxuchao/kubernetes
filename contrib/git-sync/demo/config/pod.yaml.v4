@@ -1,0 +1,90 @@
+apiVersion: v1beta3
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    name: blog
+  name: blog-pod
+spec:
+  containers:
+  - capabilities: {}
+    env:
+    - name: GIT_SYNC_REPO
+      value: https://github.com/GoogleCloudPlatform/kubernetes.git
+    - name: GIT_SYNC_DEST
+      value: /git
+    image: proppy/git-sync
+    imagePullPolicy: Always
+    name: git-sync
+    resources: {}
+    securityContext:
+      capabilities: {}
+      privileged: false
+    terminationMessagePath: /dev/termination-log
+    volumeMounts:
+    - mountPath: /git
+      name: markdown
+  - capabilities: {}
+    env:
+    - name: HUGO_SRC
+      value: /src/contrib/git-sync/demo/blog
+    - name: HUGO_BUILD_DRAFT
+      value: "true"
+    - name: HUGO_BASE_URL
+      value: example.com
+    image: proppy/hugo
+    imagePullPolicy: Always
+    name: hugo
+    resources: {}
+    securityContext:
+      capabilities: {}
+      privileged: false
+    terminationMessagePath: /dev/termination-log
+    volumeMounts:
+    - mountPath: /src
+      name: markdown
+    - mountPath: /dest
+      name: html
+  - capabilities: {}
+    image: nginx
+    imagePullPolicy: IfNotPresent
+    name: nginx
+    ports:
+    - containerPort: 80
+      name: http-server
+      protocol: TCP
+    resources: {}
+    securityContext:
+      capabilities: {}
+      privileged: false
+    terminationMessagePath: /dev/termination-log
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: html
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+  serviceAccount: ""
+  volumes:
+  - awsElasticBlockStore: null
+    emptyDir:
+      medium: ""
+    gcePersistentDisk: null
+    gitRepo: null
+    glusterfs: null
+    hostPath: null
+    iscsi: null
+    name: markdown
+    nfs: null
+    secret: null
+  - awsElasticBlockStore: null
+    emptyDir:
+      medium: ""
+    gcePersistentDisk: null
+    gitRepo: null
+    glusterfs: null
+    hostPath: null
+    iscsi: null
+    name: html
+    nfs: null
+    secret: null
+status: {}

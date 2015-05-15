@@ -1,0 +1,51 @@
+apiVersion: v1beta3
+kind: Pod
+metadata:
+  labels:
+    name: blog
+  name: blog-pod
+spec:
+  containers:
+  - env:
+    - name: GIT_SYNC_REPO
+      value: https://github.com/GoogleCloudPlatform/kubernetes.git
+    - name: GIT_SYNC_DEST
+      value: /git
+    image: caesarxuchao/git-sync
+    imagePullPolicy: Always
+    name: git-sync
+    volumeMounts:
+    - mountPath: /git
+      name: markdown
+  - env:
+    - name: HUGO_SRC
+      value: /src/contrib/git-sync/demo/blog
+    - name: HUGO_BUILD_DRAFT
+      value: "true"
+    - name: HUGO_BASE_URL
+      value: example.com
+    image: caesarxuchao/hugo
+    imagePullPolicy: Always
+    name: hugo
+    volumeMounts:
+    - mountPath: /src
+      name: markdown
+    - mountPath: /dest
+      name: html
+  - image: nginx
+    imagePullPolicy: IfNotPresent
+    name: nginx
+    ports:
+    - containerPort: 80
+      name: http-server
+      protocol: TCP
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: html
+  volumes:
+  - emptyDir:
+      medium: ""
+    name: markdown
+  - emptyDir:
+      medium: ""
+    name: html

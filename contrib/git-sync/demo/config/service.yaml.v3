@@ -1,0 +1,11 @@
+apiVersion: v1beta3
+kind: Service
+metadata:
+  name: blog-service
+spec:
+  createExternalLoadBalancer: true
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    name: blog
