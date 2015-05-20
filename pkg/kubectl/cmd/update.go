@@ -36,10 +36,10 @@ JSON and YAML formats are accepted.`
 $ kubectl update -f pod.json
 
 // Update a pod based on the JSON passed into stdin.
-$ cat pod.json | kubectl update -f -
+$ cat pod.json | kubectl update -f -`
 
 // Update a pod by downloading it, applying the patch, then updating. Requires apiVersion be specified.
-$ kubectl update pods my-pod --patch='{ "apiVersion": "v1beta1", "desiredState": { "manifest": [{ "cpu": 100 }]}}'`
+//$ kubectl update pods my-pod --patch='{ "apiVersion": "v1beta1", "desiredState": { "manifest": [{ "cpu": 100 }]}}'`
 )
 
 func NewCmdUpdate(f *cmdutil.Factory, out io.Writer) *cobra.Command {
