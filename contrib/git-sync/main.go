@@ -59,19 +59,21 @@ const usage = "usage: GIT_SYNC_REPO= GIT_SYNC_DEST= [GIT_SYNC_BRANCH= GIT_SYNC_W
 
 func main() {
 	flag.Parse()
-	if *flRepo == "" || *flDest == "" {
-		flag.Usage()
-		log.Fatal(usage)
+	for {
+		if *flRepo == "" || *flDest == "" {
+			flag.Usage()
+			log.Fatal(usage)
+		}
+		if _, err := exec.LookPath("git"); err != nil {
+			log.Fatalf("required git executable not found: %v", err)
+		}
+		if err := syncRepo(*flRepo, *flDest, *flBranch, *flRev); err != nil {
+			log.Fatalf("error syncing repo: %v", err)
+		}
+		log.Printf("wait %d seconds", *flWait)
+		time.Sleep(time.Duration(*flWait) * time.Second)
+		log.Println("done")
 	}
-	if _, err := exec.LookPath("git"); err != nil {
-		log.Fatalf("required git executable not found: %v", err)
-	}
-	if err := syncRepo(*flRepo, *flDest, *flBranch, *flRev); err != nil {
-		log.Fatalf("error syncing repo: %v", err)
-	}
-	log.Printf("wait %d seconds", *flWait)
-	time.Sleep(time.Duration(*flWait) * time.Second)
-	log.Println("done")
 }
 
 // syncRepo syncs the branch of a given repository to the destination at the given rev.
