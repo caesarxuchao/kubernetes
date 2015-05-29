@@ -115,6 +115,7 @@ PATH="${KUBE_OUTPUT_HOSTBIN}":$PATH
 kube_api_versions=(
   ""
   v1beta3
+  v1
 )
 for version in "${kube_api_versions[@]}"; do
   if [[ -z "${version}" ]]; then
