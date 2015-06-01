@@ -263,6 +263,8 @@ func TestExtractPodsFromHTTP(t *testing.T) {
 			continue
 		}
 		update := (<-ch).(kubelet.PodUpdate)
+		t.Errorf("CHAO: testCase.expected.Pods[0]=%#v", testCase.expected.Pods[0])
+		t.Errorf("CHAO: update.Pods[0]=%#v", update.Pods[0])
 
 		if !api.Semantic.DeepEqual(testCase.expected, update) {
 			t.Errorf("%s: Expected: %#v, Got: %#v", testCase.desc, testCase.expected, update)
