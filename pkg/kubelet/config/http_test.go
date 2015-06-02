@@ -27,7 +27,6 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api/validation"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/runtime"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/securitycontext"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util/errors"
 )
@@ -161,7 +160,8 @@ func TestExtractPodsFromHTTP(t *testing.T) {
 							Image: "foo",
 							TerminationMessagePath: "/dev/termination-log",
 							ImagePullPolicy:        "Always",
-							SecurityContext:        securitycontext.ValidSecurityContextWithContainerDefaults()}},
+							//SecurityContext:        securitycontext.ValidSecurityContextWithContainerDefaults()
+						}},
 					},
 				}),
 		},
@@ -214,7 +214,7 @@ func TestExtractPodsFromHTTP(t *testing.T) {
 							Image: "foo",
 							TerminationMessagePath: "/dev/termination-log",
 							ImagePullPolicy:        "Always",
-							SecurityContext:        securitycontext.ValidSecurityContextWithContainerDefaults()}},
+						}},
 					},
 				},
 				&api.Pod{
@@ -234,7 +234,7 @@ func TestExtractPodsFromHTTP(t *testing.T) {
 							Image: "bar",
 							TerminationMessagePath: "/dev/termination-log",
 							ImagePullPolicy:        "IfNotPresent",
-							SecurityContext:        securitycontext.ValidSecurityContextWithContainerDefaults()}},
+						}},
 					},
 				}),
 		},
@@ -263,8 +263,6 @@ func TestExtractPodsFromHTTP(t *testing.T) {
 			continue
 		}
 		update := (<-ch).(kubelet.PodUpdate)
-		t.Errorf("CHAO: testCase.expected.Pods[0]=%#v", testCase.expected.Pods[0])
-		t.Errorf("CHAO: update.Pods[0]=%#v", update.Pods[0])
 
 		if !api.Semantic.DeepEqual(testCase.expected, update) {
 			t.Errorf("%s: Expected: %#v, Got: %#v", testCase.desc, testCase.expected, update)
