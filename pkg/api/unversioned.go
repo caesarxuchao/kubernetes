@@ -40,6 +40,11 @@ func PreV1Beta3(version string) bool {
 	return version == "v1beta1" || version == "v1beta2"
 }
 
+// preV1 returns true if the provided API version is an API introduced before v1.
+func PreV1(version string) bool {
+	return version == "v1beta1" || version == "v1beta2" || version == "v1beta3"
+}
+
 // TODO: remove me when watch is refactored
 func LabelSelectorQueryParam(version string) string {
 	if PreV1Beta3(version) {
