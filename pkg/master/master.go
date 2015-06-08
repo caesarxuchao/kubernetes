@@ -476,13 +476,13 @@ func (m *Master) init(c *Config) {
 
 	apiVersions := []string{}
 	if m.v1beta3 {
-		if err := m.api_v1beta3().InstallREST(m.handlerContainer); err != nil {
+		if err := m.api_v1beta3().InstallREST(m.handlerContainer, true); err != nil {
 			glog.Fatalf("Unable to setup API v1beta3: %v", err)
 		}
 		apiVersions = append(apiVersions, "v1beta3")
 	}
 	if m.v1 {
-		if err := m.api_v1().InstallREST(m.handlerContainer); err != nil {
+		if err := m.api_v1().InstallREST(m.handlerContainer, false); err != nil {
 			glog.Fatalf("Unable to setup API v1: %v", err)
 		}
 		apiVersions = append(apiVersions, "v1")

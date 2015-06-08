@@ -149,7 +149,7 @@ type RestContainer struct {
 // InstallREST registers the REST handlers (storage, watch, proxy and redirect) into a restful Container.
 // It is expected that the provided path root prefix will serve all operations. Root MUST NOT end
 // in a slash. A restful WebService is created for the group and version.
-func (g *APIGroupVersion) InstallREST(container *RestContainer) error {
+func (g *APIGroupVersion) InstallREST(container *RestContainer, watchInPath bool) error {
 	info := &APIRequestInfoResolver{util.NewStringSet(strings.TrimPrefix(g.Root, "/")), g.Mapper}
 
 	prefix := path.Join(g.Root, g.Version)
@@ -159,7 +159,7 @@ func (g *APIGroupVersion) InstallREST(container *RestContainer) error {
 		prefix:            prefix,
 		minRequestTimeout: container.MinRequestTimeout,
 	}
-	ws, registrationErrors := installer.Install()
+	ws, registrationErrors := installer.Install(watchInPath)
 	container.Add(ws)
 	return errors.NewAggregate(registrationErrors)
 }

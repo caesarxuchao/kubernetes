@@ -55,7 +55,7 @@ type action struct {
 var errEmptyName = errors.NewBadRequest("name must be provided")
 
 // Installs handlers for API resources.
-func (a *APIInstaller) Install() (ws *restful.WebService, errors []error) {
+func (a *APIInstaller) Install(watchInPath bool) (ws *restful.WebService, errors []error) {
 	errors = make([]error, 0)
 
 	// Create the WebService.
@@ -73,7 +73,7 @@ func (a *APIInstaller) Install() (ws *restful.WebService, errors []error) {
 	}
 	sort.Strings(paths)
 	for _, path := range paths {
-		if err := a.registerResourceHandlers(path, a.group.Storage[path], ws, redirectHandler, proxyHandler); err != nil {
+		if err := a.registerResourceHandlers(path, a.group.Storage[path], ws, redirectHandler, proxyHandler, watchInPath); err != nil {
 			errors = append(errors, err)
 		}
 	}
@@ -92,7 +92,7 @@ func (a *APIInstaller) newWebService() *restful.WebService {
 	return ws
 }
 
-func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storage, ws *restful.WebService, redirectHandler, proxyHandler http.Handler) error {
+func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storage, ws *restful.WebService, redirectHandler, proxyHandler http.Handler, watchInPath bool) error {
 	admit := a.group.Admit
 	context := a.group.Context
 
@@ -275,7 +275,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 		actions = appendIf(actions, action{"PUT", itemPath, nameParams, namer}, isUpdater)
 		actions = appendIf(actions, action{"PATCH", itemPath, nameParams, namer}, isPatcher)
 		actions = appendIf(actions, action{"DELETE", itemPath, nameParams, namer}, isDeleter)
-		if api.PreV1(a.group.Version) {
+		if watchInPath {
 			actions = appendIf(actions, action{"WATCH", "watch/" + itemPath, nameParams, namer}, isWatcher)
 		}
 		actions = appendIf(actions, action{"REDIRECT", "redirect/" + itemPath, nameParams, namer}, isRedirector)
@@ -316,7 +316,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			actions = appendIf(actions, action{"PUT", itemPath, nameParams, namer}, isUpdater)
 			actions = appendIf(actions, action{"PATCH", itemPath, nameParams, namer}, isPatcher)
 			actions = appendIf(actions, action{"DELETE", itemPath, nameParams, namer}, isDeleter)
-			if api.PreV1(a.group.Version) {
+			if watchInPath {
 				actions = appendIf(actions, action{"WATCH", "watch/" + itemPath, nameParams, namer}, isWatcher)
 			}
 			actions = appendIf(actions, action{"REDIRECT", "redirect/" + itemPath, nameParams, namer}, isRedirector)
@@ -362,7 +362,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			actions = appendIf(actions, action{"PUT", itemPath, nameParams, namer}, isUpdater)
 			actions = appendIf(actions, action{"PATCH", itemPath, nameParams, namer}, isPatcher)
 			actions = appendIf(actions, action{"DELETE", itemPath, nameParams, namer}, isDeleter)
-			if api.PreV1(a.group.Version) {
+			if watchInPath {
 				actions = appendIf(actions, action{"WATCH", "watch/" + itemPath, nameParams, namer}, isWatcher)
 			}
 			actions = appendIf(actions, action{"REDIRECT", "redirect/" + itemPath, nameParams, namer}, isRedirector)

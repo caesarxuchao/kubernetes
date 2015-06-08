@@ -146,13 +146,25 @@ func TestSingleWatch(t *testing.T) {
 		t.Logf("Created event %#v", got.ObjectMeta)
 	}
 
-	w, err := client.Get().
-		Prefix("watch").
-		NamespaceIfScoped(ns, len(ns) > 0).
-		Resource("events").
-		Name("event-9").
-		Param("resourceVersion", rv1).
-		Watch()
+	var w watch.Interface
+	var err error
+	if api.PreV1(testapi.Version()) {
+		w, err = client.Get().
+			Prefix("watch").
+			NamespaceIfScoped(ns, len(ns) > 0).
+			Resource("events").
+			Name("event-9").
+			Param("resourceVersion", rv1).
+			Watch()
+	} else {
+		w, err = client.Get().
+			NamespaceIfScoped(ns, len(ns) > 0).
+			Resource("events").
+			Name("event-9").
+			Param("resourceVersion", rv1).
+			Param("watch", "true").
+			Watch()
+	}
 
 	if err != nil {
 		t.Fatalf("Failed watch: %v", err)
