@@ -26,7 +26,7 @@ $ vi cluster/saltbase/pillar/privilege.sls
 allow_privileged: true
 ```
 
-Now spin up a cluster using your preferred KUBERNETES_PROVIDER
+Now rebuild the Kubenetes and spin up a cluster using your preferred KUBERNETES_PROVIDER
 
 ```shell
 $ export KUBERNETES_PROVIDER=gce
