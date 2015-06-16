@@ -44,7 +44,7 @@ runTests() {
   #  KUBE_TEST_API_VERSIONS="$1" \
   #  "${KUBE_ROOT}/hack/test-go.sh" test/integration
 
-  kube::log::status "Running integration test scenario"
+  kube::log::status "Running integration test scenario for ${KUBE_TEST_API_VERSIONS}"
 
   "${KUBE_OUTPUT_HOSTBIN}/integration" --v=${LOG_LEVEL} --api-version="$1" \
   --max-concurrency="${KUBE_INTEGRATION_TEST_MAX_CONCURRENCY}"
