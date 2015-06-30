@@ -19,7 +19,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -47,9 +46,7 @@ kubectl replace --force -f pod.json`
 func NewCmdReplace(f *cmdutil.Factory, out io.Writer) *cobra.Command {
 	var filenames util.StringList
 	cmd := &cobra.Command{
-		Use: "replace -f FILENAME",
-		// update is deprecated.
-		Aliases: []string{"update"},
+		Use:     "replace -f FILENAME",
 		Short:   "Replace a resource by filename or stdin.",
 		Long:    replace_long,
 		Example: replace_example,

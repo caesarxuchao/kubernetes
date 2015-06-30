@@ -1,4 +1,5 @@
 kubectl.md
+kubectl_.md
 kubectl_api-versions.md
 kubectl_cluster-info.md
 kubectl_config.md
