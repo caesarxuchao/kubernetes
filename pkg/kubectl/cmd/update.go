@@ -43,7 +43,7 @@ import (
 func NewCmdUpdate(f *cmdutil.Factory, out io.Writer) *cobra.Command {
 	var filenames util.StringList
 	cmd := &cobra.Command{
-		name:       "update",
+		Use:        "update",
 		Deprecated: "update is DEPRECATED, please use replace instead",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := RunReplace(f, out, cmd, args, filenames)
