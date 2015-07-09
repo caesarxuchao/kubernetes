@@ -19,9 +19,14 @@ google_analytics: "UA-36037335-10"
 
 # Build settings
 markdown: kramdown
+
 sass:
     style: :compressed
 
+gems:
+  - jekyll-sitemap
+ 
+# Horizontal site navigation
 logo:
     desktop: /img/desktop/nav_logo.svg
     mobile: /img/mobile/nav_logo.svg
@@ -34,6 +39,9 @@ nav:
  - label: Getting Started
    url: /gettingstarted
    slug: gettingstarted
+   external: false
+ - label: Documentation
+   url: /v1_0/index.html
    external: false
  - label: Community
    url: /community
@@ -48,6 +56,7 @@ nav:
    slug: blog
    external: true
 
+# Footer links
 footer:
     connect: Connect With Us!
     social: 
@@ -63,3 +72,20 @@ footer:
         url: http://webchat.freenode.net/?channels=google-containers
       - label: Mailing List
         url: "https://groups.google.com/forum/#!forum/google-containers" 
+
+# Collections (for versioning docs)
+collections:
+-v1_0:
+      output:true
+      version:v1_0
+-vHEAD:
+      output:true
+      version:vHEAD
+
+# Page default settings
+defaults:
+-scope:
+      path:""
+      type:"pages"
+values:
+    layout:"docwithnav"
