@@ -41,7 +41,8 @@ nav:
    slug: gettingstarted
    external: false
  - label: Documentation
-   url: /v1_0/index.html
+   url: /docindex
+   slug: docindex
    external: false
  - label: Community
    url: /community
