@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 Getting started on AWS EC2
 --------------------------
 

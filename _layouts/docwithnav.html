@@ -17,12 +17,9 @@ layout: default
 </div>
 <script type="text/javascript">
 	$(function() {
-	
 	    var menu_ul = $('.menu > li > ul'),
 	           menu_a  = $('.menu > li > a');
-	    
 	    menu_ul.hide();
-	
 	    menu_a.click(function(e) {
 	        e.preventDefault();
 	        if(!$(this).hasClass('active')) {
@@ -33,9 +30,12 @@ layout: default
 	            $(this).removeClass('active');
 	            $(this).next().stop(true,true).slideUp('normal');
 	        }
-		 	
 	    });
 		
+		var url = window.location.href;
+		var $current = $('.menu li a[href="' + url + '"]');
+		$current.parents('.submenu').slideToggle();
+		$current.next('.submenu').slideToggle();
 	
 	});
 </script>

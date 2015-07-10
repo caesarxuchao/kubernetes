@@ -1,5 +1,5 @@
 ---
-layout: documentation
+layout: docwithnav
 ---
 ## Getting started on [CoreOS](http://coreos.com)
 

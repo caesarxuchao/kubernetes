@@ -50,21 +50,6 @@ ul, ul ul {
 	top: 50%;
 	margin: -.5em 0 0 0;
 }
-.item1 > a:before {
-	background-position: 0 0;
-}
-.item2 > a:before {
-	background-position: -38px 0;
-}
-.item3 > a:before {
-	background-position: 0 -38px;
-}
-.item4 > a:before {
-	background-position: -38px -38px;
-}
-.item5 > a:before {
-	background-position: -76px 0;
-}
 
 .menu > li > ul li a:before{
 	content: '▶';
@@ -77,9 +62,8 @@ ul, ul ul {
 }
 
 .menu > li > ul li:hover a,
-.menu > li > ul li:hover a span,
 .menu > li > ul li:hover a:before {
-
+	color:#428BCB;
 }
 
 .navContainer {
@@ -93,5 +77,5 @@ ul, ul ul {
 }
 
 .navSubMenu {
-	margin-left:15px;
+	margin-left:.75em;
 }
