@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Kubernetes Overview
 
 See the [user overview](docs/overview.md) for an introduction to Kubernetes and its core concepts.

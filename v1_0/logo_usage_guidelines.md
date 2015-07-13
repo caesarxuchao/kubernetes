@@ -1,3 +1,6 @@
+--- 
+layout: docwithnav 
+--- 
 # Kubernetes Branding Guidelines
 
 These guidelines provide you with guidance for using the Kubernetes logo. You can use the logo on your website or in print without pre-approval, provided you follow these basic guidelines.

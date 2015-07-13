@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 Please see the [Releases Page](https://github.com/GoogleCloudPlatform/kubernetes/releases)
 
 
