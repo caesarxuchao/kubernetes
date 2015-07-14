@@ -41,8 +41,8 @@ nav:
    slug: gettingstarted
    external: false
  - label: Documentation
-   url: /docindex
-   slug: docindex
+   url: /v1_0
+   slug: v1_0
    external: false
  - label: Community
    url: /community
@@ -86,7 +86,7 @@ collections:
 # Page default settings
 defaults:
 -scope:
-      path:""
+      path:"_v1_0"
       type:"pages"
 values:
     layout:"docwithnav"
