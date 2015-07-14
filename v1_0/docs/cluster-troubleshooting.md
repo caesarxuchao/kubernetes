@@ -1,6 +1,9 @@
+---
+layout: docwithnav
+---
 # Cluster Troubleshooting
 Most of the time, if you encounter problems, it is your application that is having problems.  For application
-problems please see the [application troubleshooting guide](application-troubleshooting.md).
+problems please see the [application troubleshooting guide](application-troubleshooting.html).
 
 ## Listing your cluster
 The first thing to debug in your cluster is if your nodes are all registered correctly.
@@ -27,4 +30,4 @@ of the relevant log files.  (note that on systemd based systems, you may need to
 
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/cluster-troubleshooting.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/cluster-troubleshooting.html?pixel)]()

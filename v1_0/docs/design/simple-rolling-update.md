@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 ## Simple rolling update
 This is a lightweight design document for simple rolling update in ```kubectl```
 
@@ -91,4 +94,4 @@ then ```foo-next``` is synthesized using the pattern ```<controller-name>-<hash-
       * Goto Rollout with ```foo``` and ```foo-next``` trading places.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/simple-rolling-update.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/simple-rolling-update.html?pixel)]()

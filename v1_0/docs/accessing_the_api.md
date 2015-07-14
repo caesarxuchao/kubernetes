@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Configuring APIserver ports
 
 This document describes what ports the kubernetes apiserver
@@ -6,7 +9,7 @@ cluster administrators who want to customize their cluster
 or understand the details.
 
 Most questions about accessing the cluster are covered
-in [Accessing the cluster](../docs/accessing-the-cluster.md).
+in [Accessing the cluster](../docs/accessing-the-cluster.html).
 
 
 ## Ports and IPs Served On
@@ -24,8 +27,8 @@ By default the Kubernetes APIserver serves HTTP on 2 ports:
     - default is port 6443, change with `--secure-port` flag.
     - default IP is first non-localhost network interface, change with `--bind-address` flag.
     - serves HTTPS.  Set cert with `--tls-cert-file` and key with `--tls-private-key-file` flag.
-    - uses token-file or client-certificate based [authentication](./authentication.md).
-    - uses policy-based [authorization](./authorization.md).
+    - uses token-file or client-certificate based [authentication](./authentication.html).
+    - uses policy-based [authorization](./authorization.html).
   3. Removed: ReadOnly Port
     - For security reasons, this had to be removed. Use the service account feature instead.
 
@@ -75,4 +78,4 @@ variety of uses cases:
      installations that want to do their own auth proxy.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/accessing_the_api.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/accessing_the_api.html?pixel)]()

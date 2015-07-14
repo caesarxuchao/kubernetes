@@ -1,6 +1,9 @@
+---
+layout: docwithnav
+---
 # DNS Integration with Kubernetes
 
-As of kubernetes 0.8, DNS is offered as a [cluster add-on](../cluster/addons/README.md).
+As of kubernetes 0.8, DNS is offered as a [cluster add-on](../cluster/addons/README.html).
 If enabled, a DNS Pod and Service will be scheduled on the cluster, and the kubelets will be
 configured to tell individual containers to use the DNS Service's IP.
 
@@ -35,7 +38,7 @@ time.
 
 ## For more information
 
-See [the docs for the DNS cluster addon](../cluster/addons/dns/README.md).
+See [the docs for the DNS cluster addon](../cluster/addons/dns/README.html).
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/dns.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/dns.html?pixel)]()

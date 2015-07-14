@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Downward API
 
 The downward API allows containers to consume information about the system without coupling to the
@@ -47,4 +50,4 @@ spec:
 ```
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/downward_api.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/downward_api.html?pixel)]()

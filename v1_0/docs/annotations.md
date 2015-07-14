@@ -1,6 +1,9 @@
+---
+layout: docwithnav
+---
 # Annotations
 
-We have [labels](labels.md) for identifying metadata.
+We have [labels](labels.html) for identifying metadata.
 
 It is also useful to be able to attach arbitrary non-identifying metadata, for retrieval by API clients such as tools, libraries, etc. This information may be large, may be structured or unstructured, may include characters not permitted by labels, etc. Such information would not be used for object selection and therefore doesn't belong in labels.
 
@@ -25,4 +28,4 @@ Possible information that could be recorded in annotations:
 Yes, this information could be stored in an external database or directory, but that would make it much harder to produce shared client libraries and tools for deployment, management, introspection, etc.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/annotations.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/annotations.html?pixel)]()

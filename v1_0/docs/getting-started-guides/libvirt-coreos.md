@@ -268,4 +268,4 @@ usermod -a -G libvirtd $USER
 Ensure libvirtd has been restarted since ebtables was installed.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/libvirt-coreos.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/libvirt-coreos.html?pixel)]()

@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # CoreOS Multinode Cluster
 
 Use the [master.yaml](cloud-configs/master.yaml) and [node.yaml](cloud-configs/node.yaml) cloud-configs to provision a multi-node Kubernetes cluster.
@@ -136,4 +139,4 @@ hdiutil makehybrid -iso -joliet -joliet-volume-name "config-2" -joliet -o node.i
 Boot one or more the [vmware image](https://coreos.com/docs/running-coreos/platforms/vmware) using `node.iso` as a config drive.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/coreos/coreos_multinode_cluster.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/coreos/coreos_multinode_cluster.html?pixel)]()

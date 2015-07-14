@@ -1,8 +1,11 @@
+---
+layout: docwithnav
+---
 # Getting started on Amazon EC2 with CoreOS
 
 The example below creates an elastic Kubernetes cluster with a custom number of worker nodes and a master.
 
-**Warning:** contrary to the [supported procedure](aws.md), the examples below provision Kubernetes with an insecure API server (plain HTTP,
+**Warning:** contrary to the [supported procedure](aws.html), the examples below provision Kubernetes with an insecure API server (plain HTTP,
 no security tokens, no basic auth). For demonstration purposes only.
 
 ## Highlights
@@ -16,7 +19,7 @@ no security tokens, no basic auth). For demonstration purposes only.
 
 * [aws CLI](http://aws.amazon.com/cli)
 * [CoreOS image for AWS](https://coreos.com/docs/running-coreos/cloud-providers/ec2/)
-* [kubectl CLI](aws/kubectl.md)
+* [kubectl CLI](aws/kubectl.html)
 
 ## Starting a Cluster
 
@@ -214,4 +217,4 @@ kubectl delete pods hello
 ```
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/aws-coreos.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/aws-coreos.html?pixel)]()

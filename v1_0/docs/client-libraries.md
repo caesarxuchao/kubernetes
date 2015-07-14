@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 ## kubernetes API client libraries
 
 ### Supported
@@ -15,4 +18,4 @@
 
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/client-libraries.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/client-libraries.html?pixel)]()

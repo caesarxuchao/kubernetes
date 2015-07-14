@@ -1,5 +1,8 @@
+---
+layout: docwithnav
+---
 # Volumes
-This document describes the current state of Volumes in kubernetes.  Familiarity with [pods](./pods.md) is suggested.
+This document describes the current state of Volumes in kubernetes.  Familiarity with [pods](./pods.html) is suggested.
 
 A Volume is a directory, possibly with some data in it, which is accessible to a Container. Kubernetes Volumes are similar to but not the same as [Docker Volumes](https://docs.docker.com/userguide/dockervolumes/).
 
@@ -140,7 +143,7 @@ The mount being created in this example is not read only.
 ### Secrets
 
 Secret volumes are used to pass sensitive information, such as passwords, to
-pods that mount these volumes. Secrets are described [here](secrets.md).
+pods that mount these volumes. Secrets are described [here](secrets.html).
 
 
 ## Resources
@@ -148,6 +151,6 @@ pods that mount these volumes. Secrets are described [here](secrets.md).
 The storage media (Disk, SSD, or memory) of an EmptyDir volume is determined by the media of the filesystem holding the kubelet root dir (typically `/var/lib/kubelet`).
 There is no limit on how much space an EmptyDir or HostPath volume can consume, and no isolation between containers or between pods.
 
-In the future, we expect that EmptyDir and HostPath volumes will be able to request a certain amount of space using a [resource](./resources.md) specification, and to select the type of media to use, for clusters that have several media types.
+In the future, we expect that EmptyDir and HostPath volumes will be able to request a certain amount of space using a [resource](./resources.html) specification, and to select the type of media to use, for clusters that have several media types.
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/volumes.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/volumes.html?pixel)]()

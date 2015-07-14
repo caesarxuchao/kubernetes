@@ -1,8 +1,11 @@
+---
+layout: docwithnav
+---
 # Application Troubleshooting.
 
 This guide is to help users debug applications that are deployed into Kubernetes and not behaving correctly.
 This is *not* a guide for people who want to debug their cluster.  For that you should check out
-[this guide](cluster-troubleshooting.md)
+[this guide](cluster-troubleshooting.html)
 
 ## FAQ
 Users are highly encouraged to check out our [FAQ](https://github.com/GoogleCloudPlatform/kubernetes/wiki/User-FAQ)
@@ -143,4 +146,4 @@ check:
    * Is your application serving on the port that you configured?  Kubernetes doesn't do port remapping, so if your application serves on 8080, the ```containerPort``` field needs to be 8080.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/application-troubleshooting.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/application-troubleshooting.html?pixel)]()

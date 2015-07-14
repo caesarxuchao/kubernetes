@@ -31,7 +31,7 @@ convenient).
    go get github.com/vmware/govmomi/govc
    ```
 
-5. Get or build a [binary release](binary_release.md)
+5. Get or build a [binary release](binary_release.html)
 
 ### Setup
 
@@ -88,4 +88,4 @@ going on (find yourself authorized with your SSH key, or use the password
 `kube` otherwise).
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/vsphere.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/vsphere.html?pixel)]()

@@ -4,9 +4,9 @@
 
 `Node` is a worker machine in Kubernetes, previously known as `Minion`. Node
 may be a VM or physical machine, depending on the cluster. Each node has
-the services necessary to run [Pods](pods.md) and be managed from the master
+the services necessary to run [Pods](pods.html) and be managed from the master
 systems. The services include docker, kubelet and network proxy. See
-[The Kubernetes Node](design/architecture.md#the-kubernetes-node) section in design
+[The Kubernetes Node](design/architecture.html#the-kubernetes-node) section in design
 doc for more details.
 
 ## Node Status
@@ -68,7 +68,7 @@ Kubernetes from the node.
 
 ## Node Management
 
-Unlike [Pods](pods.md) and [Services](services.md), a Node is not inherently
+Unlike [Pods](pods.html) and [Services](services.html), a Node is not inherently
 created by Kubernetes: it is either created from cloud providers like Google Compute Engine,
 or from your physical or virtual machines. What this means is that when
 Kubernetes creates a node, it only creates a representation for the node.
@@ -181,4 +181,4 @@ Set the `cpu` and `memory` values to the amount of resources you want to reserve
 Place the file in the manifest directory (`--config=DIR` flag of kubelet).  Do this
 on each kubelet where you want to reserve resources.
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/node.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/node.html?pixel)]()

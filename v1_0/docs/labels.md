@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Labels
 
 _Labels_ are key/value pairs that are attached to objects, such as pods.
@@ -11,7 +14,7 @@ Each object can have a set of key/value labels defined.  Each Key must be unique
 }
 ```
 
-We'll eventually index and reverse-index labels for efficient queries and watches, use them to sort and group in UIs and CLIs, etc. We don't want to pollute labels with non-identifying, especially large and/or structured, data. Non-identifying information should be recorded using [annotations](annotations.md).
+We'll eventually index and reverse-index labels for efficient queries and watches, use them to sort and group in UIs and CLIs, etc. We don't want to pollute labels with non-identifying, especially large and/or structured, data. Non-identifying information should be recorded using [annotations](annotations.html).
 
 
 ## Motivation
@@ -40,7 +43,7 @@ Valid label values must be 63 characters or less and must be empty or begin and 
 
 ## Label selectors
 
-Unlike [names and UIDs](identifiers.md), labels do not provide uniqueness. In general, we expect many objects to carry the same label(s).
+Unlike [names and UIDs](identifiers.html), labels do not provide uniqueness. In general, we expect many objects to carry the same label(s).
 
 Via a _label selector_, the client/user can identify a set of objects. The label selector is the core grouping primitive in Kubernetes.
 
@@ -89,8 +92,8 @@ LIST and WATCH operations may specify label selectors to filter the sets of obje
 
 Kubernetes also currently supports two objects that use label selectors to keep track of their members, `service`s and `replicationcontroller`s:
 
-* `service`: A [service](services.md) is a configuration unit for the proxies that run on every worker node.  It is named and points to one or more pods.
-* `replicationcontroller`: A [replication controller](replication-controller.md) ensures that a specified number of pod "replicas" are running at any one time.
+* `service`: A [service](services.html) is a configuration unit for the proxies that run on every worker node.  It is named and points to one or more pods.
+* `replicationcontroller`: A [replication controller](replication-controller.html) ensures that a specified number of pod "replicas" are running at any one time.
 
 The set of pods that a `service` targets is defined with a label selector. Similarly, the population of pods that a `replicationcontroller` is monitoring is also defined with a label selector. For management convenience and consistency, `services` and `replicationcontrollers` may themselves have labels and would generally carry the labels their corresponding pods have in common.
 
@@ -106,4 +109,4 @@ Pods (and other objects) may belong to multiple sets simultaneously, which enabl
 Concerning API: we may extend such filtering to DELETE operations in the future.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/labels.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/labels.html?pixel)]()

@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Clustering in Kubernetes
 
 
@@ -60,4 +63,4 @@ This flow has the admin manually approving the kubelet signing requests.  This i
 ![Dynamic Sequence Diagram](clustering/dynamic.png)
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/clustering.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/clustering.html?pixel)]()

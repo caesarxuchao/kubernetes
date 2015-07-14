@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Kubernetes Event Compression
 
 This document captures the design of event compression.
@@ -78,4 +81,4 @@ This demonstrates what would have been 20 separate entries (indicating schedulin
  * PR [#4444](https://github.com/GoogleCloudPlatform/kubernetes/pull/4444): Switch events history to use LRU cache instead of map
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/event_compression.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/event_compression.html?pixel)]()

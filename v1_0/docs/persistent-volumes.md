@@ -1,6 +1,9 @@
+---
+layout: docwithnav
+---
 # Persistent Volumes and Claims
 
-This document describes the current state of `PersistentVolumes` in Kubernetes.  Familiarity with [volumes](./volumes.md) is suggested.
+This document describes the current state of `PersistentVolumes` in Kubernetes.  Familiarity with [volumes](./volumes.html) is suggested.
 
 Managing storage is a distinct problem from managing compute. The `PersistentVolume` subsystem provides an API for users and administrators that abstracts details of how storage is provided from how it is consumed.  To do this we introduce two new API resources:  `PersistentVolume` and `PersistentVolumeClaim`.
 
@@ -77,7 +80,7 @@ Each PV contains a spec and status, which is the specification and status of the
 
 ### Capacity
 
-Generally, a PV will have a specific storage capacity.  This is set using the PV's `capacity` attribute.  See the Kubernetes [Resource Model](./resources.md) to understand the units expected by `capacity`.
+Generally, a PV will have a specific storage capacity.  This is set using the PV's `capacity` attribute.  See the Kubernetes [Resource Model](./resources.html) to understand the units expected by `capacity`.
 
 Currently, storage size is the only resource that can be set or requested.  Future attributes may include IOPS, throughput, etc.
 
@@ -145,7 +148,7 @@ Claims use the same conventions as volumes when requesting storage with specific
 
 ### Resources
 
-Claims, like pods, can request specific quantities of a resource.  In this case, the request is for storage.  The same [resource model](./resources.md) applies to both volumes and claims.
+Claims, like pods, can request specific quantities of a resource.  In this case, the request is for storage.  The same [resource model](./resources.html) applies to both volumes and claims.
 
 ## <a name="claims-as-volumes"></a> Claims As Volumes
 
@@ -171,4 +174,4 @@ spec:
 
 ```
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/persistent-volumes.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/persistent-volumes.html?pixel)]()

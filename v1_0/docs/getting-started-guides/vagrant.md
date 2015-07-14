@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 ## Getting started with Vagrant
 
 Running kubernetes with Vagrant (and VirtualBox) is an easy way to run/test/develop on your local machine (Linux, Mac OS X).
@@ -247,7 +250,7 @@ myNginx   nginx              name=my-nginx   3
 ```
 
 We did not start any services, hence there are none listed. But we see three replicas displayed properly.
-Check the [guestbook](../../examples/guestbook/README.md) application to learn how to create a service.
+Check the [guestbook](../../examples/guestbook/README.html) application to learn how to create a service.
 You can already play with scaling the replicas with:
 
 ```sh
@@ -297,7 +300,7 @@ If this is your first time creating the cluster, the kubelet on each minion sche
 
 #### I want to make changes to Kubernetes code!
 
-To set up a vagrant cluster for hacking, follow the [vagrant developer guide](../devel/developer-guides/vagrant.md).
+To set up a vagrant cluster for hacking, follow the [vagrant developer guide](../devel/developer-guides/vagrant.html).
 
 #### I have brought Vagrant up but the nodes cannot validate!
 
@@ -339,4 +342,4 @@ export KUBERNETES_VAGRANT_USE_NFS=true
 ```
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/vagrant.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/vagrant.html?pixel)]()

@@ -1,6 +1,9 @@
+---
+layout: docwithnav
+---
 # Security Contexts
 ## Abstract
-A security context is a set of constraints that are applied to a container in order to achieve the following goals (from [security design](security.md)):
+A security context is a set of constraints that are applied to a container in order to achieve the following goals (from [security design](security.html)):
 
 1.  Ensure a clear isolation between container and the underlying host it runs on
 2.  Limit the ability of the container to negatively impact the infrastructure or other containers
@@ -32,7 +35,7 @@ Processes in pods will need to have consistent UID/GID/SELinux category labels i
 * The concept of a security context should not be tied to a particular security mechanism or platform 
   (ie. SELinux, AppArmor)
 * Applying a different security context to a scope (namespace or pod) requires a solution such as the one proposed for
-  [service accounts](./service_accounts.md).
+  [service accounts](./service_accounts.html).
 
 ## Use Cases
 
@@ -157,4 +160,4 @@ configurable policies that reside within the [service account](https://github.co
 
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/security_context.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/security_context.html?pixel)]()

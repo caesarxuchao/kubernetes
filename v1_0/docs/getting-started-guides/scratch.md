@@ -3,7 +3,7 @@ Getting started from Scratch
 
 This guide is for people who want to craft a custom Kubernetes cluster.  If you
 can find an existing Getting Started Guide that meets your needs on [this
-list](README.md), then we recommend using it, as you will be able to benefit
+list](README.html), then we recommend using it, as you will be able to benefit
 from the experience of others.  However, if you have specific IaaS, networking,
 configuration management, or operating system requirements not met by any of
 those guides, then this guide will provide an outline of the steps you need to
@@ -59,7 +59,7 @@ steps that existing cluster setup scripts are making.
 ### Learning 
   1. You should be familiar with using Kubernetes already.  We suggest you set
     up a temporary cluster by following one of the other Getting Started Guides.
-    This will help you become familiar with the CLI ([kubectl](../kubectl.md)) and concepts ([pods](../pods.md), [services](../services.md), etc.) first.
+    This will help you become familiar with the CLI ([kubectl](../kubectl.html)) and concepts ([pods](../pods.html), [services](../services.html), etc.) first.
   1. You should have `kubectl` installed on your desktop.  This will happen as a side
     effect of completing one of the other Getting Started Guides.
 
@@ -85,7 +85,7 @@ on how flags are set on various components.
   have identical configurations.
 
 ### Network
-Kubernetes has a distinctive [networking model](../networking.md).
+Kubernetes has a distinctive [networking model](../networking.html).
 
 Kubernetes allocates an IP address to each pod and creates a virtual ethernet device for each
 Pod.  When creating a cluster, you need to allocate a block of IPs for Kubernetes to use
@@ -94,7 +94,7 @@ as the node is added.  A process in one pod should be able to communicate with a
 using the IP of the second pod.  This connectivity can be accomplished in two ways:
 - Configure network to route Pod IPs
   - Harder to setup from scratch.
-  - The Google Compute Engine ([GCE](gce.md)) and [AWS](aws.md) guides use this approach.
+  - The Google Compute Engine ([GCE](gce.html)) and [AWS](aws.html) guides use this approach.
   - Need to make the Pod IPs routable by programming routers, switches, etc.
   - Can be configured external to kubernetes, or can implement in the "Routes" interface of a Cloud Provider module.
 - Create an Overlay network
@@ -117,7 +117,7 @@ You need to select an address range for the Pod IPs.
   - e.g. use 10.240.0.0/16 as the range for the cluster, with up to 256 nodes using 10.240.0.0/24 through 10.240.255.0/24, respectively.
   - Need to make these routable or connect with overlay.
 
-Kubernetes also allocates an IP to each [service](../services.md).  However, service IPs do not necessarily
+Kubernetes also allocates an IP to each [service](../services.html).  However, service IPs do not necessarily
 need to be routable.  The kube-proxy takes care of translating Service IPs to Pod IPs before traffic leaves
 the node.  You do need to Allocate a block of IPs for services.  Call this `SERVICE_CLUSTER_IP_RANGE`.
 For example, you could set `SERVICE_CLUSTER_IP_RANGE="10.1.0.0/16"`, allowing ~67840 distinct services to be active at once.
@@ -155,7 +155,7 @@ You will need binaries for:
 #### Downloading and Extracting Kubernetes Binaries
 A Kubernetes binary release includes all the Kubernetes binaries as well as the supported release of etcd.
 You can use a Kubernetes binary release (recommended) or build your Kubernetes binaries following the instructions in the
-[Developer Documentation]( ../devel/README.md).  Only using a binary release is covered in this guide.
+[Developer Documentation]( ../devel/README.html).  Only using a binary release is covered in this guide.
 
 Download the [latest binary release](
 https://github.com/GoogleCloudPlatform/kubernetes/releases/latest) and unzip it.
@@ -247,7 +247,7 @@ The format for this file is described in the [authentication documentation](
 ../authentication.md).
 
 For distributing credentials to clients, the convention in Kubernetes is to put the credentials
-into a [kubeconfig file](../kubeconfig-file.md).
+into a [kubeconfig file](../kubeconfig-file.html).
 
 The kubeconfig file for the administrator can be created as follows:
  - If you have already used Kubernetes with a non-custom cluster (for example, used a Getting Started
@@ -368,7 +368,7 @@ Arguments to consider:
   - `--docker-root=`
   - `--root-dir=`
   - `--configure-cbr0=` (described above)
-  - `--register-node` (described in [Node](../node.md) documentation.
+  - `--register-node` (described in [Node](../node.html) documentation.
 
 ### kube-proxy
 
@@ -388,7 +388,7 @@ Each node needs to be allocated its own CIDR range for pod networking.
 Call this $NODE_X_POD_CIDR.
 
 A bridge called `cbr0` needs to be created on each node.  The bridge is explained
-further in the [networking documentation](../networking.md).
+further in the [networking documentation](../networking.html).
 
 - Recommended, automatic approach:
   1. Set `--configure-cbr0=true` option in kubelet init script and restart kubelet service.  Kubelet will configure cbr0 automatically.
@@ -426,7 +426,7 @@ the pod.
 ### Using Configuration Management
 The previous steps all involved "conventional" system administration techniques for setting up
 machines.  You may want to use a Configuration Management system to automate the node configuration
-process.  There are examples of [Saltstack](../salt.md), Ansible, Juju, and CoreOS Cloud Config in the
+process.  There are examples of [Saltstack](../salt.html), Ansible, Juju, and CoreOS Cloud Config in the
 various Getting Started Guides.
 
 ## Bootstrapping the Cluster
@@ -445,7 +445,7 @@ You will need to run one or more instances of etcd.
   - Alternative: run 3 or 5 etcd instances.
     - Log can be written to non-durable storage because storage is replicated. 
     - run a single apiserver which connects to one of the etc nodes.
- See [Availability](../availability.md) for more discussion on factors affecting cluster
+ See [Availability](../availability.html) for more discussion on factors affecting cluster
 availability.
 
 To run an etcd instance:
@@ -471,7 +471,7 @@ Here are some apiserver flags you may need to set:
   - `--tls-cert-file=/srv/kubernetes/server.cert` -%}
   - `--tls-private-key-file=/srv/kubernetes/server.key` -%}
   - `--admission-control=$RECOMMENDED_LIST`
-    - See [admission controllers](../admission_controllers.md) for recommended arguments.
+    - See [admission controllers](../admission_controllers.html) for recommended arguments.
   - `--allow-privileged=true`, only if you trust your cluster user to run pods as root.
  
 If you are following the firewall-only security approach, then use these arguments:
@@ -630,7 +630,7 @@ Flags to consider using with controller manager.
  - `--allocate-node-cidrs=`
    - *TODO*: explain when you want controller to do this and when you wanna do it another way.
  - `--cloud-provider=` and `--cloud-config` as described in apiserver section.
- - `--service-account-private-key-file=/srv/kubernetes/server.key`, used by [service account](../service_accounts.md) feature.  
+ - `--service-account-private-key-file=/srv/kubernetes/server.key`, used by [service account](../service_accounts.html) feature.  
  - `--master=127.0.0.1:8080`
 
 Template for controller manager pod:
@@ -702,12 +702,12 @@ Template for controller manager pod:
 
 ### Inspect pods and services
 
-Try to run through the "Inspect your cluster" section in one of the other Getting Started Guides, such as [GCE](gce.md#inspect-your-cluster).
+Try to run through the "Inspect your cluster" section in one of the other Getting Started Guides, such as [GCE](gce.html#inspect-your-cluster).
 You should see some services.  You should also see "mirror pods" for the apiserver, scheduler and controller-manager, plus any add-ons you started.
 
 ### Try Examples
 
-At this point you should be able to run through one of the basic examples, such as the [nginx example](../../examples/simple-nginx.md).
+At this point you should be able to run through one of the basic examples, such as the [nginx example](../../examples/simple-nginx.html).
 
 ### Running the Conformance Test
 
@@ -719,9 +719,9 @@ The nodes must be able to connect to each other using their private IP. Verify t
 pinging or SSH-ing from one node to another.
 
 ### Getting Help
-If you run into trouble, please see the section on [troubleshooting](gce.md#troubleshooting), post to the
+If you run into trouble, please see the section on [troubleshooting](gce.html#troubleshooting), post to the
 [google-containers group](https://groups.google.com/forum/#!forum/google-containers), or come ask questions on IRC at #google-containers on freenode.
 
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/scratch.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/scratch.html?pixel)]()

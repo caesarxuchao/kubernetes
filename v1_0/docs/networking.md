@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Networking in Kubernetes
 
 ## Summary
@@ -12,7 +15,7 @@ on different nodes, we do not recommend having a pod directly talk to the IP
 address of another Pod.  Instead, if a pod, or collection of pods, provide some
 service, then you should create a `service` object spanning those pods, and
 clients should connect to the IP of the service object.  See
-[services](services.md).
+[services](services.html).
 
 ## Docker model
 
@@ -156,7 +159,7 @@ people have reported success with Flannel and Kubernetes.
 
 ### OpenVSwitch
 
-[OpenVSwitch](./ovs-networking.md) is a somewhat more mature but also
+[OpenVSwitch](./ovs-networking.html) is a somewhat more mature but also
 complicated way to build an overlay network.  This is endorsed by several of the
 "Big Shops" for networking.
 
@@ -174,7 +177,7 @@ IPs.
 
 The early design of the networking model and its rationale, and some future
 plans are described in more detail in the [networking design
-document](design/networking.md).
+document](design/networking.html).
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/networking.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/networking.html?pixel)]()

@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Services and Firewalls
 
 Many cloud providers (e.g. Google Compute Engine) define firewalls that help keep prevent inadvertent
@@ -34,4 +37,4 @@ Consequently, please be careful when opening firewalls in Google Compute Engine 
 ### Other cloud providers
 Coming soon.
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/services-firewalls.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/services-firewalls.html?pixel)]()

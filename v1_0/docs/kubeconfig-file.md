@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # kubeconfig files
 In order to easily switch between multiple clusters, a kubeconfig file was defined.  This file contains a series of authentication mechanisms and cluster connection information associated with nicknames.  It also introduces the concept of a tuple of authentication information (user) and cluster connection information called a context that is also associated with a nickname.
 
@@ -83,7 +86,7 @@ The rules for loading and merging the kubeconfig files are straightforward, but 
 
 ## Manipulation of kubeconfig via `kubectl config <subcommand>`
 In order to more easily manipulate kubeconfig files, there are a series of subcommands to `kubectl config` to help.
-See [docs/kubectl_config.md](kubectl_config.md) for help.
+See [docs/kubectl_config.md](kubectl_config.html) for help.
 
 ### Example
 ```
@@ -149,4 +152,4 @@ $kubectl config use-context federal-context
 ```
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/kubeconfig-file.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/kubeconfig-file.html?pixel)]()

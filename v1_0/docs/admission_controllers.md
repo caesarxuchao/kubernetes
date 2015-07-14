@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Admission Controllers
 
 ## What are they?
@@ -46,12 +49,12 @@ commands in those containers, we strongly encourage enabling this plug-in.
 
 ### ServiceAccount
 
-This plug-in implements automation for [serviceAccounts]( service_accounts.md).
+This plug-in implements automation for [serviceAccounts]( service_accounts.html).
 We strongly recommend using this plug-in if you intend to make use of Kubernetes ```ServiceAccount``` objects.
 
 ### SecurityContextDeny
 
-This plug-in will deny any pod with a [SecurityContext](security_context.md) that defines options that were not available on the ```Container```.
+This plug-in will deny any pod with a [SecurityContext](security_context.html) that defines options that were not available on the ```Container```.
 
 ### ResourceQuota
 
@@ -59,7 +62,7 @@ This plug-in will observe the incoming request and ensure that it does not viola
 enumerated in the ```ResourceQuota``` object in a ```Namespace```.  If you are using ```ResourceQuota```
 objects in your Kubernetes deployment, you MUST use this plug-in to enforce quota constraints.
 
-See the [resourceQuota design doc]( design/admission_control_resource_quota.md).
+See the [resourceQuota design doc]( design/admission_control_resource_quota.html).
 
 It is strongly encouraged that this plug-in is configured last in the sequence of admission control plug-ins.  This is
 so that quota is not prematurely incremented only for the request to be rejected later in admission control.
@@ -70,7 +73,7 @@ This plug-in will observe the incoming request and ensure that it does not viola
 enumerated in the ```LimitRange``` object in a ```Namespace```.  If you are using ```LimitRange``` objects in
 your Kubernetes deployment, you MUST use this plug-in to enforce those constraints.
 
-See the [limitRange design doc]( design/admission_control_limit_range.md).
+See the [limitRange design doc]( design/admission_control_limit_range.html).
 
 ### NamespaceExists
 
@@ -106,4 +109,4 @@ For Kubernetes 1.0, we strongly recommend running the following set of admission
 ```
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/admission_controllers.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/admission_controllers.html?pixel)]()

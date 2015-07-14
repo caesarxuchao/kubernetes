@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Availability
 
 This document collects advice on reasoning about and provisioning for high-availability when using Kubernetes clusters.
@@ -120,7 +123,7 @@ then you need `R + U` clusters.  If it is not (e.g you want to ensure low latenc
 cluster failure), then you need to have `R * U` clusters (`U` in each of `R` regions).  In any case, try to put each cluster in a different zone.
 
 Finally, if any of your clusters would need more than the maximum recommended number of nodes for a Kubernetes cluster, then
-you may need even more clusters.  Our [roadmap](http://docs.k8s.io/roadmap.md)
+you may need even more clusters.  Our [roadmap](http://docs.k8s.io/roadmap.html)
 calls for maximum 100 node clusters at v1.0 and maximum 1000 node clusters in the middle of 2015.
 
 ## Working with multiple clusters
@@ -130,4 +133,4 @@ service instances behind a load balancer (AWS Elastic Load Balancer, GCE Forward
 failures of a single cluster are not visible to end users.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/availability.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/availability.html?pixel)]()

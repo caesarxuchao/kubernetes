@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Kubernetes CLI/Configuration Roadmap
 
 See also issues with the following labels:
@@ -78,4 +81,4 @@ Server-side support:
 1. Operate on uids
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/cli-roadmap.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/cli-roadmap.html?pixel)]()

@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Images
 Each container in a pod has its own image.  Currently, the only type of image supported is a [Docker Image](https://docs.docker.com/userguide/dockerimages/).
 
@@ -135,7 +138,7 @@ where node creation is automated.
 Kubernetes supports specifying registry keys on a pod.
 
 First, create a `.dockercfg`, such as running `docker login <registry.domain>`.
-Then put the resulting `.dockercfg` file into a [secret resource](../docs/secrets.md).  For example:
+Then put the resulting `.dockercfg` file into a [secret resource](../docs/secrets.html).  For example:
 ```
 $ docker login
 Username: janedoe
@@ -187,7 +190,7 @@ spec:
 ```
 This needs to be done for each pod that is using a private registry.
 However, setting of this field can be automated by setting the imagePullSecrets
-in a [serviceAccount](../docs/service_accounts.md) resource.
+in a [serviceAccount](../docs/service_accounts.html) resource.
 
 Currently, all pods will potentially have read access to any images which were
 pulled using imagePullSecrets.  That is, imagePullSecrets does *NOT* protect your
@@ -222,4 +225,4 @@ common use cases and suggested solutions.
      - NOT supported yet.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/images.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/images.html?pixel)]()

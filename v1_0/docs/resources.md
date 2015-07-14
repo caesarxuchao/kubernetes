@@ -144,7 +144,7 @@ The following are planned future extensions to the resource model, included here
 
 ## Usage data
 
-Because resource usage and related metrics change continuously, need to be tracked over time (i.e., historically), can be characterized in a variety of ways, and are fairly voluminous, we will not include usage in core API objects, such as [Pods](pods.md) and Nodes, but will provide separate APIs for accessing and managing that data. See the Appendix for possible representations of usage data, but the representation we'll use is TBD.
+Because resource usage and related metrics change continuously, need to be tracked over time (i.e., historically), can be characterized in a variety of ways, and are fairly voluminous, we will not include usage in core API objects, such as [Pods](pods.html) and Nodes, but will provide separate APIs for accessing and managing that data. See the Appendix for possible representations of usage data, but the representation we'll use is TBD.
 
 Singleton values for observed and predicted future usage will rapidly prove inadequate, so we will support the following structure for extended usage information: 
 
@@ -208,4 +208,4 @@ This is the amount of time a container spends accessing disk, including actuator
   * Compressible? yes
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/resources.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/resources.html?pixel)]()

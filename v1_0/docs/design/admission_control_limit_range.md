@@ -132,4 +132,4 @@ It is expected we will want to define limits for particular pods or containers b
 To make a **LimitRangeItem** more restrictive, we will intend to add these additional restrictions at a future point in time.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/admission_control_limit_range.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/admission_control_limit_range.html?pixel)]()

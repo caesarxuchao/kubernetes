@@ -1,6 +1,3 @@
----
-layout: docwithnav
----
 Getting started on AWS EC2
 --------------------------
 
@@ -59,7 +56,7 @@ If these already exist, make sure you want them to be used here.
 NOTE: If using an existing keypair named "kubernetes" then you must set the `AWS_SSH_KEY` key to point to your private key.
 
 ### Alternatives
-A contributed [example](aws-coreos.md) allows you to setup a Kubernetes cluster based on [CoreOS](http://www.coreos.com), either using
+A contributed [example](aws-coreos.html) allows you to setup a Kubernetes cluster based on [CoreOS](http://www.coreos.com), either using
 AWS CloudFormation or EC2 with user data (cloud-config).
 
 ## Getting started with your cluster
@@ -74,13 +71,13 @@ sudo cp kubernetes/platforms/darwin/amd64/kubectl /usr/local/bin/kubectl
 sudo cp kubernetes/platforms/linux/amd64/kubectl /usr/local/bin/kubectl
 ```
 
-An up-to-date documentation page for this tool is available here: [kubectl manual](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/kubectl.md)
+An up-to-date documentation page for this tool is available here: [kubectl manual](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/kubectl.html)
 
 By default, `kubectl` will use the `kubeconfig` file generated during the cluster startup for authenticating against the API.
-For more information, please read [kubeconfig files](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/kubeconfig-file.md)
+For more information, please read [kubeconfig files](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/docs/kubeconfig-file.html)
 
 ### Examples
-See [a simple nginx example](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/simple-nginx.md) to try out your new cluster.
+See [a simple nginx example](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/simple-nginx.html) to try out your new cluster.
 
 The "Guestbook" application is another popular example to get started with Kubernetes: [guestbook example](https://github.com/GoogleCloudPlatform/kubernetes/tree/master/examples/guestbook)
 
@@ -99,4 +96,4 @@ Please see the [Kubernetes docs](https://github.com/GoogleCloudPlatform/kubernet
 and using a Kubernetes cluster.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/aws.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/aws.html?pixel)]()

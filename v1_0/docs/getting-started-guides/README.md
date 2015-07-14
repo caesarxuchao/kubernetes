@@ -1,48 +1,45 @@
----
-layout: docwithnav
----
 If you are not sure what OSes and infrastructure is supported, the table below lists all the combinations which have
 been tested recently.
 
-For the easiest "kick the tires" experience, please try the [local docker](docker.md) guide.
+For the easiest "kick the tires" experience, please try the [local docker](docker.html) guide.
 
 If you are considering contributing a new guide, please read the
-[guidelines](../../docs/devel/writing-a-getting-started-guide.md).
+[guidelines](../../docs/devel/writing-a-getting-started-guide.html).
 
 IaaS Provider        | Config. Mgmt | OS     | Networking  | Docs                                                                           | Conformance | Support Level                | Notes
 -------------------- | ------------ | ------ | ----------  | ------------------------------------------------------------------------------ | ----------- | ---------------------------- | -----
 GKE                  |              |        | GCE         | [docs](https://cloud.google.com/container-engine)                              |             | Commercial                   | Uses K8s version 0.15.0
-Vagrant              | Saltstack    | Fedora | OVS         | [docs](../../docs/getting-started-guides/vagrant.md)                           |             | Project                      | Uses latest via https://get.k8s.io/
-GCE                  | Saltstack    | Debian | GCE         | [docs](../../docs/getting-started-guides/gce.md)                               |             | Project                      | Tested with 0.15.0 by @robertbailey
-Azure                | CoreOS       | CoreOS | Weave       | [docs](../../docs/getting-started-guides/coreos/azure/README.md)               |             | Community ([@errordeveloper](https://github.com/errordeveloper), [@squillace](https://github.com/squillace), [@chanezon](https://github.com/chanezon), [@crossorigin](https://github.com/crossorigin)) | Uses K8s version 0.17.0
-Docker Single Node   | custom       | N/A    | local       | [docs](docker.md)                                                              |             | Project (@brendandburns)     | Tested @ 0.14.1 |
-Docker Multi Node    | Flannel      | N/A    | local       | [docs](docker-multinode.md)                                                    |             | Project (@brendandburns)     | Tested @ 0.14.1 |
-Bare-metal           | Ansible      | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/fedora_ansible_config.md)      |             | Project                      | Uses K8s v0.13.2
-Bare-metal           | custom       | Fedora | _none_      | [docs](../../docs/getting-started-guides/fedora/fedora_manual_config.md)       |             | Project                      | Uses K8s v0.13.2
-Bare-metal           | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.md) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
-libvirt              | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.md) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
-KVM                  | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.md) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
-Mesos/GCE            |              |        |             | [docs](../../docs/getting-started-guides/mesos.md)                             |             | [Community](https://github.com/mesosphere/kubernetes-mesos) ([@jdef](https://github.com/jdef)) | Uses K8s v0.11.2
-AWS                  | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.md)                            |             | Community                    | Uses K8s version 0.19.3
-GCE                  | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.md)                            |             | Community [@pires](https://github.com/pires) | Uses K8s version 0.19.3
-Vagrant              | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.md)                            |             | Community ( [@pires](https://github.com/pires), [@AntonioMeireles](https://github.com/AntonioMeireles) )           | Uses K8s version 0.19.3
-Bare-metal (Offline) | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos/bare_metal_offline.md)         |             | Community([@jeffbean](https://github.com/jeffbean))    | Uses K8s version 0.15.0
-CloudStack           | Ansible      | CoreOS | flannel     | [docs](../../docs/getting-started-guides/cloudstack.md)                        |             | Community (@runseb)          | Uses K8s version 0.9.1
-Vmware               |              | Debian | OVS         | [docs](../../docs/getting-started-guides/vsphere.md)                           |             | Community (@pietern)         | Uses K8s version 0.9.1
-Bare-metal           | custom       | CentOS | _none_      | [docs](../../docs/getting-started-guides/centos/centos_manual_config.md)       |             | Community(@coolsvap)         | Uses K8s v0.9.1
-AWS                  | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.md)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
-OpenStack/HPCloud    | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.md)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
-Joyent               | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.md)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
-AWS                  | Saltstack    | Ubuntu | OVS         | [docs](../../docs/getting-started-guides/aws.md)                               |             | Community (@justinsb)        | Uses K8s version 0.5.0
-Vmware               | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.md)                            |             | Community (@kelseyhightower) | Uses K8s version 0.15.0
-Azure                | Saltstack    | Ubuntu | OpenVPN     | [docs](../../docs/getting-started-guides/azure.md)                             |             | Community                    |
-Bare-metal           | custom       | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/ubuntu.md)                            |             | Community (@resouer @WIZARD-CXY)       | use k8s version 0.18.0
-Local                |              |        | _none_      | [docs](../../docs/getting-started-guides/locally.md)                           |             | Community (@preillyme)      |
-libvirt/KVM          | CoreOS       | CoreOS | libvirt/KVM | [docs](../../docs/getting-started-guides/libvirt-coreos.md)                    |             | Community (@lhuard1A)       |
-oVirt                |              |        |             | [docs](../../docs/getting-started-guides/ovirt.md)                             |             | Community (@simon3z)        |
-Rackspace            | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/rackspace.md)                         |             | Community (@doublerr)       | use k8s version 0.18.0
+Vagrant              | Saltstack    | Fedora | OVS         | [docs](../../docs/getting-started-guides/vagrant.html)                           |             | Project                      | Uses latest via https://get.k8s.io/
+GCE                  | Saltstack    | Debian | GCE         | [docs](../../docs/getting-started-guides/gce.html)                               |             | Project                      | Tested with 0.15.0 by @robertbailey
+Azure                | CoreOS       | CoreOS | Weave       | [docs](../../docs/getting-started-guides/coreos/azure/README.html)               |             | Community ([@errordeveloper](https://github.com/errordeveloper), [@squillace](https://github.com/squillace), [@chanezon](https://github.com/chanezon), [@crossorigin](https://github.com/crossorigin)) | Uses K8s version 0.17.0
+Docker Single Node   | custom       | N/A    | local       | [docs](docker.html)                                                              |             | Project (@brendandburns)     | Tested @ 0.14.1 |
+Docker Multi Node    | Flannel      | N/A    | local       | [docs](docker-multinode.html)                                                    |             | Project (@brendandburns)     | Tested @ 0.14.1 |
+Bare-metal           | Ansible      | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/fedora_ansible_config.html)      |             | Project                      | Uses K8s v0.13.2
+Bare-metal           | custom       | Fedora | _none_      | [docs](../../docs/getting-started-guides/fedora/fedora_manual_config.html)       |             | Project                      | Uses K8s v0.13.2
+Bare-metal           | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.html) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
+libvirt              | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.html) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
+KVM                  | custom       | Fedora | flannel     | [docs](../../docs/getting-started-guides/fedora/flannel_multi_node_cluster.html) |             | Community ([@aveshagarwal](https://github.com/aveshagarwal))| Tested with 0.15.0
+Mesos/GCE            |              |        |             | [docs](../../docs/getting-started-guides/mesos.html)                             |             | [Community](https://github.com/mesosphere/kubernetes-mesos) ([@jdef](https://github.com/jdef)) | Uses K8s v0.11.2
+AWS                  | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.html)                            |             | Community                    | Uses K8s version 0.19.3
+GCE                  | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.html)                            |             | Community [@pires](https://github.com/pires) | Uses K8s version 0.19.3
+Vagrant              | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.html)                            |             | Community ( [@pires](https://github.com/pires), [@AntonioMeireles](https://github.com/AntonioMeireles) )           | Uses K8s version 0.19.3
+Bare-metal (Offline) | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos/bare_metal_offline.html)         |             | Community([@jeffbean](https://github.com/jeffbean))    | Uses K8s version 0.15.0
+CloudStack           | Ansible      | CoreOS | flannel     | [docs](../../docs/getting-started-guides/cloudstack.html)                        |             | Community (@runseb)          | Uses K8s version 0.9.1
+Vmware               |              | Debian | OVS         | [docs](../../docs/getting-started-guides/vsphere.html)                           |             | Community (@pietern)         | Uses K8s version 0.9.1
+Bare-metal           | custom       | CentOS | _none_      | [docs](../../docs/getting-started-guides/centos/centos_manual_config.html)       |             | Community(@coolsvap)         | Uses K8s v0.9.1
+AWS                  | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.html)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
+OpenStack/HPCloud    | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.html)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
+Joyent               | Juju         | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/juju.html)                              |             | [Community](https://github.com/whitmo/bundle-kubernetes) ( [@whit](https://github.com/whitmo), [@matt](https://github.com/mbruzek), [@chuck](https://github.com/chuckbutler) ) | [Tested](http://reports.vapour.ws/charm-tests-by-charm/kubernetes) K8s v0.8.1
+AWS                  | Saltstack    | Ubuntu | OVS         | [docs](../../docs/getting-started-guides/aws.html)                               |             | Community (@justinsb)        | Uses K8s version 0.5.0
+Vmware               | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/coreos.html)                            |             | Community (@kelseyhightower) | Uses K8s version 0.15.0
+Azure                | Saltstack    | Ubuntu | OpenVPN     | [docs](../../docs/getting-started-guides/azure.html)                             |             | Community                    |
+Bare-metal           | custom       | Ubuntu | flannel     | [docs](../../docs/getting-started-guides/ubuntu.html)                            |             | Community (@resouer @WIZARD-CXY)       | use k8s version 0.18.0
+Local                |              |        | _none_      | [docs](../../docs/getting-started-guides/locally.html)                           |             | Community (@preillyme)      |
+libvirt/KVM          | CoreOS       | CoreOS | libvirt/KVM | [docs](../../docs/getting-started-guides/libvirt-coreos.html)                    |             | Community (@lhuard1A)       |
+oVirt                |              |        |             | [docs](../../docs/getting-started-guides/ovirt.html)                             |             | Community (@simon3z)        |
+Rackspace            | CoreOS       | CoreOS | flannel     | [docs](../../docs/getting-started-guides/rackspace.html)                         |             | Community (@doublerr)       | use k8s version 0.18.0
 
-Don't see anything above that meets your needs?  See our [Getting Started from Scratch](../../docs/getting-started-guides/scratch.md) guide.
+Don't see anything above that meets your needs?  See our [Getting Started from Scratch](../../docs/getting-started-guides/scratch.html) guide.
 
 *Note*: The above table is ordered by version test/used in notes followed by support level.
 
@@ -51,7 +48,7 @@ Definition of columns:
   - **OS** is the base operating system of the nodes.
   - **Config. Mgmt** is the configuration management system that helps install and maintain kubernetes software on the
     nodes.
-  - **Networking** is what implements the [networking model](../../docs/networking.md).  Those with networking type
+  - **Networking** is what implements the [networking model](../../docs/networking.html).  Those with networking type
     _none_ may not support more than one node, or may support multiple VM nodes only in the same physical node.
   - **Conformance** indicates whether a cluster created with this configuration has passed the project's conformance
     tests. 
@@ -64,4 +61,4 @@ Definition of columns:
   - **Notes** is relevant information such as version k8s used.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/README.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/README.html?pixel)]()

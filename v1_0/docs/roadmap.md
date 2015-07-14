@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Kubernetes v1 
 
 Updated May 28, 2015
@@ -91,4 +94,4 @@ In terms of performance, the objectives include:
 - startup time at the 99%tile ([#3552](https://github.com/GoogleCloudPlatform/kubernetes/issues/3952))
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/roadmap.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/roadmap.html?pixel)]()

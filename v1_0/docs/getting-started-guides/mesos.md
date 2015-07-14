@@ -210,4 +210,4 @@ Future work will add instructions to this guide to enable support for Kubernetes
 [9]: ../../examples/
 [10]: http://open.mesosphere.com/getting-started/cloud/google/mesosphere/#vpn-setup
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/mesos.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/getting-started-guides/mesos.html?pixel)]()

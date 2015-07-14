@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 # Identifiers and Names in Kubernetes
 
 A summarization of the goals and recommendations for identifiers in Kubernetes.  Described in [GitHub issue #199](https://github.com/GoogleCloudPlatform/kubernetes/issues/199).
@@ -92,4 +95,4 @@ objectives.
       1. This may correspond to Docker's container ID.
 
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/identifiers.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/identifiers.html?pixel)]()

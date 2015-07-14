@@ -385,4 +385,4 @@ spec:
   restartPolicy: Never
 ```
 
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/expansion.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/expansion.html?pixel)]()
