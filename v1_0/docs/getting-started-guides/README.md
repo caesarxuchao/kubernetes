@@ -1,3 +1,6 @@
+---
+layout: docwithnav
+---
 If you are not sure what OSes and infrastructure is supported, the table below lists all the combinations which have
 been tested recently.
 
