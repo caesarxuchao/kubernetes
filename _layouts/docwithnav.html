@@ -15,7 +15,6 @@
 </div>
 {% include footer.html %}
 <script type="text/javascript">
-
 	$(function() {
 	    var menu_ul = $('.menu > li > ul'),
 	           menu_a  = $('.menu > li > a');
@@ -31,14 +30,13 @@
 	            $(this).next().stop(true,true).slideUp('normal');
 	        }
 	    });
+		window.addEventListener("popstate", function(e) {
+		        window.location.href = location.href
+		});
 	});
-	var aurl = window.location.pathname;
-	var $current = $('.menu li a[href="' + aurl + '"]');
-	$current.parents('submenu').addClass('active').slideToggle();
-	$current.next('submenu').slideToggle();	
-	window.addEventListener("popstate", function(e) {
-	        window.location.href = location.href
-	});
-	
+    $('.menu a').each(function(){
+		var that = $(this);
+		that[ that.attr( 'href' ) === window.location.href ? 'addClass' : 'removeClass' ]( 'active' );
+    });
 </script>
 
