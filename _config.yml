@@ -88,7 +88,10 @@ collections:
 # Page default settings
 defaults:
 -scope:
-      path:"_v1_0"
-      type:"pages"
+      path:"v1_0"
+values:
+    layout:"docwithnav"
+-scope:
+      path:"vHEAD"
 values:
     layout:"docwithnav"
