@@ -13,4 +13,4 @@ hero:
 {% include hero.html %}
 
 
-##### [View the current stable release here](/v1_0/index.html)
+##### [View the current stable release here]({{ site.url }}/v1_0/index.html)
