@@ -57,6 +57,8 @@ nav:
    slug: blog
    external: true
 
+include: [v1_0, vHEAD]
+
 # Footer links
 footer:
     connect: Connect With Us!
