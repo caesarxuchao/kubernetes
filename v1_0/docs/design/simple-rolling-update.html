@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Manage a cluster of Linux containers as a single system to accelerate Dev and simplify Ops with Kubernetes by Google.">
+  <meta name="viewport"
+   content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta property="og:title" content="Kubernetes by Google">
+  <meta property="og:site_name" content="Kubernetes by Google">
+  <meta property="og:description" content="Manage a cluster of Linux containers as a single system to accelerate Dev and simplify Ops with Kubernetes by Google.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://localhost:4000">
+  <meta property="og:image" content="http://localhost:4000/img/global/og_img.jpg">
+
+  <link rel="shortcut icon"
+   href="http://localhost:4000/img/global/favicon.png" type="image/vnd.microsoft.icon" />
+  <!-- apple device icons -->
+  <link rel="apple-touch-icon"
+   href="http://localhost:4000/img/global/apple_touch_icon_2X.jpg" />
+  <!-- end apple device icons -->
+  <link type="text/plain" rel="author" href="http://localhost:4000/humans.txt" />
+  <link rel="stylesheet" href="http://localhost:4000/css/main.css">
+  <link rel="canonical" href="http://localhost:4000/v1_0/docs/design/simple-rolling-update.html">
+  <title>Kubernetes by Google</title>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script>
+    if ( !window.jQuery ) {
+        document.write('<script src="http://localhost:4000/js/jquery-2.1.1.min.js"><\/script>');
+    }
+  </script>
+  <script type="text/javascript" src="http://localhost:4000/js/script.js"></script>
+  <script>
+    var trackOutboundLink=function(n){ga("send","event","outbound","click",n,{hitCallback:function(){document.location=n}})};
+  </script>
+ </head>
+ <body>
+<header id="nav" class="mobile-menu-slide">
+ <div class="container">
+  <div class="row hidden-sm hidden-xs">
+   <div class="col-xs-12">
+    <a href="http://localhost:4000/"><img src="http://localhost:4000/img/desktop/nav_logo.svg" alt="Kubernetes by Google" id="logo-desktop" /></a>
+    <nav>
+
+     <a href="http://localhost:4000/"  >
+      <div>
+       Home
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+     <a href="http://localhost:4000/gettingstarted"  >
+      <div>
+       Getting Started
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+     <a href="http://localhost:4000/v1_0"  >
+      <div>
+       Documentation
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+     <a href="http://localhost:4000/community"  >
+      <div>
+       Community
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+     <a href="http://localhost:4000/events"  >
+      <div>
+       Events
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+     <a href="http://kubernetesio.blogspot.com/"  onclick="trackOutboundLink('http://kubernetesio.blogspot.com/'); return false;">
+      <div>
+       Blog
+      </div>
+      <div class="underline">
+       &nbsp;
+      </div>
+     </a>
+
+    </nav>
+    <a href="javascript:;" class="back-to-top"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 17" enable-background="new 0 0 24 17" xml:space="preserve"><g><path fill="#FFFFFF" d="M21.8,15.7c-3.2-3.9-6.5-7.9-9.7-11.8c-3.2,3.9-6.5,7.9-9.7,11.8c-1.1,1.3-2.9-0.6-1.9-1.9 c3.5-4.3,7.1-8.6,10.6-13c0.4-0.5,1.4-0.5,1.9,0c3.5,4.3,7.1,8.6,10.6,13C24.7,15.1,22.8,17,21.8,15.7z"/></g></svg></a>
+   </div>
+  </div>
+ </div>
+ <div class="visible-sm-block visible-xs-block">
+    <a href="javascript:;" id="mobile-menu-button" class="mobile-menu-slide"><span></span></a>
+    <a href="javascript:;" class="back-to-top"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 17" enable-background="new 0 0 24 17" xml:space="preserve"><g><path fill="#FFFFFF" d="M21.8,15.7c-3.2-3.9-6.5-7.9-9.7-11.8c-3.2,3.9-6.5,7.9-9.7,11.8c-1.1,1.3-2.9-0.6-1.9-1.9 c3.5-4.3,7.1-8.6,10.6-13c0.4-0.5,1.4-0.5,1.9,0c3.5,4.3,7.1,8.6,10.6,13C24.7,15.1,22.8,17,21.8,15.7z"/></g></svg></a>
+ </div>
+</header>
+<div id="mobile-nav-container" class="visible-sm-block visible-xs-block mobile-menu-slide">
+
+  <a href="http://localhost:4000/"  >
+  <div></div>
+  <span>Home</span>
+ </a>
+
+  <a href="http://localhost:4000/gettingstarted"  >
+  <div></div>
+  <span>Getting Started</span>
+ </a>
+
+  <a href="http://localhost:4000/v1_0"  >
+  <div></div>
+  <span>Documentation</span>
+ </a>
+
+  <a href="http://localhost:4000/community"  >
+  <div></div>
+  <span>Community</span>
+ </a>
+
+  <a href="http://localhost:4000/events"  >
+  <div></div>
+  <span>Events</span>
+ </a>
+
+  <a href="http://kubernetesio.blogspot.com/"  onclick="trackOutboundLink('http://kubernetesio.blogspot.com/'); return false;">
+  <div></div>
+  <span>Blog</span>
+ </a>
+
+</div>
+<div>
+	<table>
+		<tr>
+			<td>
+				<div id="wrapper">
+					<!-- VERSION 1.0 -->
+		<ul class="menu">
+			<li class="version">
+				<a href="/v1_0" class="nav-link">Version 1.0</a>
+			</li>
+			<li class="navContainer">
+				<a href="/v1_0/README.html" class="nav-link">What is Kubernetes?</a>
+			</li><!-- 
+					GETTING STARTED
+					 -->
+			<li class="navContainer">Getting Started
+			</li><!-- <li>System Requirements 
+					</li>-->
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/getting-started-guides/README.html" class="nav-link">Installing Kubernetes</a> 
+				<ul class="submenu item10">
+					<li class="subitem1 navContainer">AWS
+					</li>
+							<li>
+								<a href="/v1_0/docs/getting-started-guides/aws.html" class="nav-link">AWS</a>
+							</li>
+							<li>
+								<a href="/v1_0/docs/getting-started-guides/coreos.html" class="nav-link">CoreOS</a>
+							</li>
+							<li>
+								<a href="/v1_0/docs/getting-started-guides/juju.html" class="nav-link">Juju</a>
+							</li>
+					<li class="navContainer">Azure
+					</li>
+							<li>
+								<a href="/v1_0/docs/getting-started-guides/coreos/azure/README.html" class="nav-link">CoreOS</a>
+							</li>
+							<li>
+								<a href="/v1_0/docs/getting-started-guides/azure.html" class="nav-link">SaltStack</a>
+							</li>
+					<li>Bare-metal
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/fedora/fedora_ansible_config.html" class="nav-link">Fedora - Ansible</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/fedora/fedora_manual_config.html" class="nav-link">Fedora</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/fedora/flannel_multi_node_cluster.html" class="nav-link">Fedora - flannel</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/centos/centos_manual_config.html" class="nav-link">CentOS</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/ubuntu.html" class="nav-link">Bare-metal</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/coreos/bare_metal_offline.html" class="nav-link">Bare-metal (Offline)</a>
+					</li>
+					<li>CloudStack
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/cloudstack.html" class="nav-link">CloudStack</a>
+					</li>
+					<li>Docker
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/docker.html" class="nav-link">Single Node</a>
+					</li>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/docker-multinode.html" class="nav-link">Multiple Nodes</a>
+					</li>
+					<li>Google Compute Engine
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/gce.html" class="nav-link">Google Compute Engine</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/coreos.html" class="nav-link">CoreOS</a>
+					</li>
+					<li>Google Container Engine
+					</li>
+					<li>
+						<a href="https://cloud.google.com/container-engine">Google Container Engine</a>
+					</li>
+					<li>Joyent
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/juju.html" class="nav-link">Joyent</a>
+					</li>
+					<li>KVM
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/fedora/flannel_multi_node_cluster.html" class="nav-link">Fedora - flannel</a>
+					</li>
+					<li>libvirt
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/fedora/flannel_multi_node_cluster.html" class="nav-link">Fedora - flannel</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/libvirt-coreos.html" class="nav-link">CoreOS</a>
+					</li>
+					<li>Local
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/locally.html" class="nav-link">Local</a>
+					</li>
+					<li>Mesosphere
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/mesos.html" class="nav-link">Google Compute Engine</a>
+					</li>
+					<li>OpenStack/HPCloud
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/juju.html" class="nav-link">Juju</a>
+					</li>
+					<li>oVirt
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/ovirt.html" class="nav-link">oVirt</a>
+					</li>
+					<li>Rackspace
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/rackspace.html" class="nav-link">Rackspace</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/rkt/README.html" class="nav-link">rkt</a>
+					</li>
+					<li>Vagrant
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/vagrant.html" class="nav-link">Vagrant</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/coreos.html" class="nav-link">CoreOS</a>
+					</li>
+					<li>Vmware
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/vsphere.html" class="nav-link">Vmware</a>
+					</li>
+					<li>
+						<a href="/v1_0/docs/getting-started-guides/coreos.html" class="nav-link">CoreOS</a>
+					</li>
+				</ul>
+			</li>
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Downloading Kubernetes</a>
+			</li>
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Next Steps Roadmap</a>
+			</li><!-- 
+				USERS GUIDE
+				 -->
+			<li class="navContainer">User's Guide
+			</li>
+			<li class="item20 navSubMenu">
+				<a href="/v1_0/docs/overview.html" class="nav-link">Overview and Concepts</a>
+		<ul class="submenu">
+			<li class="subitem1">
+				<a href="/v1_0/docs/design/architecture.html" class="nav-link">Architecture</a>
+			</li>
+			<li class="subitem2">
+				<a href="/v1_0/docs/cluster-admin-guide.html" class="nav-link">Clusters</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/node.html" class="nav-link">Nodes</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/pods.html" class="nav-link">Pods</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/labels.html" class="nav-link">Labels</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/replication-controller.html" class="nav-link">Replication Controller</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/services.html" class="nav-link">Services</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Containers</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/ui.html" class="nav-link">User Interface</a>
+			</li>
+		</ul>
+	</li>
+			<!-- 
+				CLUSTER ADMINISTRATION 
+				-->
+			<li class="navContainer navSubMenu">Cluster Administration
+			</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/cluster-admin-guide.html" class="nav-link">Administering Clusters</a>
+			</li>
+			<li class="item30 navSubMenu">
+				<a href="/v1_0/docs/design/README.html" class="nav-link">Planning and Designing</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="#" class="nav-link">Scheduler</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/design/security.html" class="nav-link">Security</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/design/access.html" class="nav-link">Access Management</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/admission_controllers.html" class="nav-link">Admission Controllers</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/authentication.html" class="nav-link">Authentication</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/design/namespaces.html" class="nav-link">Namespaces</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/networking.html" class="nav-link">Networking</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/availability.html" class="nav-link">High-Availability</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/resources.html" class="nav-link">Resources</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/roadmap.html" class="nav-link">Future Development</a>
+			</li>
+			</ul>
+		</li>
+			<li class="item40 navSubMenu">
+				<a href="/v1_0/docs/cluster_management.html" class="nav-link">Managing Clusters and Nodes</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="#" class="nav-link">Creating Clusters and Nodes</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Configuring Clusters</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/User-FAQ#how-do-i-change-the-size-of-my-cluster" class="nav-link">Changing Cluster Size</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/resource_quota_admin.html" class="nav-link">Setting Resource Quotas</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Setting Limits</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Sharing Clusters</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/logging.html" class="nav-link">Logging</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/networking.html" class="nav-link">Networking</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Viewing Clusters</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Upgrading Clusters</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Tearing Down Clusters</a>
+			</li>
+				</ul>
+			</li>
+			<li class="navSubMenu">
+				<a href="v1.0/cluster/addons/cluster-monitoring/README.html" class="nav-link">Monitoring Clusters</a>
+			</li>
+			<li class="item50 navSubMenu">
+				<a href="#" class="nav-link">Configuration Management</a>
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/docs/salt.html" class="nav-link">SaltStack</a>
+			</li>
+			<li>
+				<a href="/v1_0/cluster/saltbase/README.html" class="nav-link">SaltStack Configuration</a>
+			</li>
+				</ul>
+			</li>
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Container Image Registry</a>
+			</li><!-- 
+				APPLICATION ADMINISTRATION
+				 -->
+			<li class="navContainer navSubMenu">Application Administration
+			</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/pod-states.html" class="nav-link">Pod lifecycles</a>
+			</li>
+			<li class="item60 navSubMenu">
+				<a href="#" class="nav-link">Object and Data Identification</a>
+
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/docs/labels.html" class="nav-link">Labels</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/annotations.html" class="nav-link">Annotations</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/identifiers.html" class="nav-link">Names and UIDs</a>
+			</li>
+			</ul>
+		</li>
+		<li class="item70 navSubMenu">
+			<a href="#" class="nav-link">Managing Components</a>
+			<ul class="submenu">
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Pods</a>
+			
+		<ul class="submenu">
+			<li>Overview (+ prerequisites)
+			</li>
+			<li>Creating and Configuring Pods
+			</li>
+			<li>Viewing Pods
+			</li>
+			<li>Updating Pods
+			</li>
+			<li>Deleting Pods
+			</li>
+			<li>Whats next?
+			</li>
+			</ul>
+		</li>
+			<li class="item80 navSubMenu">
+				<a href="#" class="nav-link">Replication Controllers</a>
+			
+		<ul class="submenu">
+			<li>Overview (+ prerequisites)
+			</li>
+			<li>Creating and Configuring Replication Controllers
+			</li>
+			<li>Viewing Replication Controllers
+			</li>
+			<li>Updating Replication Controllers
+			</li>
+			<li>Scaling Replication Controllers
+			</li>
+			<li>
+				<a href="/v1_0/docs/design/simple-rolling-update.html" class="nav-link">Performing Rolling Updates</a>
+			</li>
+			<li>Deleting Replication Controllers
+			</li>
+			<li>Whats next?
+			</li>
+				</ul>
+			</li>
+			<li class="item90 navSubMenu">
+				<a href="/v1_0/docs/services.html" class="nav-link">Services</a>
+			
+		<ul class="submenu">
+			<li>Overview (+ prerequisites)
+			</li>
+			<li>Creating and Configuring Services
+			</li>
+			<li>Viewing Services
+			</li>
+			<li>Updating Services
+			</li>
+			<li>Deleting Services
+			</li>
+			<li>Whats next?
+			</li>
+				</ul>
+			</li>
+
+				</ul>
+			</li>
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Migrating APIs</a>
+			</li><!-- 
+				APPLICATION DEVELOPMENT
+				 -->
+			<li class="navContainer navSubMenu">Application Development
+			</li>
+			<li class="item100 navSubMenu">
+				<a href="/v1_0/docs/container-environment.html" class="nav-link">Container Environment</a>
+				
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/docs/containers.html" class="nav-link">Containers</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/images.html" class="nav-link">Images</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/User-FAQ#use-of-environment-variables-on-the-command-line" class="nav-link">Environment Variable</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/downward_api.html" class="nav-link">Downward API</a>
+			</li>
+				</ul>
+			</li>
+			<li class="navSubMenu">
+				<a href="#" class="nav-link">Docker Concepts</a>
+			</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/accessing-the-cluster.html" class="nav-link">Accessing Clusters and Services</a>
+			</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/volumes.html" class="nav-link">Volumes</a>
+			</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/docs/secrets.html" class="nav-link">Secrets</a>
+			</li><!-- 
+				SOLUTIONS
+				 -->
+			<li class="navContainer">Solutions
+			</li>
+			<li class="navSubMenu">
+				<a href="http://jeffmendoza.github.io/kubernetes/solutions/mesosphere.html" class="nav-link">Deploying a solution goes here</a>
+			</li><!-- 
+				TUTORIALS
+				 -->
+			<li class="navContainer">
+				<a href="#" class="nav-link">Tutorials</a>
+			</li>
+			<li class="item110 navSubMenu">
+				<a href="#" class="nav-link">Kubernetes Basics</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/walkthrough/README.html" class="nav-link">Kubernetes 101</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/walkthrough/k8s201.html" class="nav-link">Kubernetes 201</a>
+			</li>
+			</ul>
+		</li>
+			<li class="item120 navSubMenu">
+				<a href="#" class="nav-link">Deploying Clusters</a>
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/cassandra/README.html" class="nav-link">Apache Cassandra Database</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/spark/README.html" class="nav-link">Apache Spark</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/storm/README.html" class="nav-link">Apache Storm</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/celery-rabbitmq/README.html" class="nav-link">Distributed Task Queue</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/hazelcast/README.html" class="nav-link">Hazelcast</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/meteor/README.html" class="nav-link">Meteor Applications</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/redis/README.html" class="nav-link">Redis</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/rethinkdb/README.html" class="nav-link">RethinkDB</a>
+			</li>
+		</ul>
+	</li>
+			<li class="navSubMenu">
+				<a href="/v1_0/examples/mysql-wordpress-pd/README.html" class="nav-link">Persistent Images</a>
+			</li>
+			<li class="item120 navSubMenu">
+				<a href="#" class="nav-link">Multi-tier Applications</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/guestbook-go/README.html" class="nav-link">Guestbook - Go Server</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/guestbook/README.html" class="nav-link">GuestBook - PHP Server</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/phabricator/README.html" class="nav-link">MySQL - Phabricator Server</a>
+			</li>
+			</ul>
+		</li>
+			
+			<!-- 
+				EXAMPLES
+				 -->
+			<li class="navContainer">Examples
+			</li>
+			<li class="item140 navSubMenu">
+				<a href="#" class="nav-link">Cluster Setup and Configuration</a>
+		
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/simple-yaml.html" class="nav-link">Using Configuration Files</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/environment-guide/README.html" class="nav-link">Using Environment Variables</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/downward-api/README.html" class="nav-link">Using the Downward API</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/node-selection/README.html" class="nav-link">Assigning Pods to Nodes</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/kubectl-container/README.html" class="nav-link">Packaging kubectl into a Pod</a>
+			</li>
+			<li>Resource Control:
+			</li>
+			<li>
+				<a href="/v1_0/examples/kubernetes-namespaces/README.html" class="nav-link">Sharing through Namespaces</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/design/admission_control_limit_range.md#kubectl">Setting Limits in Pods</a>
+			</li>
+			<li>Networking:
+			</li>
+			<li>
+				<a href="/v1_0/examples/simple-nginx.html" class="nav-link">Creating Servers with Ext. IPs</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/cluster-dns/README.html" class="nav-link">Setting Up & Configuring DNS</a>
+			</li>
+			<li>Logging:
+			</li>
+			<li>
+				<a href="/v1_0/examples/logging-demo/README.html" class="nav-link">Configuring with Visualization</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/elasticsearch/README.html" class="nav-link">Deploying Elasticsearch</a>
+			</li>
+			<li>Security:
+			</li>
+			<li>
+				<a href="/v1_0/examples/openshift-origin/README.html" class="nav-link">Deploying OpenShift Origin</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/secrets/README.html" class="nav-link">Creating and Using Secrets</a>
+			</li>
+				<li>Storage Models
+				<li>
+					<a href="/v1_0/examples/persistent-volumes/README.html" class="nav-link">Persistent Volumes</a>
+				</li>
+				<li>
+					<a href="/v1_0/examples/rbd/README.html" class="nav-link">Ceph Volumes</a>
+				</li>
+				<li>
+					<a href="/v1_0/examples/glusterfs/README.html" class="nav-link">GlusterFS Volumes</a>
+				</li>
+				<li>
+					<a href="/v1_0/examples/iscsi/README.html" class="nav-link">iSCSI Volumes</a>
+				</li>
+				<li>
+					<a href="/v1_0/examples/nfs/README.html" class="nav-link">NFS Volumes</a>
+				</li>
+				<li>
+					<a href="#" class="nav-link">MongoDB Volumes</a>
+				</li>
+			</li>
+			</ul>
+		</li>
+			<li class="item150 navSubMenu">
+				<a href="#" class="nav-link">Test Loads, Health, & Pod Status</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/k8petstore/README.html" class="nav-link">Simulating Large Test Loads</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/liveness/README.html" class="nav-link">Checking if Pods are Healthy</a>
+			</li>
+			<li>
+				<a href="/v1_0/examples/explorer/README.html" class="nav-link">Creating Explorer Pods</a>
+			</li>
+			</ul>
+		</li>
+			<li class="item160 navSubMenu">
+				<a href="#" class="nav-link">Upgrading Pods and Clusters</a>
+				
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/examples/update-demo/README.html" class="nav-link">Updating Live Pods</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Upgrading Clusters</a>
+			</li>
+			</ul>
+		</li>
+			<!-- 
+				API REFERENCE
+				 -->
+			<li class="navContainer">API Reference
+			</li>
+			<li class="item170 navSubMenu">
+				<a href="/v1_0/docs/api.html" class="nav-link">API Basics</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/docs/client-libraries.html" class="nav-link">Client Libraries</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/authorization.html" class="nav-link">API Authorization</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/accessing_the_api.html" class="nav-link">Reaching the API</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/working_with_resources.html" class="nav-link">Working with Resources</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/api-conventions.html" class="nav-link">API Conventions</a>
+			</li>
+			</ul>
+		</li>
+			<li class="navSubMenu">
+				<a target="_blank" href="http://kubernetes.io/third_party/swagger-ui/" class="nav-link">Kubernetes API Reference</a>
+			</li><!-- 
+				CLI REFERENCE
+				 -->
+			<li class="navContainer">CLI Reference
+			</li>
+			<li class="item180 navSubMenu">
+				<a href="/v1_0/docs/kubectl.html" class="nav-link">kubectl Reference</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="/v1_0/docs/kubectl_api-versions.html" class="nav-link">kubectl api-versions</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_cluster-info.html" class="nav-link">kubectl cluster-info</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_config.html" class="nav-link">kubectl config</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_create.html" class="nav-link">kubectl create</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_delete.html" class="nav-link">kubectl delete</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_describe.html" class="nav-link">kubectl describe</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_exec.html" class="nav-link">kubectl exec</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_expose.html" class="nav-link">kubectl expose</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_get.html" class="nav-link">kubectl get</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_label.html" class="nav-link">kubectl label</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_logs.html" class="nav-link">kubectl logs</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_namespace.html" class="nav-link">kubectl namespace</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_port-forward.html" class="nav-link">kubectl port-forward</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_proxy.html" class="nav-link">kubectl proxy</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_rolling-update.html" class="nav-link">kubectl rolling-update</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_run.html" class="nav-link">kubectl run</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_scale.html" class="nav-link">kubectl scale</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_stop.html" class="nav-link">kubectl stop</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_update.html" class="nav-link">kubectl update</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/kubectl_version.html" class="nav-link">kubectl version</a>
+			</li>
+			</ul>
+		</li>
+			<li class="navContainer">Troubleshooting
+			</li>
+			<li class="item190 navSubMenu">
+				<a href="/v1_0/docs/troubleshooting.html" class="nav-link">Resolving Issues</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/User-FAQ#command-not-found" class="nav-link">Command Not Found</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ#checking-logs" class="nav-link">Checking Log Files</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ#etcd-contents" class="nav-link">Accessing etcd with etcdctl</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ" class="nav-link">Debugging FAQ page</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/application-troubleshooting.html" class="nav-link">Applications</a>
+			</li>
+			<li>
+				<a href="/v1_0/docs/cluster-troubleshooting.html" class="nav-link">Clusters</a>
+				<li>
+					Networking Resources Platforms and Operating Systems 
+				</li>
+				<li>
+					<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ#gce" class="nav-link">Google Compute Engine</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ#arch-linux" class="nav-link">Arch Linux</a>
+			</li>
+			</ul>
+		</li>
+			<!-- 
+				SUPPORT
+				 -->
+			<li class="item200 navContainer">
+				<a href="#" class="nav-link">Support</a>
+			
+		<ul class="submenu">
+			<li>
+				<a href="#" class="nav-link">Getting Help</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link">Esculating Security Issues</a>
+			</li>
+			<li>
+				<a href="http://kubernetes.io/community/" class="nav-link">Community</a>
+			</li>
+			<li>
+				<a href="/v1_0/contrib/recipes">Community Contriubted Solutions</a>
+			</li>
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/wiki/Media" class="nav-link">Presentation and Videos</a>
+			</li>
+			</ul>
+		</li>
+			<!-- 
+				RELEASE NOTES
+				 -->
+			<li>
+				<a href="https://github.com/GoogleCloudPlatform/kubernetes/releases" class="navContainer nav-link">Release Notes</a>
+			</li>
+			<li class="navContainer">
+				<a href="/v1_0/docs/glossary.html" class="nav-link">Glossary</a>
+			</li>
+		</ul>
+		<hr>
+		<ul>
+			<li>
+				<a href="/vHEAD" class="nav-link">Development HEAD (unstable)</a>
+			</li>
+		</ul>
+				</div>
+			</td>
+			<td>
+					<div id="doccontent">
+			<h2 id="simple-rolling-update">Simple rolling update</h2>
+<p>This is a lightweight design document for simple rolling update in <code>kubectl</code></p>
+
+<p>Complete execution flow can be found <a href="#execution-details">here</a>.</p>
+
+<h3 id="lightweight-rollout">Lightweight rollout</h3>
+<p>Assume that we have a current replication controller named <code>foo</code> and it is running image <code>image:v1</code></p>
+
+<p><code>kubectl rolling-update rc foo [foo-v2] --image=myimage:v2</code></p>
+
+<p>If the user doesn’t specify a name for the ‘next’ replication controller, then the ‘next’ replication controller is renamed to
+the name of the original replication controller.</p>
+
+<p>Obviously there is a race here, where if you kill the client between delete foo, and creating the new version of ‘foo’ you might be surprised about what is there, but I think that’s ok.
+See <a href="#recovery">Recovery</a> below</p>
+
+<p>If the user does specify a name for the ‘next’ replication controller, then the ‘next’ replication controller is retained with its existing name,
+and the old ‘foo’ replication controller is deleted.  For the purposes of the rollout, we add a unique-ifying label <code>kubernetes.io/deployment</code> to both the <code>foo</code> and <code>foo-next</code> replication controllers.
+The value of that label is the hash of the complete JSON representation of the<code>foo-next</code> or<code>foo</code> replication controller.  The name of this label can be overridden by the user with the <code>--deployment-label-key</code> flag.</p>
+
+<h4 id="recovery">Recovery</h4>
+<p>If a rollout fails or is terminated in the middle, it is important that the user be able to resume the roll out.
+To facilitate recovery in the case of a crash of the updating process itself, we add the following annotations to each replication controller in the <code>kubernetes.io/</code> annotation namespace:
+   * <code>desired-replicas</code> The desired number of replicas for this replication controller (either N or zero)
+   * <code>update-partner</code> A pointer to the replication controller resource that is the other half of this update (syntax <code>&lt;name&gt;</code> the namespace is assumed to be identical to the namespace of this replication controller.)</p>
+
+<p>Recovery is achieved by issuing the same command again:</p>
+
+<p><code>
+kubectl rolling-update rc foo [foo-v2] --image=myimage:v2
+</code></p>
+
+<p>Whenever the rolling update command executes, the kubectl client looks for replication controllers called <code>foo</code> and <code>foo-next</code>, if they exist, an attempt is
+made to roll <code>foo</code> to <code>foo-next</code>.  If <code>foo-next</code> does not exist, then it is created, and the rollout is a new rollout.  If <code>foo</code> doesn’t exist, then
+it is assumed that the rollout is nearly completed, and <code>foo-next</code> is renamed to <code>foo</code>.  Details of the execution flow are given below.</p>
+
+<h3 id="aborting-a-rollout">Aborting a rollout</h3>
+<p>Abort is assumed to want to reverse a rollout in progress.</p>
+
+<p><code>kubectl rolling-update rc foo [foo-v2] --rollback</code></p>
+
+<p>This is really just semantic sugar for:</p>
+
+<p><code>kubectl rolling-update rc foo-v2 foo</code></p>
+
+<p>With the added detail that it moves the <code>desired-replicas</code> annotation from <code>foo-v2</code> to <code>foo</code></p>
+
+<h3 id="execution-details">Execution Details</h3>
+
+<p>For the purposes of this example, assume that we are rolling from <code>foo</code> to <code>foo-next</code> where the only change is an image update from <code>v1</code> to <code>v2</code></p>
+
+<p>If the user doesn’t specify a <code>foo-next</code> name, then it is either discovered from the <code>update-partner</code> annotation on <code>foo</code>.  If that annotation doesn’t exist,
+then <code>foo-next</code> is synthesized using the pattern <code>&lt;controller-name&gt;-&lt;hash-of-next-controller-JSON&gt;</code></p>
+
+<h4 id="initialization">Initialization</h4>
+<ul>
+  <li>If <code>foo</code> and <code>foo-next</code> do not exist:
+    <ul>
+      <li>Exit, and indicate an error to the user, that the specified controller doesn’t exist.</li>
+    </ul>
+  </li>
+  <li>If <code>foo</code> exists, but <code>foo-next</code> does not:
+    <ul>
+      <li>Create <code>foo-next</code> populate it with the <code>v2</code> image, set <code>desired-replicas</code> to <code>foo.Spec.Replicas</code></li>
+      <li>Goto Rollout</li>
+    </ul>
+  </li>
+  <li>If <code>foo-next</code> exists, but <code>foo</code> does not:
+    <ul>
+      <li>Assume that we are in the rename phase.</li>
+      <li>Goto Rename</li>
+    </ul>
+  </li>
+  <li>If both <code>foo</code> and <code>foo-next</code> exist:
+    <ul>
+      <li>Assume that we are in a partial rollout</li>
+      <li>If <code>foo-next</code> is missing the <code>desired-replicas</code> annotation
+        <ul>
+          <li>Populate the <code>desired-replicas</code> annotation to <code>foo-next</code> using the current size of <code>foo</code></li>
+        </ul>
+      </li>
+      <li>Goto Rollout</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="rollout">Rollout</h4>
+<ul>
+  <li>While size of <code>foo-next</code> &lt; <code>desired-replicas</code> annotation on <code>foo-next</code>
+    <ul>
+      <li>increase size of <code>foo-next</code></li>
+      <li>if size of <code>foo</code> &gt; 0
+ decrease size of <code>foo</code></li>
+    </ul>
+  </li>
+  <li>Goto Rename</li>
+</ul>
+
+<h4 id="rename">Rename</h4>
+<ul>
+  <li>delete <code>foo</code></li>
+  <li>create <code>foo</code> that is identical to <code>foo-next</code></li>
+  <li>delete <code>foo-next</code></li>
+</ul>
+
+<h4 id="abort">Abort</h4>
+<ul>
+  <li>If <code>foo-next</code> doesn’t exist
+    <ul>
+      <li>Exit and indicate to the user that they may want to simply do a new rollout with the old version</li>
+    </ul>
+  </li>
+  <li>If <code>foo</code> doesn’t exist
+    <ul>
+      <li>Exit and indicate not found to the user</li>
+    </ul>
+  </li>
+  <li>Otherwise, <code>foo-next</code> and <code>foo</code> both exist
+    <ul>
+      <li>Set <code>desired-replicas</code> annotation on <code>foo</code> to match the annotation on <code>foo-next</code></li>
+      <li>Goto Rollout with <code>foo</code> and <code>foo-next</code> trading places.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><a href=""><img src="https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/design/simple-rolling-update.html?pixel" alt="Analytics" /></a></p>
+
+	</div>
+<script type="text/javascript">
+	$(function() {
+			 	$('.nav-link').click( function() {
+		        	var href = $(this).attr('href');
+					var containertest = href.indexOf('#');
+					history.pushState({}, null, href);
+					if(containertest == -1){
+						$('#doccontent').load(href + ' #doccontent');
+					}
+		        return false; // don't actually follow the link
+		     	});
+	});
+</script>
+
+			</td>
+		</tr>
+	</table>
+</div>
+<footer class="text-center">
+ <div class="container">
+  <div class="row">
+   <div class="col-xs-12">
+    <h5>
+     Connect With Us!
+    </h5>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-xs-12">
+    <div class="social">
+
+     <a href="http://stackoverflow.com/questions/tagged/kubernetes" class="stackoverflow" onclick="trackOutboundLink('http://stackoverflow.com/questions/tagged/kubernetes'); return false;"><span>stackoverflow</span></a>
+
+     <a href="https://twitter.com/googlecloud" class="twitter" onclick="trackOutboundLink('https://twitter.com/googlecloud'); return false;"><span>twitter</span></a>
+
+     <a href="https://plus.google.com/+googlecloudplatform" class="googleplus" onclick="trackOutboundLink('https://plus.google.com/+googlecloudplatform'); return false;"><span>googleplus</span></a>
+
+    </div>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-xs-12">
+
+    <a href="http://webchat.freenode.net/?channels=google-containers" onclick="trackOutboundLink('http://webchat.freenode.net/?channels=google-containers'); return false;">Freenode</a>
+     | 
+
+    <a href="https://groups.google.com/forum/#!forum/google-containers" onclick="trackOutboundLink('https://groups.google.com/forum/#!forum/google-containers'); return false;">Mailing List</a>
+    
+
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-xs-12">
+    <div class="copyright">
+     © Kubernetes 
+    </div>
+   </div>
+  </div>
+ </div>
+</footer>
+
+<!-- end of content -->
+<!-- responsive test blocks -->
+<div class="visible-xs-block"></div>
+<div class="visible-sm-block"></div>
+<div class="visible-md-block"></div>
+<div class="visible-lg-block"></div>
+<!-- end of responsive test blocks -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', '', 'auto');
+  ga('send', 'pageview');
+</script>
+ </body>
+</html>
+
+<script type="text/javascript">
+
+	$(function() {
+	    var menu_ul = $('.menu > li > ul'),
+	           menu_a  = $('.menu > li > a');
+	    menu_ul.hide();
+	    menu_a.click(function(e) {
+	        e.preventDefault();
+	        if(!$(this).hasClass('active')) {
+	            menu_a.removeClass('active');
+	            menu_ul.filter(':visible').slideUp('normal');
+	            $(this).addClass('active').next().stop(true,true).slideDown('normal');
+	        } else {
+	            $(this).removeClass('active');
+	            $(this).next().stop(true,true).slideUp('normal');
+	        }
+	    });
+	});
+	var aurl = window.location.pathname;
+	var $current = $('.menu li a[href="' + aurl + '"]');
+	$current.parents('submenu').addClass('active').slideToggle();
+	$current.next('submenu').slideToggle();	
+	window.addEventListener("popstate", function(e) {
+	        window.location.href = location.href
+	});
+	
+</script>
+
