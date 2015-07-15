@@ -35,7 +35,7 @@ ul, ul ul {
 	border-bottom: 1px solid #428BCB;
 }
 .menu > li > a:hover, .menu > li > a.active {
-
+	color: #428BCB;
 }
 .menu > li > a.active {
 	color: #428BCB;
@@ -78,4 +78,10 @@ ul, ul ul {
 
 .navSubMenu {
 	margin-left:.75em;
+}
+
+#doccontent {
+	img{
+		max-width: 100%;	
+	}
 }

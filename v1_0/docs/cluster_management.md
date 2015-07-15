@@ -46,6 +46,7 @@ replication controller, then a new copy of the pod will be started on a differen
 pods are replicated, upgrades can be done without special coordination.
 
 If you want more control over the upgrading process, you may use the following workflow:
+
   1. Mark the node to be rebooted as unschedulable:
     `kubectl replace nodes $NODENAME --patch='{"apiVersion": "v1", "spec": {"unschedulable": true}}'`. 
     This keeps new pods from landing on the node while you are trying to get them off.
