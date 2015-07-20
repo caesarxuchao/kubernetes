@@ -187,6 +187,7 @@ Definition of columns:
     tests for supporting the API and base features of Kubernetes v1.0.0.
 
   - Support Levels
+
     - **Project**:  Kubernetes Committers regularly use this configuration, so it usually works with the latest release
       of Kubernetes.
 

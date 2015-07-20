@@ -75,6 +75,7 @@ TODO: pluggability
 * Minimize the number of dependencies, particularly those required for steady-state operation.
 * Stratify the dependencies that remain via principled layering.
 * Break any circular dependencies by converting hard dependencies to soft dependencies.
+
   * Also accept that data from other components from another source, such as local files, which can then be manually populated at bootstrap time and then continuously updated once those other components are available.
   * State should be rediscoverable and/or reconstructable.
   * Make it easy to run temporary, bootstrap instances of all components in order to create the runtime state needed to run the components in the steady state; use a lock (master election for distributed components, file lock for local components like Kubelet) to coordinate handoff. We call this technique "pivoting".

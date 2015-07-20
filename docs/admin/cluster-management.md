@@ -83,6 +83,7 @@ If you want more control over the upgrading process, you may use the following w
     This keeps new pods from landing on the node while you are trying to get them off.
 
   1. Get the pods off the machine, via any of the following strategies:
+
     1. wait for finite-duration pods to complete
     1. delete pods with `kubectl delete pods $PODNAME`
     1. for pods with a replication controller, the pod will eventually be replaced by a new pod which will be scheduled to a new node. additionally, if the pod is part of a service, then clients will automatically be redirected to the new pod.

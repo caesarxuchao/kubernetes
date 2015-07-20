@@ -38,6 +38,7 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Kubernetes User Guide: Managing Applications: Configuring and launching containers](#kubernetes-user-guide-managing-applications-configuring-and-launching-containers)
+
   - [Configuration in Kubernetes](#configuration-in-kubernetes)
   - [Launching a container using a configuration file](#launching-a-container-using-a-configuration-file)
   - [Validating configuration](#validating-configuration)

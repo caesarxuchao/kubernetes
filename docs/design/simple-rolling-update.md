@@ -96,22 +96,28 @@ then `foo-next` is synthesized using the pattern `<controller-name>-<hash-of-nex
 #### Initialization
 
    * If `foo` and `foo-next` do not exist:
+
       * Exit, and indicate an error to the user, that the specified controller doesn't exist.
    * If `foo` exists, but `foo-next` does not:
+
       * Create `foo-next` populate it with the `v2` image, set `desired-replicas` to `foo.Spec.Replicas`
       * Goto Rollout
    * If `foo-next` exists, but `foo` does not:
+
       * Assume that we are in the rename phase.
       * Goto Rename
    * If both `foo` and `foo-next` exist:
+
       * Assume that we are in a partial rollout
       * If `foo-next` is missing the `desired-replicas` annotation
+
          * Populate the `desired-replicas` annotation to `foo-next` using the current size of `foo`
       * Goto Rollout
 
 #### Rollout
 
    * While size of `foo-next` < `desired-replicas` annotation on `foo-next`
+
       * increase size of `foo-next`
       * if size of `foo` > 0
          decrease size of `foo`
@@ -127,10 +133,13 @@ then `foo-next` is synthesized using the pattern `<controller-name>-<hash-of-nex
 #### Abort
 
    * If `foo-next` doesn't exist
+
       * Exit and indicate to the user that they may want to simply do a new rollout with the old version
    * If `foo` doesn't exist
+
       * Exit and indicate not found to the user
    * Otherwise, `foo-next` and `foo` both exist
+
       * Set `desired-replicas` annotation on `foo` to match the annotation on `foo-next`
       * Goto Rollout with `foo` and `foo-next` trading places.
 

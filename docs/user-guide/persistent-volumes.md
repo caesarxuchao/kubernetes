@@ -40,8 +40,10 @@ This document describes the current state of `PersistentVolumes` in Kubernetes. 
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Persistent Volumes and Claims](#persistent-volumes-and-claims)
+
   - [Introduction](#introduction)
   - [Lifecycle of a volume and claim](#lifecycle-of-a-volume-and-claim)
+
     - [Provisioning](#provisioning)
     - [Binding](#binding)
     - [Using](#using)
@@ -49,11 +51,13 @@ This document describes the current state of `PersistentVolumes` in Kubernetes. 
     - [Reclaiming](#reclaiming)
   - [Types of Persistent Volumes](#types-of-persistent-volumes)
   - [Persistent Volumes](#persistent-volumes)
+
     - [Capacity](#capacity)
     - [Access Modes](#access-modes)
     - [Recycling Policy](#recycling-policy)
     - [Phase](#phase)
   - [PersistentVolumeClaims](#persistentvolumeclaims)
+
     - [Access Modes](#access-modes)
     - [Resources](#resources)
   - [Claims As Volumes](#claims-as-volumes)

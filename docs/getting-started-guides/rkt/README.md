@@ -40,6 +40,7 @@ We still have [a bunch of work](https://github.com/GoogleCloudPlatform/kubernete
 ### **Prerequisite**
 
 - [systemd](http://www.freedesktop.org/wiki/Software/systemd/) should be installed on your machine and should be enabled. The minimum version required at this moment (2015/05/28) is [215](http://lists.freedesktop.org/archives/systemd-devel/2014-July/020903.html).
+
   *(Note that systemd is not required by rkt itself, we are using it here to monitor and manage the pods launched by kubelet.)*
 
 - Install the latest rkt release according to the instructions [here](https://github.com/coreos/rkt).

@@ -38,11 +38,14 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Kubernetes Container Environment](#kubernetes-container-environment)
+
   - [Overview](#overview)
   - [Cluster Information](#cluster-information)
+
     - [Container Information](#container-information)
     - [Cluster Information](#cluster-information)
   - [Container Hooks](#container-hooks)
+
     - [Hook Details](#hook-details)
     - [Hook Handler Execution](#hook-handler-execution)
     - [Hook delivery guarantees](#hook-delivery-guarantees)

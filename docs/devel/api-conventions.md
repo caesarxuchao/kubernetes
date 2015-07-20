@@ -44,10 +44,13 @@ using resources with kubectl can be found in (working_with_resources.md).*
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
   - [Types (Kinds)](#types-kinds)
+
     - [Resources](#resources)
     - [Objects](#objects)
+
       - [Metadata](#metadata)
       - [Spec and Status](#spec-and-status)
+
         - [Typical status properties](#typical-status-properties)
       - [References to related objects](#references-to-related-objects)
       - [Lists of named subobjects preferred over maps](#lists-of-named-subobjects-preferred-over-maps)
@@ -55,7 +58,9 @@ using resources with kubectl can be found in (working_with_resources.md).*
     - [Lists and Simple kinds](#lists-and-simple-kinds)
   - [Differing Representations](#differing-representations)
   - [Verbs on Resources](#verbs-on-resources)
+
     - [PATCH operations](#patch-operations)
+
       - [Strategic Merge Patch](#strategic-merge-patch)
     - [List Operations](#list-operations)
     - [Map Operations](#map-operations)
@@ -67,6 +72,7 @@ using resources with kubectl can be found in (working_with_resources.md).*
   - [Units](#units)
   - [Selecting Fields](#selecting-fields)
   - [HTTP Status codes](#http-status-codes)
+
       - [Success codes](#success-codes)
       - [Error codes](#error-codes)
   - [Response Status Kind](#response-status-kind)
@@ -82,6 +88,7 @@ The following terms are defined:
 
 * **Kind** the name of a particular object schema (e.g. the "Cat" and "Dog" kinds would have different attributes and properties)
 * **Resource** a representation of a system entity, sent or retrieved as JSON via HTTP to the server. Resources are exposed via:
+
   * Collections - a list of resources of the same type, which may be queryable
   * Elements - an individual resource, addressable via a URL
 
@@ -269,10 +276,13 @@ TODO: more documentation of Watch
 The API supports three different PATCH operations, determined by their corresponding Content-Type header:
 
 * JSON Patch, `Content-Type: application/json-patch+json`
+
  * As defined in [RFC6902](https://tools.ietf.org/html/rfc6902), a JSON Patch is a sequence of operations that are executed on the resource, e.g. `{"op": "add", "path": "/a/b/c", "value": [ "foo", "bar" ]}`. For more details on how to use JSON Patch, see the RFC.
 * Merge Patch, `Content-Type: application/merge-json-patch+json`
+
  * As defined in [RFC7386](https://tools.ietf.org/html/rfc7386), a Merge Patch is essentially a partial representation of the resource. The submitted JSON is "merged" with the current resource to create a new one, then the new one is saved. For more details on how to use Merge Patch, see the RFC.
 * Strategic Merge Patch, `Content-Type: application/strategic-merge-patch+json`
+
  * Strategic Merge Patch is a custom implementation of Merge Patch. For a detailed explanation of how it works and why it needed to be introduced, see below.
 
 #### Strategic Merge Patch
@@ -454,67 +464,94 @@ The following HTTP status codes may be returned by the API.
 #### Success codes
 
 * `200 StatusOK`
+
   * Indicates that the request completed successfully.
 * `201 StatusCreated`
+
   * Indicates that the request to create kind completed successfully.
 * `204 StatusNoContent`
+
   * Indicates that the request completed successfully, and the response contains no body.
   * Returned in response to HTTP OPTIONS requests.
 
 #### Error codes
 
 * `307 StatusTemporaryRedirect`
+
   * Indicates that the address for the requested resource has changed.
   * Suggested client recovery behavior
+
     * Follow the redirect.
 * `400 StatusBadRequest`
+
   * Indicates the requested is invalid.
   * Suggested client recovery behavior:
+
     * Do not retry. Fix the request.
 * `401 StatusUnauthorized`
+
   * Indicates that the server can be reached and understood the request, but refuses to take any further action, because the client must provide authorization. If the client has provided authorization, the server is indicating the provided authorization is unsuitable or invalid.
   * Suggested client recovery behavior
+
     * If the user has not supplied authorization information, prompt them for the appropriate credentials
     * If the user has supplied authorization information, inform them their credentials were rejected and optionally prompt them again.
 * `403 StatusForbidden`
+
   * Indicates that the server can be reached and understood the request, but refuses to take any further action, because it is configured to deny access for some reason to the requested resource by the client.
   * Suggested client recovery behavior
+
     * Do not retry. Fix the request.
 * `404 StatusNotFound`
+
   * Indicates that the requested resource does not exist.
   * Suggested client recovery behavior
+
     * Do not retry. Fix the request.
 * `405 StatusMethodNotAllowed`
+
   * Indicates that the action the client attempted to perform on the resource was not supported by the code.
   * Suggested client recovery behavior
+
     * Do not retry. Fix the request.
 * `409 StatusConflict`
+
   * Indicates that either the resource the client attempted to create already exists or the requested update operation cannot be completed due to a conflict.
   * Suggested client recovery behavior
   * * If creating a new resource
   *   * Either change the identifier and try again, or GET and compare the fields in the pre-existing object and issue a PUT/update to modify the existing object.
   * * If updating an existing resource:
+
       * See `Conflict` from the `status` response section below on how to retrieve more information about the nature of the conflict.
       * GET and compare the fields in the pre-existing object, merge changes (if still valid according to preconditions), and retry with the updated request (including `ResourceVersion`).
 * `422 StatusUnprocessableEntity`
+
   * Indicates that the requested create or update operation cannot be completed due to invalid data provided as part of the request.
   * Suggested client recovery behavior
+
     * Do not retry. Fix the request.
 * `429 StatusTooManyRequests`
+
   * Indicates that the either the client rate limit has been exceeded or the server has received more requests then it can process.
   * Suggested client recovery behavior:
+
     * Read the `Retry-After` HTTP header from the response, and wait at least that long before retrying.
 * `500 StatusInternalServerError`
+
   * Indicates that the server can be reached and understood the request, but either an unexpected internal error occurred and the outcome of the call is unknown, or the server cannot complete the action in a reasonable time (this maybe due to temporary server load or a transient communication issue with another server).
   * Suggested client recovery behavior:
+
     * Retry with exponential backoff.
 * `503 StatusServiceUnavailable`
+
   * Indicates that required service is unavailable.
   * Suggested client recovery behavior:
+
     * Retry with exponential backoff.
 * `504 StatusServerTimeout`
+
   * Indicates that the request could not be completed within the given time. Clients can get this response ONLY when they specified a timeout param in the request.
   * Suggested client recovery behavior:
+
     * Increase the value of the timeout param and retry with exponential backoff
 
 ## Response Status Kind
@@ -575,77 +612,110 @@ $ curl -v -k -H "Authorization: Bearer WhCDvq4VPpYhrcfmF6ei7V9qlbqTubUc" https:/
 Possible values for the `reason` and `details` fields:
 
 * `BadRequest`
+
   * Indicates that the request itself was invalid, because the request doesn't make any sense, for example deleting a read-only object.
   * This is different than `status reason` `Invalid` above which indicates that the API call could possibly succeed, but the data was invalid.
   * API calls that return BadRequest can never succeed.
   * Http status code: `400 StatusBadRequest`
 * `Unauthorized`
+
   * Indicates that the server can be reached and understood the request, but refuses to take any further action without the client providing appropriate authorization. If the client has provided authorization, this error indicates the provided credentials are insufficient or invalid.
   * Details (optional):
+
     * `kind string`
+
       * The kind attribute of the unauthorized resource (on some operations may differ from the requested resource).
     * `name string`
+
       * The identifier of the unauthorized resource.
    * HTTP status code: `401 StatusUnauthorized`
 * `Forbidden`
+
   * Indicates that the server can be reached and understood the request, but refuses to take any further action, because it is configured to deny access for some reason to the requested resource by the client.
   * Details (optional):
+
     * `kind string`
+
       * The kind attribute of the forbidden resource (on some operations may differ from the requested resource).
     * `name string`
+
       * The identifier of the forbidden resource.
 	 * HTTP status code: `403 StatusForbidden`
 * `NotFound`
+
   * Indicates that one or more resources required for this operation could not be found.
   * Details (optional):
+
     * `kind string`
+
       * The kind attribute of the missing resource (on some operations may differ from the requested resource).
     * `name string`
+
       * The identifier of the missing resource.
   * HTTP status code: `404 StatusNotFound`
 * `AlreadyExists`
+
   * Indicates that the resource you are creating already exists.
   * Details (optional):
+
     * `kind string`
+
       * The kind attribute of the conflicting resource.
     * `name string`
+
       * The identifier of the conflicting resource.
   * HTTP status code: `409 StatusConflict`
 * `Conflict`
+
   * Indicates that the requested update operation cannot be completed due to a conflict. The client may need to alter the request. Each resource may define custom details that indicate the nature of the conflict.
   * HTTP status code: `409 StatusConflict`
 * `Invalid`
+
   * Indicates that the requested create or update operation cannot be completed due to invalid data provided as part of the request.
   * Details (optional):
+
     * `kind string`
+
       * the kind attribute of the invalid resource
     * `name string`
+
       * the identifier of the invalid resource
     * `causes`
+
       * One or more `StatusCause` entries indicating the data in the provided resource that was invalid. The `reason`, `message`, and `field` attributes will be set.
   * HTTP status code: `422 StatusUnprocessableEntity`
 * `Timeout`
+
   * Indicates that the request could not be completed within the given time. Clients may receive this response if the server has decided to rate limit the client, or if the server is overloaded and cannot process the request at this time.
   * Http status code: `429 TooManyRequests`
   * The server should set the `Retry-After` HTTP header and return `retryAfterSeconds` in the details field of the object. A value of `0` is the default.
 * `ServerTimeout`
+
   * Indicates that the server can be reached and understood the request, but cannot complete the action in a reasonable time. This maybe due to temporary server load or a transient communication issue with another server.
+
     * Details (optional):
+
       * `kind string`
+
         * The kind attribute of the resource being acted on.
       * `name string`
+
         * The operation that is being attempted.
   * The server should set the `Retry-After` HTTP header and return `retryAfterSeconds` in the details field of the object. A value of `0` is the default.
   * Http status code: `504 StatusServerTimeout`
 * `MethodNotAllowed`
+
   * Indicates that the action the client attempted to perform on the resource was not supported by the code.
   * For instance, attempting to delete a resource that can only be created.
   * API calls that return MethodNotAllowed can never succeed.
   * Http status code: `405 StatusMethodNotAllowed`
 * `InternalError`
+
   * Indicates that an internal error occurred, it is unexpected and the outcome of the call is unknown.
   * Details (optional):
+
     * `causes`
+
       * The original error.
   * Http status code: `500 StatusInternalServerError`
 

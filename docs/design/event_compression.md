@@ -52,19 +52,24 @@ Event compression should be best effort (not guaranteed). Meaning, in the worst 
 Instead of a single Timestamp, each event object [contains](../../pkg/api/types.go#L1111) the following fields:
 
  * `FirstTimestamp util.Time` 
+
    * The date/time of the first occurrence of the event.
  * `LastTimestamp util.Time`
+
    * The date/time of the most recent occurrence of the event.
    * On first occurrence, this is equal to the FirstTimestamp.
  * `Count int`
+
    * The number of occurrences of this event between FirstTimestamp and LastTimestamp
    * On first occurrence, this is 1.
 
 Each binary that generates events:
 
  * Maintains a historical record of previously generated events:
+
    * Implemented with ["Least Recently Used Cache"](https://github.com/golang/groupcache/blob/master/lru/lru.go) in [`pkg/client/record/events_cache.go`](../../pkg/client/record/events_cache.go).
    * The key in the cache is generated from the event object minus timestamps/count/transient fields, specifically the following events fields are used to construct a unique key for an event:
+
      * `event.Source.Component`
      * `event.Source.Host`
      * `event.InvolvedObject.Kind`
@@ -76,16 +81,20 @@ Each binary that generates events:
      * `event.Message`
    * The LRU cache is capped at 4096 events. That means if a component (e.g. kubelet) runs for a long period of time and generates tons of unique events, the previously generated events cache will not grow unchecked in memory. Instead, after 4096 unique events are generated, the oldest events are evicted from the cache.
  * When an event is generated, the previously generated events cache is checked (see [`pkg/client/record/event.go`](../../pkg/client/record/event.go)).
+
    * If the key for the new event matches the key for a previously generated event (meaning all of the above fields match between the new event and some previously generated event), then the event is considered to be a duplicate and the existing event entry is updated in etcd:
+
      * The new PUT (update) event API is called to update the existing event entry in etcd with the new last seen timestamp and count.
      * The event is also updated in the previously generated events cache with an incremented count, updated last seen timestamp, name, and new resource version (all required to issue a future event update).
    * If the key for the new event does not match the key for any previously generated event (meaning none of the above fields match between the new event and any previously generated events), then the event is considered to be new/unique and a new event entry is created in etcd:
+
      * The usual POST/create event API is called to create a new event entry in etcd.
      * An entry for the event is also added to the previously generated events cache.
 
 ## Issues/Risks
 
  * Compression is not guaranteed, because each component keeps track of event history in memory
+
    * An application restart causes event history to be cleared, meaning event history is not preserved across application restarts and compression will not occur across component restarts.
    * Because an LRU cache is used to keep track of previously generated events, if too many unique events are generated, old events will be evicted from the cache, so events will only be compressed until they age out of the events cache, at which point any new instance of the event will cause a new entry to be created in etcd.
 

@@ -44,6 +44,7 @@ Running kubernetes with Vagrant (and VirtualBox) is an easy way to run/test/deve
 - [Authenticating with your master](#authenticating-with-your-master)
 - [Running containers](#running-containers)
 - [Troubleshooting](#troubleshooting)
+
     - [I keep downloading the same (large) box all the time!](#i-keep-downloading-the-same-large-box-all-the-time)
     - [I just created the cluster, but I am getting authorization errors!](#i-just-created-the-cluster-but-i-am-getting-authorization-errors)
     - [I just created the cluster, but I do not see my container running!](#i-just-created-the-cluster-but-i-do-not-see-my-container-running)

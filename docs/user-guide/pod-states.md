@@ -93,47 +93,59 @@ If a node dies or is disconnected from the rest of the cluster, some entity with
 ## Examples
 
    * Pod is `Running`, 1 container, container exits success
+
      * Log completion event
      * If RestartPolicy is:
+
        * Always: restart container, pod stays `Running`
        * OnFailure: pod becomes `Succeeded`
        * Never: pod becomes `Succeeded`
 
    * Pod is `Running`, 1 container, container exits failure
+
      * Log failure event
      * If RestartPolicy is:
+
        * Always: restart container, pod stays `Running`
        * OnFailure: restart container, pod stays `Running`
        * Never: pod becomes `Failed`
 
    * Pod is `Running`, 2 containers, container 1 exits failure
+
      * Log failure event
      * If RestartPolicy is:
+
        * Always: restart container, pod stays `Running`
        * OnFailure: restart container, pod stays `Running`
        * Never: pod stays `Running`
      * When container 2 exits...
+
        * Log failure event
        * If RestartPolicy is:
+
          * Always: restart container, pod stays `Running`
          * OnFailure: restart container, pod stays `Running`
          * Never: pod becomes `Failed`
 
    * Pod is `Running`, container becomes OOM
+
      * Container terminates in failure
      * Log OOM event
      * If RestartPolicy is:
+
        * Always: restart container, pod stays `Running`
        * OnFailure: restart container, pod stays `Running`
        * Never: log failure event, pod becomes `Failed`
 
    * Pod is `Running`, a disk dies
+
      * All containers are killed
      * Log appropriate event
      * Pod becomes `Failed`
      * If running under a controller, pod will be recreated elsewhere
 
    * Pod is `Running`, its node is segmented out
+
      * NodeController waits for timeout
      * NodeController marks pod `Failed`
      * If running under a controller, pod will be recreated elsewhere

@@ -99,10 +99,12 @@ These guidelines say *what* to do.  See the Rationale section for *why*.
     This mean writing scripts in `cluster/$IAAS_NAME`.
 
   - all commits to the tip of this repo need to not break any of the development distros
+
     - the author of the change is responsible for making changes necessary on all the cloud-providers if the
       change affects any of them, and reverting the change if it breaks any of the CIs.
 
   - a development distro needs to have an organization which owns it.  This organization needs to: 
+
     - Setting up and maintaining Continuous Integration that runs e2e frequently (multiple times per day) against the
       Distro at head,  and which notifies all devs of breakage.
 

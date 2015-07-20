@@ -64,6 +64,7 @@ A request has 4 attributes that can be considered for authorization:
   - user (the user-string which a user was authenticated as).
   - whether the request is readonly (GETs are readonly)
   - what resource is being accessed 
+
     - applies only to the API endpoints, such as 
         `/api/v1/namespaces/default/pods`.  For miscellaneous endpoints, like `/version`, the
         resource is the empty string.

@@ -42,14 +42,18 @@ This is *not* a guide for people who want to debug their cluster.  For that you 
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Application Troubleshooting](#application-troubleshooting)
+
   - [FAQ](#faq)
   - [Diagnosing the problem](#diagnosing-the-problem)
+
     - [Debugging Pods](#debugging-pods)
+
       - [My pod stays pending](#my-pod-stays-pending)
       - [My pod stays waiting](#my-pod-stays-waiting)
       - [My pod is crashing or otherwise unhealthy](#my-pod-is-crashing-or-otherwise-unhealthy)
     - [Debugging Replication Controllers](#debugging-replication-controllers)
     - [Debugging Services](#debugging-services)
+
       - [My service is missing endpoints](#my-service-is-missing-endpoints)
       - [Network traffic is not forwarded](#network-traffic-is-not-forwarded)
       - [More information](#more-information)

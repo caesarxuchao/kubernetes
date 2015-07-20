@@ -123,6 +123,7 @@ make this distinction.
 The distinction is useful for a number of reasons:
 
   - the requirements for humans and automated processes are different:
+
     - Humans need a wide range of capabilities to do their daily activities. Automated processes often have more narrowly-defined activities.
     - Humans may better tolerate the exceptional conditions created by expiration of a token.  Remembering to handle
       this in a program is more annoying.  So, either long-lasting credentials or automated rotation of credentials is
@@ -132,6 +133,7 @@ The distinction is useful for a number of reasons:
       management.  A VM with a role/service-account can have its credentials automatically managed.
 
   - the identity of a Pod cannot in general be mapped to a single human.
+
     - If policy allows, it may be created by one human, and then updated by another, and another, until its behavior cannot be attributed to a single human.
 
 **TODO**: consider getting rid of separate serviceAccount object and just rolling its parts into the SecurityContext or

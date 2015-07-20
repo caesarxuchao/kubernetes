@@ -42,11 +42,14 @@ In order for the kubectl usage examples to work, make sure you have an examples 
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Kubernetes 101 - Kubectl CLI and Pods](#kubernetes-101---kubectl-cli-and-pods)
+
   - [Kubectl CLI](#kubectl-cli)
   - [Pods](#pods)
+
       - [Pod Definition](#pod-definition)
       - [Pod Management](#pod-management)
       - [Volumes](#volumes)
+
         - [Volume Types](#volume-types)
       - [Multiple Containers](#multiple-containers)
   - [What's Next?](#whats-next)

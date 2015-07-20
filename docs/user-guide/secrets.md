@@ -43,21 +43,26 @@ a docker image. See [Secrets design document](../design/secrets.md) for more inf
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Secrets](#secrets)
+
   - [Overview of Secrets](#overview-of-secrets)
+
     - [Service Accounts Automatically Create and Use Secrets with API Credentials](#service-accounts-automatically-create-and-use-secrets-with-api-credentials)
     - [Creating a Secret Manually](#creating-a-secret-manually)
     - [Manually specifying a Secret to be Mounted on a Pod](#manually-specifying-a-secret-to-be-mounted-on-a-pod)
     - [Manually specifying an imagePullSecret](#manually-specifying-an-imagepullsecret)
     - [Automatic use of Manually Created Secrets](#automatic-use-of-manually-created-secrets)
   - [Details](#details)
+
     - [Restrictions](#restrictions)
     - [Consuming Secret Values](#consuming-secret-values)
     - [Secret and Pod Lifetime interaction](#secret-and-pod-lifetime-interaction)
   - [Use cases](#use-cases)
+
     - [Use-Case: Pod with ssh keys](#use-case-pod-with-ssh-keys)
     - [Use-Case: Pods with prod / test credentials](#use-case-pods-with-prod--test-credentials)
     - [Use-case: Secret visible to one container in a pod](#use-case-secret-visible-to-one-container-in-a-pod)
   - [Security Properties](#security-properties)
+
     - [Protections](#protections)
     - [Risks](#risks)
 

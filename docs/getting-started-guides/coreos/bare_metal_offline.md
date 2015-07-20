@@ -46,6 +46,7 @@ Deploy a CoreOS running Kubernetes environment. This particular guild is made to
 - [DHCP configuration](#dhcp-configuration)
 - [Kubernetes](#kubernetes)
 - [Cloud Configs](#cloud-configs)
+
     - [master.yml](#masteryml)
     - [node.yml](#nodeyml)
 - [New pxelinux.cfg file](#new-pxelinuxcfg-file)
@@ -62,6 +63,7 @@ Deploy a CoreOS running Kubernetes environment. This particular guild is made to
 ## High Level Design
 
 1. Manage the tftp directory 
+
   * /tftpboot/(coreos)(centos)(RHEL)
   * /tftpboot/pxelinux.0/(MAC) -> linked to Linux image config file
 2. Update per install the link for pxelinux
@@ -131,6 +133,7 @@ Now you should have a working PXELINUX setup to image CoreOS nodes. You can veri
 This section describes how to setup the CoreOS images to live alongside a pre-existing PXELINUX environment. 
 
 1. Find or create the TFTP root directory that everything will be based off of.
+
     * For this document we will assume `/tftpboot/` is our root directory.
 2. Once we know and have our tftp root directory we will create a new directory structure for our CoreOS images.
 3. Download the CoreOS PXE files provided by the CoreOS team.

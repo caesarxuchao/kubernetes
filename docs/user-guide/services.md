@@ -38,23 +38,29 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Services in Kubernetes](#services-in-kubernetes)
+
   - [Overview](#overview)
   - [Defining a service](#defining-a-service)
+
     - [Services without selectors](#services-without-selectors)
   - [Virtual IPs and service proxies](#virtual-ips-and-service-proxies)
   - [Multi-Port Services](#multi-port-services)
   - [Choosing your own IP address](#choosing-your-own-ip-address)
+
     - [Why not use round-robin DNS?](#why-not-use-round-robin-dns)
   - [Discovering services](#discovering-services)
+
     - [Environment variables](#environment-variables)
     - [DNS](#dns)
   - [Headless services](#headless-services)
   - [External services](#external-services)
+
     - [Type = NodePort](#type--nodeport)
     - [Type = LoadBalancer](#type--loadbalancer)
   - [Shortcomings](#shortcomings)
   - [Future work](#future-work)
   - [The gory details of virtual IPs](#the-gory-details-of-virtual-ips)
+
     - [Avoiding collisions](#avoiding-collisions)
     - [IPs and VIPs](#ips-and-vips)
 

@@ -38,16 +38,20 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Node](#node)
+
   - [What is a node?](#what-is-a-node)
   - [Node Status](#node-status)
+
     - [Node Addresses](#node-addresses)
     - [Node Phase](#node-phase)
     - [Node Condition](#node-condition)
     - [Node Capacity](#node-capacity)
     - [Node Info](#node-info)
   - [Node Management](#node-management)
+
     - [Node Controller](#node-controller)
     - [Self-Registration of nodes](#self-registration-of-nodes)
+
       - [Manual Node Administration](#manual-node-administration)
     - [Node capacity](#node-capacity)
 

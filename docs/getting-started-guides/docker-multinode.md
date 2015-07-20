@@ -47,6 +47,7 @@ Please install Docker 1.6.2 or wait for Docker 1.7.1.
 
 - [Prerequisites](#prerequisites)
 - [Overview](#overview)
+
   - [Bootstrap Docker](#bootstrap-docker)
 - [Master Node](#master-node)
 - [Adding a worker node](#adding-a-worker-node)

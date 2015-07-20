@@ -38,6 +38,7 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Kubernetes User Guide: Managing Applications](#kubernetes-user-guide-managing-applications)
+
   - [Quick walkthrough](#quick-walkthrough)
   - [Thorough walkthrough](#thorough-walkthrough)
   - [Concept guide](#concept-guide)
@@ -65,6 +66,7 @@ If you don't have much familiarity with Kubernetes, we recommend you read the fo
 1. [Working with containers in production](production-pods.md)
 1. [Managing deployments](managing-deployments.md)
 1. [Application introspection and debugging](introspection-and-debugging.md)
+
     1. [Using the Kubernetes web user interface](ui.md)
     1. [Logging](logging.md)
     1. [Monitoring](monitoring.md)
@@ -116,9 +118,11 @@ If you don't have much familiarity with Kubernetes, we recommend you read the fo
 ## Further reading
 
 * API resources
+
   * [Working with resources](working-with-resources.md)
 
 * Pods and containers
+
   * [Pod lifecycle and restart policies](pod-states.md)
   * [Lifecycle hooks](container-environment.md)
   * [Compute resources, such as cpu and memory](compute-resources.md)

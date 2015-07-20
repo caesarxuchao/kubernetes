@@ -47,14 +47,18 @@ Familiarity with [pods](pods.md) is suggested.
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Volumes](#volumes)
+
   - [Background](#background)
   - [Types of Volumes](#types-of-volumes)
+
     - [emptyDir](#emptydir)
     - [hostPath](#hostpath)
     - [gcePersistentDisk](#gcepersistentdisk)
+
       - [Creating a PD](#creating-a-pd)
       - [Example pod](#example-pod)
     - [awsElasticBlockStore](#awselasticblockstore)
+
       - [Creating an EBS volume](#creating-an-ebs-volume)
       - [AWS EBS Example configuration](#aws-ebs-example-configuration)
     - [nfs](#nfs)

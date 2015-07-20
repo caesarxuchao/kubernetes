@@ -39,9 +39,11 @@ Getting started on AWS EC2
 
 - [Prerequisites](#prerequisites)
 - [Cluster turnup](#cluster-turnup)
+
     - [Supported procedure: `get-kube`](#supported-procedure-get-kube)
     - [Alternatives](#alternatives)
 - [Getting started with your cluster](#getting-started-with-your-cluster)
+
     - [Command line administration tool: `kubectl`](#command-line-administration-tool-kubectl)
     - [Examples](#examples)
 - [Tearing down the cluster](#tearing-down-the-cluster)

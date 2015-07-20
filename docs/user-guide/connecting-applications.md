@@ -39,9 +39,11 @@ Documentation for other releases can be found at
 
 - [Kubernetes User Guide: Managing Applications: Connecting applications](#kubernetes-user-guide-managing-applications-connecting-applications)
 - [The Kubernetes model for connecting containers](#the-kubernetes-model-for-connecting-containers)
+
   - [Exposing pods to the cluster](#exposing-pods-to-the-cluster)
   - [Creating a Service](#creating-a-service)
   - [Accessing the Service](#accessing-the-service)
+
     - [Environment Variables](#environment-variables)
     - [DNS](#dns)
   - [Securing the Service](#securing-the-service)

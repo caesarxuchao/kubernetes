@@ -78,6 +78,7 @@ K8s User assets:
 
   - External User assets of each K8s User
   - things private to the K8s app, like:
+
     - credentials for accessing other services (docker private repos, storage services, facebook, etc)
     - SSL certificates for web servers
     - proprietary data and code
@@ -96,6 +97,7 @@ Cluster in Small organization:
 
    - K8s Admins may be the same people as K8s Users.
    - few K8s Admins.
+
     - prefer ease of use to fine-grained access control/precise accounting, etc.
  - Product requirement that it be easy for potential K8s Cluster Admin to try out setting up a simple cluster.
 
@@ -226,6 +228,7 @@ Goals for K8s authentication:
 
 - Include a built-in authentication system with no configuration required to use in single-user mode, and little configuration required to add several user accounts, and no https proxy required.
 - Allow for authentication to be handled by a system external to Kubernetes, to allow integration with existing to enterprise authorization systems.  The kubernetes namespace itself should avoid taking contributions of multiple authorization schemes.  Instead, a trusted proxy in front of the apiserver can be used to authenticate users.
+
   - For organizations whose security requirements only allow FIPS compliant implementations (e.g. apache) for authentication.
   - So the proxy can terminate SSL, and isolate the CA-signed certificate from less trusted, higher-touch APIserver.
   - For organizations that already have existing SaaS web services (e.g. storage, VMs) and want a common authentication portal.
@@ -252,6 +255,7 @@ To be considered for subsequent versions:
 - Fuller use of OAuth (http://tools.ietf.org/html/rfc6749)
 - Scoped tokens.
 - Tokens that are bound to the channel between the client and the api server
+
      - http://www.ietf.org/proceedings/90/slides/slides-90-uta-0.pdf
      - http://www.browserauth.net
 

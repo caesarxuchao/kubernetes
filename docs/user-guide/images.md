@@ -44,8 +44,10 @@ The `image` property of a container supports the same syntax as the `docker` com
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Images](#images)
+
   - [Updating Images](#updating-images)
   - [Using a Private Registry](#using-a-private-registry)
+
     - [Using Google Container Registry](#using-google-container-registry)
     - [Configuring Nodes to Authenticate to a Private Repository](#configuring-nodes-to-authenticate-to-a-private-repository)
     - [Pre-pulling Images](#pre-pulling-images)
@@ -67,16 +69,20 @@ Private registries may require keys to read images from them.
 Credentials can be provided in several ways:
 
   - Using Google Container Registry
+
     - Per-cluster
     - automatically configured on Google Compute Engine or Google Container Engine
     - all pods can read the project's private registry
   - Configuring Nodes to Authenticate to a Private Registry 
+
     - all pods can read any configured private registries
     - requires node configuration by cluster administrator
   - Pre-pulling Images
+
     - all pods can use any images cached on a node
     - requires root access to all nodes to setup
   - Specifying ImagePullSecrets on a Pod
+
     - only pods which provide own keys can access the private registry
 Each option is described in more detail below.
   
@@ -113,8 +119,10 @@ example, run these on your desktop/laptop:
    1. run `docker login [server]` for each set of credentials you want to use.
    1. view `$HOME/.dockercfg` in an editor to ensure it contains just the credentials you want to use.
    1. get a list of your nodes 
+
       - for example: `nodes=$(kubectl get nodes -o template --template='{{range.items}}{{.metadata.name}} {{end}}')`
    1. copy your local `.dockercfg` to the home directory of root on each node.
+
       - for example: `for n in $nodes; do scp ~/.dockercfg root@$n:/root/.dockercfg; done`
 
 Verify by creating a pod that uses a private image, e.g.:
@@ -261,24 +269,31 @@ There are a number of solutions for configuring private registries.  Here are so
 common use cases and suggested solutions.
 
  1. Cluster running only non-proprietary (e.g open-source) images.  No need to hide images.
+
    - Use public images on the Docker hub.
+
      - no configuration required
      - on GCE/GKE, a local mirror is automatically used for improved speed and availability
  1. Cluster running some proprietary images which should be hidden to those outside the company, but
    visible to all cluster users.
 
    - Use a hosted private [Docker registry](https://docs.docker.com/registry/)
+
      - may be hosted on the [Docker Hub](https://hub.docker.com/account/signup/), or elsewhere.
      - manually configure .dockercfg on each node as described above
    - Or, run an internal private registry behind your firewall with open read access.
+
      - no kubernetes configuration required
    - Or, when on GCE/GKE, use the project's Google Container Registry.
+
      - will work better with cluster autoscaling than manual node configuration
    - Or, on a cluster where changing the node configuration is inconvenient, use `imagePullSecrets`.
   1. Cluster with a proprietary images, a few of which require stricter access control
+
      - Move sensitive data into a "Secret" resource, instead of packaging it in an image.
      - DO NOT use imagePullSecrets for this use case yet.
   1. A multi-tenant cluster where each tenant needs own private registry
+
      - NOT supported yet.
 
 

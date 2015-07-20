@@ -42,6 +42,7 @@ services has been deployed.
 **Table of Contents**
 
 - [Prerequisites](#prerequisites)
+
    - [On Ubuntu](#on-ubuntu)
    - [With Docker](#with-docker)
 - [Launch Kubernetes cluster](#launch-kubernetes-cluster)
@@ -51,6 +52,7 @@ services has been deployed.
 - [Launch the "k8petstore" example app](#launch-the-k8petstore-example-app)
 - [Tear down cluster](#tear-down-cluster)
 - [More Info](#more-info)
+
     - [Cloud compatibility](#cloud-compatibility)
 
 
@@ -116,9 +118,11 @@ Juju status provides information about each unit in the cluster:
     juju status --format=oneline
 
     - docker/0: 52.4.92.78 (started)
+
       - flannel-docker/0: 52.4.92.78 (started)
       - kubernetes/0: 52.4.92.78 (started)
     - docker/1: 52.6.104.142 (started)
+
       - flannel-docker/1: 52.6.104.142 (started)
       - kubernetes/1: 52.6.104.142 (started)
     - etcd/0: 52.5.216.210 (started) 4001/tcp
@@ -235,6 +239,7 @@ or
 Kubernetes Bundle on Github
 
  - [Bundle Repository](https://github.com/whitmo/bundle-kubernetes)
+
    * [Kubernetes master charm](https://github.com/whitmo/charm-kubernetes-master)
    * [Kubernetes node charm](https://github.com/whitmo/charm-kubernetes)
  - [Bundle Documentation](http://whitmo.github.io/bundle-kubernetes)

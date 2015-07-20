@@ -42,11 +42,13 @@ Getting started on Google Compute Engine
 - [Starting a cluster](#starting-a-cluster)
 - [Installing the kubernetes command line tools on your workstation](#installing-the-kubernetes-command-line-tools-on-your-workstation)
 - [Getting started with your cluster](#getting-started-with-your-cluster)
+
     - [Inspect your cluster](#inspect-your-cluster)
     - [Run some examples](#run-some-examples)
 - [Tearing down the cluster](#tearing-down-the-cluster)
 - [Customizing](#customizing)
 - [Troubleshooting](#troubleshooting)
+
     - [Project settings](#project-settings)
     - [Cluster initialization hang](#cluster-initialization-hang)
     - [SSH](#ssh)

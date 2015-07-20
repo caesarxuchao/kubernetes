@@ -51,6 +51,7 @@ there is one of these running on a single kubernetes-master node.
 By default the Kubernetes APIserver serves HTTP on 2 ports:
 
   1. Localhost Port
+
     - serves HTTP
     - default is port 8080, change with `--insecure-port` flag.
     - defaults IP is localhost, change with `--insecure-bind-address` flag.

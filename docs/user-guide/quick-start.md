@@ -38,6 +38,7 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Kubernetes User Guide: Managing Applications: Quick start](#kubernetes-user-guide-managing-applications-quick-start)
+
   - [Launching a simple application](#launching-a-simple-application)
   - [Exposing your application to the Internet](#exposing-your-application-to-the-internet)
   - [Killing the application](#killing-the-application)

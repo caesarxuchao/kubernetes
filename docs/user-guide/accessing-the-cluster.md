@@ -38,17 +38,23 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [User Guide to Accessing the Cluster](#user-guide-to-accessing-the-cluster)
+
   - [Accessing the cluster API](#accessing-the-cluster-api)
+
     - [Accessing for the first time with kubectl](#accessing-for-the-first-time-with-kubectl)
     - [Directly accessing the REST API](#directly-accessing-the-rest-api)
+
       - [Using kubectl proxy](#using-kubectl-proxy)
       - [Without kubectl proxy](#without-kubectl-proxy)
     - [Programmatic access to the API](#programmatic-access-to-the-api)
     - [Accessing the API from a Pod](#accessing-the-api-from-a-pod)
   - [Accessing services running on the cluster](#accessing-services-running-on-the-cluster)
+
     - [Ways to connect](#ways-to-connect)
     - [Discovering builtin services](#discovering-builtin-services)
+
       - [Manually constructing apiserver proxy URLs](#manually-constructing-apiserver-proxy-urls)
+
         - [Examples](#examples)
       - [Using web browsers to access services running on the cluster](#using-web-browsers-to-access-services-running-on-the-cluster)
   - [Requesting redirects](#requesting-redirects)
@@ -84,12 +90,14 @@ If you want to directly access the REST API with an http client like
 curl or wget, or a browser, there are several ways to locate and authenticate:
 
   - Run kubectl in proxy mode.
+
     - Recommended approach.
     - Uses stored apiserver location.
     - Verifies identity of apiserver using self-signed cert.  No MITM possible.
     - Authenticates to apiserver.
     - In future, may do intelligent client-side load-balancing and failover.
   - Provide the location and credentials directly to the http client.
+
     - Alternate approach.
     - Works with some types of client code that are confused by using a proxy.
     - Need to import a root cert into your browser to protect against MITM.
@@ -198,6 +206,7 @@ such as your desktop machine.
 You have several options for connecting to nodes, pods and services from outside the cluster:
 
   - Access services through public IPs.
+
     - Use a service with type `NodePort` or `LoadBalancer` to make the service reachable outside
       the cluster.  See the [services](services.md) and
       [kubectl expose](kubectl/kubectl_expose.md) documentation.
@@ -213,6 +222,7 @@ You have several options for connecting to nodes, pods and services from outside
       nodes via their nodeIPs.
 
   - Access services, nodes, or pods using the Proxy Verb.
+
     - Does apiserver authentication and authorization prior to accessing the remote service.
       Use this if the services are not secure enough to expose to the internet, or to gain
       access to ports on the node IP, or for debugging.
@@ -221,6 +231,7 @@ You have several options for connecting to nodes, pods and services from outside
     - Only works for HTTP/HTTPS.
     - Described [here](#discovering-builtin-services).
   - Access from a node or pod in the cluster.
+
     - Run a pod, and then connect to a shell in it using [kubectl exec](kubectl/kubectl_exec.md).
       Connect to other nodes, pods, and services from that shell.
 
@@ -296,6 +307,7 @@ The redirect capabilities have been deprecated and removed.  Please use a proxy 
 There are several different proxies you may encounter when using kubernetes:
 
   1. The [kubectl proxy](#directly-accessing-the-rest-api):
+
     - runs on a user's desktop or in a pod
     - proxies from a localhost address to the kubernetes apiserver
     - client to proxy uses HTTP
@@ -303,6 +315,7 @@ There are several different proxies you may encounter when using kubernetes:
     - locates apiserver
     - adds authentication headers
   1. The [apiserver proxy](#discovering-builtin-services):
+
     - is a bastion built into the apiserver
     - connects a user outside of the cluster to cluster IPs which otherwise might not be reachable
     - runs in the apiserver processes
@@ -311,16 +324,19 @@ There are several different proxies you may encounter when using kubernetes:
     - can be used to reach a Node, Pod, or Service
     - does load balancing when used to reach a Service
   1. The [kube proxy](services.md#ips-and-vips):
+
     - runs on each node 
     - proxies UDP and TCP
     - does not understand HTTP
     - provides load balancing
     - is just used to reach services
   1. A Proxy/Load-balancer in front of apiserver(s):
+
     - existence and implementation varies from cluster to cluster (e.g. nginx)
     - sits between all clients and one or more apiservers
     - acts as load balancer if there are several apiservers.
   1. Cloud Load Balancers on external services:
+
     - are provided by some cloud providers (e.g. AWS ELB, Google Cloud Load Balancer)
     - are created automatically when the kubernetes service has type `LoadBalancer`
     - use UDP/TCP only

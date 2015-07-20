@@ -38,10 +38,12 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Admission Controllers](#admission-controllers)
+
   - [What are they?](#what-are-they)
   - [Why do I need them?](#why-do-i-need-them)
   - [How do I turn on an admission control plug-in?](#how-do-i-turn-on-an-admission-control-plug-in)
   - [What does each plug-in do?](#what-does-each-plug-in-do)
+
     - [AlwaysAdmit](#alwaysadmit)
     - [AlwaysDeny](#alwaysdeny)
     - [DenyExecOnPrivileged](#denyexeconprivileged)

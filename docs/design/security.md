@@ -69,6 +69,7 @@ Automated process users fall into the following categories:
 ### Description of roles
 
 * Developers:
+
   * write pod specs.
   * making some of their own images, and using some "community" docker images
   * know which pods need to talk to which other pods
@@ -78,17 +79,21 @@ Automated process users fall into the following categories:
   * are not necessarily comfortable reasoning about the security properties of a system at the level of detail of Linux Capabilities, SELinux, AppArmor, etc.
 
 * Project Admins:
+
   * allocate identity and roles within a namespace
   * reason about organizational security within a namespace
+
     * don't give a developer permissions that are not needed for role.
     * protect files on shared storage from unnecessary cross-team access
   * are less focused about application security
 
 * Administrators:
+
   * are less focused on application security. Focused on operating system security.
   * protect the node from bad actors in containers, and properly-configured innocent containers from bad actors in other containers.
   * comfortable reasoning about the security properties of a system at the level of detail of Linux Capabilities, SELinux, AppArmor, etc.
   * decides who can use which Linux Capabilities, run privileged containers, use hostPath, etc.
+
     * e.g. a team that manages Ceph or a mysql server might be trusted to have raw access to storage devices in some organizations, but teams that develop the applications at higher layers would not.
 
 
@@ -118,6 +123,7 @@ A pod runs in a *security context* under a *service account* that is defined by 
 6. Developers should be able to define [secrets](secrets.md) that are automatically added to the containers when pods are run
 
    1.  Secrets are files injected into the container whose values should not be displayed within a pod. Examples:
+
        1. An SSH private key for git cloning remote data
        2. A client certificate for accessing a remote system
        3. A private key and certificate for a web server

@@ -38,6 +38,7 @@ Getting started locally
 **Table of Contents**
 
 - [Requirements](#requirements)
+
     - [Linux](#linux)
     - [Docker](#docker)
     - [etcd](#etcd)
@@ -46,6 +47,7 @@ Getting started locally
 - [Running a container](#running-a-container)
 - [Running a user defined pod](#running-a-user-defined-pod)
 - [Troubleshooting](#troubleshooting)
+
     - [I cannot reach service IPs on the network.](#i-cannot-reach-service-ips-on-the-network)
     - [I cannot create a replication controller with replica size greater than 1!  What gives?](#i-cannot-create-a-replication-controller-with-replica-size-greater-than-1--what-gives)
     - [I changed Kubernetes code, how do I run it?](#i-changed-kubernetes-code-how-do-i-run-it)

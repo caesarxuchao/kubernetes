@@ -37,7 +37,9 @@ Kubernetes Deployment On Bare-metal Ubuntu Nodes
 
 - [Introduction](#introduction)
 - [Prerequisites](#prerequisites)
+
     - [Starting a Cluster](#starting-a-cluster)
+
         - [Make *kubernetes* , *etcd* and *flanneld* binaries](#make-kubernetes--etcd-and-flanneld-binaries)
         - [Configure and start the kubernetes cluster](#configure-and-start-the-kubernetes-cluster)
         - [Deploy addons](#deploy-addons)

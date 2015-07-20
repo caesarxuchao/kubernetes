@@ -143,6 +143,7 @@ The following resource types are predefined ("reserved") by Kubernetes in the `k
   * Internal representation: milli-KCUs
   * Compressible? yes
   * Qualities: this is a placeholder for the kind of thing that may be supported in the future &mdash; see [#147](https://github.com/GoogleCloudPlatform/kubernetes/issues/147)
+
     * [future] `schedulingLatency`: as per lmctfy
     * [future] `cpuConversionFactor`: property of a node: the speed of a CPU core on the node's processor divided by the speed of the canonical Kubernetes CPU (a floating point value; default = 1.0).
 

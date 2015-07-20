@@ -38,11 +38,13 @@ Documentation for other releases can be found at
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [Compute Resources](#compute-resources)
+
   - [Container and Pod Resource Limits](#container-and-pod-resource-limits)
   - [How Pods with Resource Limits are Scheduled](#how-pods-with-resource-limits-are-scheduled)
   - [How Pods with Resource Limits are Run](#how-pods-with-resource-limits-are-run)
   - [Monitoring Compute Resource Usage](#monitoring-compute-resource-usage)
   - [Troubleshooting](#troubleshooting)
+
     - [My pods are pending with event message failedScheduling](#my-pods-are-pending-with-event-message-failedscheduling)
     - [My container is terminated](#my-container-is-terminated)
   - [Planned Improvements](#planned-improvements)

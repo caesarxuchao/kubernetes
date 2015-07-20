@@ -43,17 +43,20 @@ This document will hopefully help you to figure out what's going wrong.
 <!-- BEGIN MUNGE: GENERATED_TOC -->
 
 - [My Service is not working - how to debug](#my-service-is-not-working---how-to-debug)
+
   - [Conventions](#conventions)
   - [Running commands in a Pod](#running-commands-in-a-pod)
   - [Setup](#setup)
   - [Does the Service exist?](#does-the-service-exist)
   - [Does the Service work by DNS?](#does-the-service-work-by-dns)
+
     - [Does any Service exist in DNS?](#does-any-service-exist-in-dns)
   - [Does the Service work by IP?](#does-the-service-work-by-ip)
   - [Is the Service correct?](#is-the-service-correct)
   - [Does the Service have any Endpoints?](#does-the-service-have-any-endpoints)
   - [Are the Pods working?](#are-the-pods-working)
   - [Is the kube-proxy working?](#is-the-kube-proxy-working)
+
     - [Is kube-proxy running?](#is-kube-proxy-running)
     - [Is kube-proxy writing iptables rules?](#is-kube-proxy-writing-iptables-rules)
     - [Is kube-proxy proxying?](#is-kube-proxy-proxying)

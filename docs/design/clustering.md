@@ -42,7 +42,9 @@ The term "clustering" refers to the process of having all members of the kuberne
 Once a cluster is established, the following is true:
 
 1. **Master -> Node**  The master needs to know which nodes can take work and what their current status is wrt capacity.
+
   1. **Location** The master knows the name and location of all of the nodes in the cluster.
+
 	  * For the purposes of this doc, location and name should be enough information so that the master can open a TCP connection to the Node.  Most probably we will make this either an IP address or a DNS name.  It is going to be important to be consistent here (master must be able to reach kubelet on that DNS name) so that we can verify certificates appropriately.
   2. **Target AuthN** A way to securely talk to the kubelet on that node.  Currently we call out to the kubelet over HTTP.  This should be over HTTPS and the master should know what CA to trust for that node.
   3. **Caller AuthN/Z** This would be the master verifying itself (and permissions) when calling the node.  Currently, this is only used to collect statistics as authorization isn't critical.  This may change in the future though.
@@ -76,8 +78,10 @@ The building blocks of an easier solution:
 
 * **Move to TLS** We will move to using TLS for all intra-cluster communication.  We will explicitly identify the trust chain (the set of trusted CAs) as opposed to trusting the system CAs.  We will also use client certificates for all AuthN.
 * [optional] **API driven CA** Optionally, we will run a CA in the master that will mint certificates for the nodes/kubelets.  There will be pluggable policies that will automatically approve certificate requests here as appropriate.
+
   * **CA approval policy**  This is a pluggable policy object that can automatically approve CA signing requests.  Stock policies will include `always-reject`, `queue` and `insecure-always-approve`.  With `queue` there would be an API for evaluating and accepting/rejecting requests.  Cloud providers could implement a policy here that verifies other out of band information and automatically approves/rejects based on other external factors.
 * **Scoped Kubelet Accounts** These accounts are per-node and (optionally) give a node permission to register itself.
+
 	* To start with, we'd have the kubelets generate a cert/account in the form of `kubelet:<host>`.  To start we would then hard code policy such that we give that particular account appropriate permissions.  Over time, we can make the policy engine more generic.
 * [optional] **Bootstrap API endpoint** This is a helper service hosted outside of the Kubernetes cluster that helps with initial discovery of the master.
 

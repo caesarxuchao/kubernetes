@@ -42,6 +42,7 @@ Getting started with libvirt CoreOS
 - [Setup](#setup)
 - [Interacting with your Kubernetes cluster with the `kube-*` scripts.](#interacting-with-your-kubernetes-cluster-with-the-kube--scripts)
 - [Troubleshooting](#troubleshooting)
+
     - [!!! Cannot find kubernetes-server-linux-amd64.tar.gz](#-cannot-find-kubernetes-server-linux-amd64targz)
     - [Can't find virsh in PATH, please fix and retry.](#cant-find-virsh-in-path-please-fix-and-retry)
     - [error: Failed to connect socket to '/var/run/libvirt/libvirt-sock': No such file or directory](#error-failed-to-connect-socket-to-varrunlibvirtlibvirt-sock-no-such-file-or-directory)
@@ -119,6 +120,7 @@ error: Cannot access storage file '$HOME/.../kubernetes/cluster/libvirt-coreos/l
 In order to fix that issue, you have several possibilities:
 
 * set `POOL_PATH` inside `cluster/libvirt-coreos/config-default.sh` to a directory:
+
   * backed by a filesystem with a lot of free disk space
   * writable by your user;
   * accessible by the qemu user.

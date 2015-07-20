@@ -73,6 +73,7 @@ Name
 ## General design
 
 1. When an object is created via an API, a Name string (a DNS_SUBDOMAIN) must be specified.  Name must be non-empty and unique within the apiserver.  This enables idempotent and space-unique creation operations.  Parts of the system (e.g. replication controller) may join strings (e.g. a base name and a random suffix) to create a unique Name.  For situations where generating a name is impractical, some or all objects may support a param to auto-generate a name.  Generating random names will defeat idempotency.
+
    * Examples: "guestbook.user", "backend-x4eb1"
 
 2. When an object is created via an API, a Namespace string (a DNS_SUBDOMAIN? format TBD via #1114) may be specified.  Depending on the API receiver, namespaces might be validated (e.g. apiserver might ensure that the namespace actually exists).  If a namespace is not specified, one will be assigned by the API receiver.  This assignment policy might vary across API receivers (e.g. apiserver might have a default, kubelet might generate something semi-random).
@@ -127,6 +128,7 @@ objectives.
    2. Since Namespace is not provided, kubelet generates one.
 
       1. The generated namespace should be deterministic and cluster-unique for the source, such as a hash of the hostname and file path.
+
          * E.g. Namespace="file-f4231812554558a718a01ca942782d81"
 
 3. Kubelet runs the pod.
