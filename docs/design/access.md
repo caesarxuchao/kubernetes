@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -39,6 +40,7 @@ This document suggests a direction for identity and access management in the Kub
 ## Background
 
 High level goals are:
+
    - Have a plan for how identity, authentication, and authorization will fit in to the API.
    - Have a plan for partitioning resources within a cluster between independent organizational units.
    - Ease integration with existing enterprise and hosted scenarios.
@@ -46,6 +48,7 @@ High level goals are:
 ### Actors
 
 Each of these can act as normal users or attackers.
+
    - External Users: People who are accessing applications running on K8s (e.g. a web site served by webserver running in a container on K8s), but who do not have K8s API access.
    - K8s Users : People who access the K8s API (e.g. create K8s API objects like Pods)
    - K8s Project Admins: People who manage access for some K8s Users
@@ -57,6 +60,7 @@ Each of these can act as normal users or attackers.
 Both intentional attacks and accidental use of privilege are concerns.
 
 For both cases it may be useful to think about these categories differently:
+
   - Application Path - attack by sending network messages from the internet to the IP/port of any application running on K8s.  May exploit weakness in application or misconfiguration of K8s.
   - K8s API Path - attack by sending network messages to any K8s API endpoint.
   - Insider Path - attack on K8s system components.  Attacker may have privileged access to networks, machines or K8s software and data.  Software errors in K8s system components and administrator error are some types of threat in this category.
@@ -66,10 +70,12 @@ This document is primarily concerned with K8s API paths, and secondarily with In
 ### Assets to protect
 
 External User assets:
+
    - Personal information like private messages, or images uploaded by External Users
    - web server logs
 
 K8s User assets:
+
   - External User assets of each K8s User
   - things private to the K8s app, like:
     - credentials for accessing other services (docker private repos, storage services, facebook, etc)
@@ -77,6 +83,7 @@ K8s User assets:
     - proprietary data and code
 
 K8s Cluster assets:
+
   - Assets of each K8s User
   - Machine Certificates or secrets.
   - The value of K8s cluster computing resources (cpu, memory, etc).
@@ -86,12 +93,14 @@ This document is primarily about protecting K8s User assets and K8s cluster asse
 ### Usage environments
 
 Cluster in Small organization:
+
    - K8s Admins may be the same people as K8s Users.
    - few K8s Admins.
     - prefer ease of use to fine-grained access control/precise accounting, etc.
  - Product requirement that it be easy for potential K8s Cluster Admin to try out setting up a simple cluster.
 
 Cluster in Large organization:
+
    - K8s Admins typically distinct people from K8s Users.  May need to divide K8s Cluster Admin access by roles.
    - K8s Users need to be protected from each other.
    - Auditing of K8s User and K8s Admin actions important.
@@ -100,16 +109,19 @@ Cluster in Large organization:
    - Need to integrate with existing enterprise directory, authentication, accounting, auditing, and security policy infrastructure.
 
 Org-run cluster:
+
    - organization that runs K8s master components is same as the org that runs apps on K8s.
    - Nodes may be on-premises VMs or physical machines; Cloud VMs; or a mix.
 
 Hosted cluster:
+
   - Offering K8s API as a service, or offering a Paas or Saas built on K8s
   - May already offer web services, and need to integrate with existing customer account concept, and existing authentication, accounting, auditing, and security policy infrastructure.
   - May want to leverage K8s User accounts and accounting to manage their User accounts (not a priority to support this use case.)
   - Precise and accurate accounting of resources needed.  Resource controls needed for hard limits (Users given limited slice of data) and soft limits (Users can grow up to some limit and then be expanded).
 
 K8s ecosystem services:
+
  - There may be companies that want to offer their existing services (Build, CI, A/B-test, release automation, etc) for use with K8s.  There should be some story for this case.
 
 Pods configs should be largely portable between Org-run and hosted configurations.
@@ -118,10 +130,12 @@ Pods configs should be largely portable between Org-run and hosted configuration
 # Design
 
 Related discussion:
+
 - https://github.com/GoogleCloudPlatform/kubernetes/issues/442
 - https://github.com/GoogleCloudPlatform/kubernetes/issues/443
 
 This doc describes two security profiles:
+
   - Simple profile:  like single-user mode.  Make it easy to evaluate K8s without lots of configuring accounts and policies.  Protects from unauthorized users, but does not partition authorized users.
   - Enterprise profile: Provide mechanisms needed for large numbers of users.  Defense in depth.  Should integrate with existing enterprise security infrastructure.
 
@@ -134,6 +148,7 @@ Features in this doc are divided into "Initial Feature", and "Improvements".   I
 ### userAccount
 
 K8s will have a `userAccount` API object.
+
 - `userAccount` has a UID which is immutable.  This is used to associate users with objects and to record actions in audit logs.
 - `userAccount` has a name which is a string and human readable and unique among userAccounts.  It is used to refer to users in Policies, to ensure that the Policies are human readable.  It can be changed only when there are no Policy objects or other objects which refer to that name.  An email address is a suggested format for this field.
 - `userAccount` is not related to the unix username of processes in Pods created by that userAccount.
@@ -148,18 +163,22 @@ another system which is trusted by the K8s API to authenticate users, but where
 the authentication details are unknown to K8s.
 
 Initial Features:
+
 - there is no superuser `userAccount`
 - `userAccount` objects are statically populated in the K8s API store by reading a config file.  Only a K8s Cluster Admin can do this.
 - `userAccount` can have a default `namespace`.  If API call does not specify a `namespace`, the default `namespace` for that caller is assumed.
 - `userAccount` is global.  A single human with access to multiple namespaces is recommended to only have one userAccount.
 
 Improvements:
+
 - Make `userAccount` part of a separate API group from core K8s objects like `pod`.  Facilitates plugging in alternate Access Management.
 
 Simple Profile:
+
    - single `userAccount`, used by all K8s Users and Project Admins.  One access token shared by all.
 
 Enterprise Profile:
+
    - every human user has own `userAccount`.
    - `userAccount`s have labels that indicate both membership in groups, and ability to act in certain roles.
    - each service using the API has own `userAccount` too. (e.g. `scheduler`, `repcontroller`)
@@ -170,10 +189,12 @@ Enterprise Profile:
 A `userAccount` is not a Unix user account.  The fact that a pod is started by a `userAccount` does not mean that the processes in that pod's containers run as a Unix user with a corresponding name or identity.
 
 Initially:
+
 - The unix accounts available in a container, and used by the processes running in a container are those that are provided by the combination of the base operating system and the Docker manifest.
 - Kubernetes doesn't enforce any relation between `userAccount` and unix accounts.
 
 Improvements:
+
 - Kubelet allocates disjoint blocks of root-namespace uids for each container.  This may provide some defense-in-depth against container escapes. (https://github.com/docker/docker/pull/4572)
 - requires docker to integrate user namespace support, and deciding what getpwnam() does for these uids.
 - any features that help users avoid use of privileged containers (https://github.com/GoogleCloudPlatform/kubernetes/issues/391)
@@ -185,12 +206,15 @@ K8s will have a have a `namespace` API object.  It is similar to a Google Comput
 Namespaces are described in [namespaces.md](namespaces.md).
 
 In the Enterprise Profile:
+
    - a `userAccount` may have permission to access several `namespace`s.
 
 In the Simple Profile:
+
    - There is a single `namespace` used by the single user.
 
 Namespaces versus userAccount vs Labels:
+
 - `userAccount`s are intended for audit logging (both name and UID should be logged), and to define who has access to `namespace`s.
 - `labels` (see [docs/user-guide/labels.md](../../docs/user-guide/labels.md)) should be used to distinguish pods, users, and other objects that cooperate towards a common goal but are different in some way, such as version, or responsibilities.
 - `namespace`s prevent name collisions between uncoordinated groups of people, and provide a place to attach common policies for co-operating groups of people.
@@ -199,6 +223,7 @@ Namespaces versus userAccount vs Labels:
 ## Authentication
 
 Goals for K8s authentication:
+
 - Include a built-in authentication system with no configuration required to use in single-user mode, and little configuration required to add several user accounts, and no https proxy required.
 - Allow for authentication to be handled by a system external to Kubernetes, to allow integration with existing to enterprise authorization systems.  The kubernetes namespace itself should avoid taking contributions of multiple authorization schemes.  Instead, a trusted proxy in front of the apiserver can be used to authenticate users.
   - For organizations whose security requirements only allow FIPS compliant implementations (e.g. apache) for authentication.
@@ -207,6 +232,7 @@ Goals for K8s authentication:
 - Avoid mixing authentication and authorization, so that authorization policies be centrally managed, and to allow changes in authentication methods without affecting authorization code.
 
 Initially:
+
 - Tokens used to authenticate a user.
 - Long lived tokens identify a particular `userAccount`.
 - Administrator utility generates tokens at cluster setup.
@@ -217,10 +243,12 @@ Initially:
 - Authentication in apiserver can be disabled by flag, to allow testing without authorization enabled, and to allow use of an authenticating proxy.  In this mode, a query parameter or header added by the proxy will identify the caller.
 
 Improvements:
+
 - Refresh of tokens.
 - SSH keys to access inside containers.
 
 To be considered for subsequent versions:
+
 - Fuller use of OAuth (http://tools.ietf.org/html/rfc6749)
 - Scoped tokens.
 - Tokens that are bound to the channel between the client and the api server
@@ -231,6 +259,7 @@ To be considered for subsequent versions:
 ## Authorization
 
 K8s authorization should:
+
 - Allow for a range of maturity levels, from single-user for those test driving the system, to integration with existing to enterprise authorization systems.
 - Allow for centralized management of users and policies.  In some organizations, this will mean that the definition of users and access policies needs to reside on a system other than k8s and encompass other web services (such as a storage service).
 - Allow processes running in K8s Pods to take on identity, and to allow narrow scoping of permissions for those identities in order to limit damage from software faults.
@@ -240,6 +269,7 @@ K8s authorization should:
 K8s will implement a relatively simple
 [Attribute-Based Access Control](http://en.wikipedia.org/wiki/Attribute_Based_Access_Control) model.
 The model will be described in more detail in a forthcoming document.  The model will
+
 - Be less complex than XACML
 - Be easily recognizable to those familiar with Amazon IAM Policies.
 - Have a subset/aliases/defaults which allow it to be used in a way comfortable to those users more familiar with Role-Based Access Control.
@@ -256,24 +286,29 @@ Policy objects may be applicable only to a single namespace or to all namespaces
 The API should have a `quota` concept (see https://github.com/GoogleCloudPlatform/kubernetes/issues/442).  A quota object relates a namespace (and optionally a label selector) to a maximum quantity of resources that may be used (see [resources design doc](resources.md)).
 
 Initially:
+
 - a `quota` object is immutable.
 - for hosted K8s systems that do billing, Project is recommended level for billing accounts.
 - Every object that consumes resources should have a `namespace` so that Resource usage stats are roll-up-able to `namespace`.
 - K8s Cluster Admin sets quota objects by writing a config file.
 
 Improvements:
+
 - allow one namespace to charge the quota for one or more other namespaces.  This would be controlled by a policy which allows changing a billing_namespace= label on an object.
 - allow quota to be set by namespace owners for (namespace x label) combinations (e.g. let "webserver" namespace use 100 cores, but to prevent accidents, don't allow "webserver" namespace and "instance=test" use more than 10 cores.
 - tools to help write consistent quota config files based on number of nodes, historical namespace usages, QoS needs, etc.
 - way for K8s Cluster Admin to incrementally adjust Quota objects.
 
 Simple profile:
+
    - a single `namespace` with infinite resource limits.
 
 Enterprise profile:
+
    - multiple namespaces each with their own limits.
 
 Issues:
+
 - need for locking or "eventual consistency" when multiple apiserver goroutines are accessing the object store and handling pod creations.
 
 
@@ -282,9 +317,11 @@ Issues:
 API actions can be logged.
 
 Initial implementation:
+
 - All API calls logged to nginx logs.
 
 Improvements:
+
 - API server does logging instead.
 - Policies to drop logging for high rate trusted API calls, or by users performing audit or other sensitive functions.
 

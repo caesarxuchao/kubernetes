@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -145,8 +146,10 @@ abstract other kinds of backends.  For example:
 
   * You want to have an external database cluster in production, but in test
     you use your own databases.
+
   * You want to point your service to a service in another
     [`Namespace`](namespaces.md) or on another cluster.
+
   * You are migrating your workload to Kubernetes and some of your backends run
     outside of Kubernetes.
 
@@ -277,6 +280,7 @@ reasons:
 
    * There is a long history of DNS libraries not respecting DNS TTLs and
      caching the results of name lookups.
+
    * Many apps do DNS lookups once and cache the results.
    * Even if apps and libraries did proper re-resolution, the load of every
      client re-resolving DNS over and over would be difficult to manage.
@@ -366,8 +370,10 @@ accessed.  Valid values for this field are:
 
    * `ClusterIP`: use a cluster-internal IP only - this is the default and is
      discussed above
+
    * `NodePort`: use a cluster IP, but also expose the service on a port on each
      node of the cluster (the same port on each node)
+
    * `LoadBalancer`: use a ClusterIP and a NodePort, but also ask the cloud
      provider for a load balancer which forwards to the `Service`
 

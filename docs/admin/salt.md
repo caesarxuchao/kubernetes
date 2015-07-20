@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -92,6 +93,7 @@ Each hosting environment has a slightly different grains.conf file that is used 
 The following enumerates the set of defined key/value pairs that are supported today.  If you add new ones, please make sure to update this list.
 
 Key | Value
+
 ------------- | -------------
 `api_servers` | (Optional) The IP address / host name where a kubelet can get read-only access to kube-apiserver
 `cbr-cidr` | (Optional) The minion IP address range used for the docker container bridge.

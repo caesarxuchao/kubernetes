@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -40,6 +41,7 @@ You need to repeat these instructions for each node you want to join the cluster
 We will assume that the IP address of this node is `${NODE_IP}` and you have the IP address of the master in `${MASTER_IP}` that you created in the [master instructions](master.md).
 
 For each worker node, there are three steps:
+
    * [Set up `flanneld` on the worker node](#set-up-flanneld-on-the-worker-node)
    * [Start kubernetes on the worker node](#start-kubernetes-on-the-worker-node)
    * [Add the worker to the cluster](#add-the-node-to-the-cluster)

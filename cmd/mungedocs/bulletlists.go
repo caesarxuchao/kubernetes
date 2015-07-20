@@ -22,29 +22,57 @@ import (
 	"strings"
 )
 
-var bulletRegex = regexp.MustCompile(`(^\s*1.\s*.*$)|(^\s*\*.\s*.*$)|(^\s*-.\s*.*$)`)
+const (
+	bullet = iota
+	whitespace
+)
 
-//var whitespaceRegex = regexp.MustCompile(`^\s*$`)
+var bulletRegex = regexp.MustCompile(`(^\s*\*.\s*.*$)|(^\s*-.\s*.*$)|(^\s*[\d]{1,2}\.\s*.*$)`)
+var leadingWhitespaceRegex = regexp.MustCompile(`^\s*`)
+
+func countLeadingWhitespace(line string) int {
+	return len(leadingWhitespaceRegex.FindString(line))
+}
+
+func findPrevBulletOrSpace(out []string) (int, int) {
+	for i := len(out) - 1; i >= 0; i-- {
+		if whitespaceRegex.MatchString(out[i]) {
+			return whitespace, i
+		}
+		if bulletRegex.MatchString(out[i]) {
+			return bullet, i
+		}
+	}
+	//treat start of file block as a whitespace
+	return whitespace, -1
+}
 
 func fixBulletLists(fileBytes []byte) []byte {
 	lines := splitLines(fileBytes)
 	out := []string{}
 	for i := range lines {
-		match := bulletRegex.FindString(lines[i])
-		if match == "" {
+		if !bulletRegex.MatchString(lines[i]) {
 			out = append(out, lines[i])
 			continue
 		}
-		fmt.Println("CHAO: find match.", match)
-		if i > 0 && !whitespaceRegex.Match([]byte(out[len(out)-1])) &&
-			!bulletRegex.Match([]byte(out[len(out)-1])) {
-			out = append(out, "")
+		fmt.Println("CHAO: find match.", lines[i])
+
+		pre, j := findPrevBulletOrSpace(out)
+		switch pre {
+		case whitespace:
+			// if there is another block of text before the list with out a whitespace in between
+			if j != len(out)-1 {
+				out = append(out, "")
+			}
+		case bullet:
+			space1 := countLeadingWhitespace(out[j])
+			space2 := countLeadingWhitespace(lines[i])
+			//nested list
+			if space1 < space2 {
+				out = append(out, "")
+			}
 		}
-		out = append(out, match)
-		if i+1 < len(lines) && !whitespaceRegex.Match([]byte(lines[i+1])) &&
-			!bulletRegex.Match([]byte(out[len(out)-1])) {
-			out = append(out, "")
-		}
+		out = append(out, lines[i])
 	}
 	final := strings.Join(out, "\n")
 	// Preserve the end of the file.
@@ -54,7 +82,7 @@ func fixBulletLists(fileBytes []byte) []byte {
 	return []byte(final)
 }
 
-// bullet lists need blank lines around them.
+// add a blank line before bullet lists is there is none.
 func checkBulletLists(filePath string, fileBytes []byte) ([]byte, error) {
 	fbs := splitByPreformatted(fileBytes)
 	fbs = append([]fileBlock{{false, []byte{}}}, fbs...)

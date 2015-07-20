@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -126,6 +127,7 @@ $ kubectl delete serviceaccount/build-robot
 TODO: Test and explain how to use additional non-K8s secrets with an existing service account.
 
 TODO explain:
+
   - The token goes to: "/var/run/secrets/kubernetes.io/serviceaccount/$WHATFILENAME"
 
 

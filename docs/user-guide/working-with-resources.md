@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -71,6 +72,7 @@ $ wc -l /tmp/original.yaml /tmp/current.yaml
 The resource we posted had only 9 lines, but the one we got back had 51 lines. 
 If you `diff -u /tmp/original.yaml /tmp/current.yaml`, you can see the fields added to the pod.
 The system adds fields in several ways:
+
   - Some fields are added synchronously with creation of the resource and some are set asynchronously.
     - For example: `metadata.uid` is set synchronously.  (Read more about [metadata](../devel/api-conventions.md#metadata)).
     - For example, `status.hostIP` is set only after the pod has been scheduled.  This often happens fast, but you may notice pods which do not have this set yet.  This is called Late Initialization.  (Read mode about [status](../devel/api-conventions.md#spec-and-status) and [late initialization](../devel/api-conventions.md#late-initialization) ).
@@ -82,11 +84,13 @@ The API will generally not modify fields that you have set; it just sets ones wh
 ## <a name="finding_schema_docs"></a>Finding Documentation on Resource Fields
 
 You can browse auto-generated API documentation at the [project website](http://kubernetes.io/third_party/swagger-ui/) or directly from your cluster, like this:
+
   - Run `kubectl proxy --api-prefix=/`
   - Go to `http://localhost:8001/swagger-ui` in your browser.
   - It should say "swagger" at the top-left.
 
 Once there:
+
   - Click on "v1" and wait for it to expand.
   - Search for "pods", "services", "replicationcontrollers" or some other resource.
   - Click on that POST row for the matching resource.

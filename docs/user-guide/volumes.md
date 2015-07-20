@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -107,6 +108,7 @@ mount each volume.
 ## Types of Volumes
 
 Kubernetes supports several types of Volumes:
+
    * emptyDir
    * hostPath
    * gcePersistentDisk
@@ -157,12 +159,14 @@ For example, some uses for a `hostPath` are:
 
 * running a container that needs access to Docker internals; use a `hostPath`
   of `/var/lib/docker`
+
 * running cAdvisor in a container; use a `hostPath` of `/dev/cgroups`
 
 Watch out when using this type of volume, because:
 
 * pods with identical configuration (such as created from a podTemplate) may
   behave differently on different nodes due to different files on the nodes
+
 * when Kubernetes adds resource-aware scheduling, as is planned, it will not be
   able to account for resources used by a `hostPath`
 

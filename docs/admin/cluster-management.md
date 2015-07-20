@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -76,9 +77,11 @@ replication controller, then a new copy of the pod will be started on a differen
 pods are replicated, upgrades can be done without special coordination.
 
 If you want more control over the upgrading process, you may use the following workflow:
+
   1. Mark the node to be rebooted as unschedulable:
     `kubectl replace nodes $NODENAME --patch='{"apiVersion": "v1", "spec": {"unschedulable": true}}'`. 
     This keeps new pods from landing on the node while you are trying to get them off.
+
   1. Get the pods off the machine, via any of the following strategies:
     1. wait for finite-duration pods to complete
     1. delete pods with `kubectl delete pods $PODNAME`

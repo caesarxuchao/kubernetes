@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -372,16 +373,20 @@ after an object is created/updated.
 For example, the scheduler sets the `pod.spec.nodeName` field after the pod is created.
 
 Late-initializers should only make the following types of modifications:
+
  - Setting previously unset fields
  - Adding keys to maps
  - Adding values to arrays which have mergeable semantics (`patchStrategy:"merge"` attribute in
   the type definition).
   
 These conventions:
+
  1. allow a user (with sufficient privilege) to override any system-default behaviors by setting
     the fields that would otherwise have been defaulted.
+
  1. enables updates from users to be merged with changes made during late initialization, using
     strategic merge patch, as opposed to clobbering the change.
+
  1. allow the component which does the late-initialization to use strategic merge patch, which
     facilitates composition and concurrency of such components.
 
@@ -518,6 +523,7 @@ Kubernetes will always return the `Status` kind from any API endpoint when an er
 Clients SHOULD handle these types of objects when appropriate.
 
 A `Status` kind will be returned by the API in two cases:
+
   * When an operation is not successful (i.e. when the server would return a non 2xx HTTP status code).
   * When a HTTP `DELETE` call is successful.
 
@@ -556,6 +562,7 @@ $ curl -v -k -H "Authorization: Bearer WhCDvq4VPpYhrcfmF6ei7V9qlbqTubUc" https:/
 ```
 
 `status` field contains one of two possible values:
+
 * `Success`
 * `Failure`
 
@@ -566,6 +573,7 @@ $ curl -v -k -H "Authorization: Bearer WhCDvq4VPpYhrcfmF6ei7V9qlbqTubUc" https:/
 `details` may contain extended data associated with the reason. Each reason may define its own extended details. This field is optional and the data returned is not guaranteed to conform to any schema except that defined by the reason type.
 
 Possible values for the `reason` and `details` fields:
+
 * `BadRequest`
   * Indicates that the request itself was invalid, because the request doesn't make any sense, for example deleting a read-only object.
   * This is different than `status reason` `Invalid` above which indicates that the API call could possibly succeed, but the data was invalid.

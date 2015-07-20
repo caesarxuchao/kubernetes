@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -63,6 +64,7 @@ Users are highly encouraged to check out our [FAQ](https://github.com/GoogleClou
 
 The first step in troubleshooting is triage.  What is the problem?  Is it your Pods, your Replication Controller or
 your Service?
+
    * [Debugging Pods](#debugging-pods)
    * [Debugging Replication Controllers](#debugging-replication-controllers)
    * [Debugging Services](#debugging-services)
@@ -98,6 +100,7 @@ scheduled.  In most cases, `hostPort` is unnecessary, try using a Service object
 
 If a Pod is stuck in the `Waiting` state, then it has been scheduled to a worker node, but it can't run on that machine.
 Again, the information from `kubectl describe ...` should be informative.  The most common cause of `Waiting` pods is a failure to pull the image.  There are three things to check:
+
 * Make sure that you have the name of the image correct
 * Have you pushed the image to the repository?
 * Run a manual `docker pull <image>` on your machine to see if the image can be pulled. 
@@ -195,6 +198,7 @@ in the endpoints list, it's likely that the proxy can't contact your pods.
 
 There are three things to
 check:
+
    * Are your pods working correctly?  Look for restart count, and [debug pods](#debugging-pods)
    * Can you connect to your pods directly?  Get the IP address for the Pod, and try to connect directly to that IP
    * Is your application serving on the port that you configured?  Kubernetes doesn't do port remapping, so if your application serves on 8080, the `containerPort` field needs to be 8080.

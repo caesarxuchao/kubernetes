@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -61,6 +62,7 @@ physical machine.  Setup is completely automated and doesn't require a cloud pro
 But their size and availability is limited to that of a single machine.
 
 The local-machine solutions are:
+
   - [Local Docker-based](#local-solutions) (recommended starting point)
   - [Vagrant](vagrant.md) (works on any platform with Vagrant: Linux, MacOS, or Windows.)
   - [No-VM local cluster](locally.md) (Linux only)
@@ -75,6 +77,7 @@ clusters.
 
 These solutions allow you to create Kubernetes clusters on range of Cloud IaaS providers with only a
 few commands, and have active community support.
+
 - [GCE](gce.md)
 - [AWS](aws.md)
 - [Azure](coreos/azure/README.md)
@@ -95,6 +98,7 @@ writing a new solution](../../docs/devel/writing-a-getting-started-guide.md).
 #### Cloud
 
 These solutions are combinations of cloud provider and OS not covered by the above solutions.
+
 - [AWS + coreos](coreos.md)
 - [GCE + CoreOS](coreos.md)
 - [AWS + Ubuntu](juju.md)
@@ -132,6 +136,7 @@ These solutions are combinations of cloud provider and OS not covered by the abo
 Here are all the solutions mentioned above in table form.
 
 IaaS Provider        | Config. Mgmt | OS     | Networking  | Docs                                              | Conforms | Support Level
+
 -------------------- | ------------ | ------ | ----------  | ---------------------------------------------     | ---------| ----------------------------
 GKE                  |              |        | GCE         | [docs](https://cloud.google.com/container-engine) |          | Commercial
 Vagrant              | Saltstack    | Fedora | OVS         | [docs](vagrant.md)                                |          | Project
@@ -169,17 +174,22 @@ any                  | any          | any    | any         | [docs](scratch.md) 
 *Note*: The above table is ordered by version test/used in notes followed by support level.
 
 Definition of columns:
+
   - **IaaS Provider** is who/what provides the virtual or physical machines (nodes) that Kubernetes runs on.
   - **OS** is the base operating system of the nodes.
   - **Config. Mgmt** is the configuration management system that helps install and maintain kubernetes software on the
     nodes.
+
   - **Networking** is what implements the [networking model](../../docs/admin/networking.md).  Those with networking type
     _none_ may not support more than one node, or may support multiple VM nodes only in the same physical node.
+
   - **Conformance** indicates whether a cluster created with this configuration has passed the project's conformance
     tests for supporting the API and base features of Kubernetes v1.0.0.
+
   - Support Levels
     - **Project**:  Kubernetes Committers regularly use this configuration, so it usually works with the latest release
       of Kubernetes.
+
     - **Commercial**: A commercial offering with its own support arrangements.
     - **Community**: Actively supported by community contributions. May not work with more recent releases of kubernetes.
     - **Inactive**: No active maintainer.  Not recommended for first-time K8s users, and may be deleted soon.

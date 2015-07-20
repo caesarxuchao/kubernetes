@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -47,22 +48,27 @@ On IaaS providers such as Google Compute Engine or Amazon Web Services, a VM exi
 [zone](https://cloud.google.com/compute/docs/zones) or [availability
 zone](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 We suggest that all the VMs in a Kubernetes cluster should be in the same availability zone, because:
+
   - compared to having a single global Kubernetes cluster, there are fewer single-points of failure
   - compared to a cluster that spans availability zones, it is easier to reason about the availability properties of a
     single-zone cluster.
+
   - when the Kubernetes developers are designing the system (e.g. making assumptions about latency, bandwidth, or
     correlated failures) they are assuming all the machines are in a single data center, or otherwise closely connected.
 
 It is okay to have multiple clusters per availability zone, though on balance we think fewer is better.
 Reasons to prefer fewer clusters are:
+
   - improved bin packing of Pods in some cases with more nodes in one cluster (less resource fragmentation)
   - reduced operational overhead (though the advantage is diminished as ops tooling and processes matures)
   - reduced costs for per-cluster fixed resource costs, e.g. apiserver VMs (but small as a percentage
     of overall cluster cost for medium to large clusters).
 
 Reasons to have multiple clusters include:
+
   - strict security policies requiring isolation of one class of work from another (but, see Partitioning Clusters
     below).
+
   - test clusters to canary new Kubernetes releases or other cluster software.
 
 ## Selecting the right number of clusters
@@ -85,6 +91,7 @@ cluster failure), then you need to have `R * U` clusters (`U` in each of `R` reg
 
 Finally, if any of your clusters would need more than the maximum recommended number of nodes for a Kubernetes cluster, then
 you may need even more clusters.  Kubernetes v1.0 currently supports clusters up to 100 nodes in size, but we are targeting
+
 1000-node clusters by early 2016.
 
 ## Working with multiple clusters

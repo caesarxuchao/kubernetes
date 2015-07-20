@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -64,6 +65,7 @@ your image.
 
 Private registries may require keys to read images from them.
 Credentials can be provided in several ways:
+
   - Using Google Container Registry
     - Per-cluster
     - automatically configured on Google Compute Engine or Google Container Engine
@@ -107,6 +109,7 @@ in the `$HOME` of `root` on a kubelet, then docker will use it.
 
 Here are the recommended steps to configuring your nodes to use a private registry.  In this
 example, run these on your desktop/laptop:
+
    1. run `docker login [server]` for each set of credentials you want to use.
    1. view `$HOME/.dockercfg` in an editor to ensure it contains just the credentials you want to use.
    1. get a list of your nodes 
@@ -263,6 +266,7 @@ common use cases and suggested solutions.
      - on GCE/GKE, a local mirror is automatically used for improved speed and availability
  1. Cluster running some proprietary images which should be hidden to those outside the company, but
    visible to all cluster users.
+
    - Use a hosted private [Docker registry](https://docs.docker.com/registry/)
      - may be hosted on the [Docker Hub](https://hub.docker.com/account/signup/), or elsewhere.
      - manually configure .dockercfg on each node as described above

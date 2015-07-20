@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -61,10 +62,12 @@ the 80% cases in order to decrease coupling and the use of workarounds.
 1.  As a user, I want to compose new environment variables for a container using a substitution
     syntax to reference other variables in the container's environment and service environment
     variables
+
 1.  As a user, I want to substitute environment variables into a container's command
 1.  As a user, I want to do the above without requiring the container's image to have a shell
 1.  As a user, I want to be able to specify a default value for a service variable which may
     not exist
+
 1.  As a user, I want to see an event associated with the pod if an expansion fails (ie, references
     variable names that cannot be expanded)
 
@@ -238,6 +241,7 @@ The necessary changes to implement this functionality are:
     scoped to a single object, and a function that returns an `ObjectEventRecorder` given an
     `ObjectReference` and an `EventRecorder`
 2.  Introduce `third_party/golang/expansion` package that provides:
+
     1.  An `Expand(string, func(string) string) string` function
     2.  A `MappingFuncFor(ObjectEventRecorder, ...map[string]string) string` function 
 3.  Make the kubelet expand environment correctly

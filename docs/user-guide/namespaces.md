@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -85,6 +86,7 @@ kube-system   <none>    Active
 ```
 
 Kubernetes starts with two initial namespaces:
+
    * `default` The default namespace for objects with no other namespace
    * `kube-system` The namespace for objects created by the Kubernetes system
 
@@ -121,6 +123,7 @@ a *Namespace*.
 See [Admission control: Limit Range](../design/admission_control_limit_range.md)
 
 A namespace can be in one of two phases:
+
    * `Active` the namespace is in use
    * ```Terminating`` the namespace is being deleted, and can not be used for new objects
 

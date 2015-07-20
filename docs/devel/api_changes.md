@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -92,6 +93,7 @@ backward-compatibly.
 Before talking about how to make API changes, it is worthwhile to clarify what
 we mean by API compatibility.  An API change is considered backward-compatible
 if it:
+
    * adds new functionality that is not required for correct behavior
    * does not change existing semantics
    * does not change existing defaults
@@ -267,8 +269,10 @@ than the generic ones (which are based on reflections and thus are highly
 inefficient).
 
 The conversion code resides with each versioned API. There are two files:
+
    - `pkg/api/<version>/conversion.go` containing manually written conversion
      functions
+
    - `pkg/api/<version>/conversion_generated.go` containing auto-generated
      conversion functions
 
@@ -282,6 +286,7 @@ conversion functions when writing your conversion functions.
 
 Once all the necessary manually written conversions are added, you need to
 regenerate auto-generated ones. To regenerate them:
+
    - run
 
 ```sh
@@ -350,6 +355,7 @@ figure out the best way to make sure your cool feature keeps working forever.
 At last, your change is done, all unit tests pass, e2e passes, you're done,
 right?  Actually, no.  You just changed the API.  If you are touching an
 existing facet of the API, you have to try *really* hard to make sure that
+
 *all* the examples and docs are updated.  There's no easy way to do this, due
 in part to JSON and YAML silently dropping unknown fields.  You're clever -
 you'll figure it out.  Put `grep` or `ack` to good use.

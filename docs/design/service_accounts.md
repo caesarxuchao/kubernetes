@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -36,6 +37,7 @@ Documentation for other releases can be found at
 ## Motivation
 
 Processes in Pods may need to call the Kubernetes API.  For example:
+
   - scheduler
   - replication controller
   - node controller
@@ -44,19 +46,24 @@ Processes in Pods may need to call the Kubernetes API.  For example:
   - monitoring system
 
 They also may interact with services other than the Kubernetes API, such as:
+
   - an image repository, such as docker -- both when the images are pulled to start the containers, and for writing
     images in the case of pods that generate images.
+
   - accessing other cloud services, such as blob storage, in the context of a large, integrated, cloud offering (hosted
     or private).
+
   - accessing files in an NFS volume attached to the pod
 
 ## Design Overview
 
 A service account binds together several things:
+
   - a *name*, understood by users, and perhaps by peripheral systems, for an identity
   - a *principal* that can be authenticated and [authorized](../admin/authorization.md)
   - a [security context](security_context.md), which defines the Linux Capabilities, User IDs, Groups IDs, and other
     capabilities and controls on interaction with the file system and OS.
+
   - a set of [secrets](secrets.md), which a container may use to
     access various networked resources.
 
@@ -79,12 +86,15 @@ The name ServiceAccount is chosen because it is widely used already (e.g. by Ker
 to refer to this type of account.  Note that it has no relation to kubernetes Service objects.
 
 The ServiceAccount object does not include any information that could not be defined separately:
+
   - username can be defined however users are defined.
   - securityContext and secrets are only referenced and are created using the REST API.
 
 The purpose of the serviceAccount object is twofold:
+
   - to bind usernames to securityContexts and secrets, so that the username can be used to refer succinctly
     in contexts where explicitly naming securityContexts and secrets would be inconvenient
+
   - to provide an interface to simplify allocation of new securityContexts and secrets.
 These features are explained later.
 
@@ -111,13 +121,16 @@ Instead, it is recommended that Pods and Humans have distinct identities, and re
 make this distinction.
 
 The distinction is useful for a number of reasons:
+
   - the requirements for humans and automated processes are different:
     - Humans need a wide range of capabilities to do their daily activities. Automated processes often have more narrowly-defined activities.
     - Humans may better tolerate the exceptional conditions created by expiration of a token.  Remembering to handle
       this in a program is more annoying.  So, either long-lasting credentials or automated rotation of credentials is
       needed.
+
     - A Human typically keeps credentials on a machine that is not part of the cluster and so not subject to automatic
       management.  A VM with a role/service-account can have its credentials automatically managed.
+
   - the identity of a Pod cannot in general be mapped to a single human.
     - If policy allows, it may be created by one human, and then updated by another, and another, until its behavior cannot be attributed to a single human.
 
@@ -186,6 +199,7 @@ First, if it finds pods which have a `Pod.Spec.ServiceAccountUsername` but no `P
 then it copies in the referenced securityContext and secrets references for the corresponding `serviceAccount`.
 
 Second, if ServiceAccount definitions change, it may take some actions.
+
 **TODO**: decide what actions it takes when a serviceAccount definition changes.  Does it stop pods, or just
 allow someone to list ones that are out of spec?  In general, people may want to customize this?
 
@@ -193,6 +207,7 @@ Third, if a new namespace is created, it may create a new serviceAccount for tha
 a new username (e.g. `NAMESPACE-default-service-account@serviceaccounts.$CLUSTERID.kubernetes.io`), a new
 securityContext, a newly generated secret to authenticate that serviceAccount to the Kubernetes API, and default
 policies for that service account.
+
 **TODO**: more concrete example.  What are typical default permissions for default service account (e.g. readonly access
 to services in the same namespace and read-write access to events in that namespace?)
 

@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -34,6 +35,7 @@ Documentation for other releases can be found at
 # Troubleshooting
 
 Sometimes things go wrong.  This guide is aimed at making them right.  It has two sections:
+
    * [Troubleshooting your application](user-guide/application-troubleshooting.md) - Useful for users who are deploying code into Kubernetes and wondering why it is not working.
    * [Troubleshooting your cluster](admin/cluster-troubleshooting.md) - Useful for cluster administrators and people whose Kubernetes cluster is unhappy.
 
@@ -44,11 +46,13 @@ If your problem isn't answered by any of guides above, there are variety of ways
 ## Questions
 
 We have a number of FAQ pages
+
    * [User FAQ](https://github.com/GoogleCloudPlatform/kubernetes/wiki/User-FAQ)
    * [Debugging FAQ](https://github.com/GoogleCloudPlatform/kubernetes/wiki/Debugging-FAQ)
    * [Services FAQ](https://github.com/GoogleCloudPlatform/kubernetes/wiki/Services-FAQ)
 
 You may also find the StackOverflow topics relevant
+
    * [Kubernetes](http://stackoverflow.com/questions/tagged/kubernetes)
    * [Google Container Engine - GKE](http://stackoverflow.com/questions/tagged/google-container-engine)
 

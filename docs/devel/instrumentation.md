@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -40,6 +41,7 @@ We use the Prometheus monitoring system's golang client library for instrumentin
 1. Import "github.com/prometheus/client_golang/prometheus".
 
 2. Create a top-level var to define the metric. For this, you have to:
+
   1. Pick the type of metric. Use a Gauge for things you want to set to a particular value, a Counter for things you want to increment, or a Histogram or Summary for histograms/distributions of values (typically for latency). Histograms are better if you're going to aggregate the values across jobs, while summaries are better if you just want the job to give you a useful summary of the values.
   2. Give the metric a name and description.
   3. Pick whether you want to distinguish different categories of things using labels on the metric. If so, add "Vec" to the name of the type of metric you want and add a slice of the label names to the definition.

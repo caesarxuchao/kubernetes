@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -53,11 +54,14 @@ Goals of this design:
 
 *  This design does not prescribe a method for storing secrets; storage of secrets should be
    pluggable to accommodate different use-cases
+
 *  Encryption of secret data and node security are orthogonal concerns
 *  It is assumed that node and master are secure and that compromising their security could also
    compromise secrets:
+
    *  If a node is compromised, the only secrets that could potentially be exposed should be the
       secrets belonging to containers scheduled onto it
+
    *  If the master is compromised, all secrets in the cluster may be exposed
 *  Secret rotation is an orthogonal concern, but it should be facilitated by this proposal
 *  A user who can consume a secret in a container can know the value of the secret; secrets must
@@ -68,6 +72,7 @@ Goals of this design:
 1.  As a user, I want to store secret artifacts for my applications and consume them securely in
     containers, so that I can keep the configuration for my applications separate from the images
     that use them:
+
     1.  As a cluster operator, I want to allow a pod to access the Kubernetes master using a custom
         `.kubeconfig` file, so that I can securely reach the master
     2.  As a cluster operator, I want to allow a pod to access a Docker registry using credentials
@@ -80,6 +85,7 @@ Goals of this design:
 3.  As a user, I want to associate a pod with a `ServiceAccount` that consumes a secret and have
     the kubelet implement some reserved behaviors based on the types of secrets the service account
     consumes:
+
     1.  Use credentials for a docker registry to pull the pod's docker image
     2.  Present kubernetes auth token to the pod or transparently decorate traffic between the pod
         and master service
@@ -218,6 +224,7 @@ the allocated storage is sufficient for the workload scheduled onto a node.
 
 For now, kubelets will only attach secrets to api-sourced pods, and not file- or http-sourced
 ones.  Doing so would:
+
   - confuse the secrets admission controller in the case of mirror pods.
   - create an apiserver-liveness dependency -- avoiding this dependency is a main reason to use non-api-source pods.
 
@@ -244,6 +251,7 @@ Consideration must be given to whether secret data should be allowed to be at re
 1.  If secret data is not allowed to be at rest, the size of secret data becomes another draw on
     the node's RAM - should it affect scheduling?
 2.  If secret data is allowed to be at rest, should it be encrypted?
+
     1.  If so, how should be this be done?
     2.  If not, what threats exist?  What types of secret are appropriate to store this way?
 

@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started with libvirt CoreOS
+
 -----------------------------------
 
 **Table of Contents**
@@ -59,6 +61,7 @@ Getting started with libvirt CoreOS
 3. Install [qemu](http://wiki.qemu.org/Main_Page)
 4. Install [libvirt](http://libvirt.org/)
 5. Enable and start the libvirt daemon, e.g:
+
    * ``systemctl enable libvirtd``
    * ``systemctl start libvirtd``
 6. [Grant libvirt access to your user¹](https://libvirt.org/aclpolkit.html)
@@ -114,6 +117,7 @@ error: Cannot access storage file '$HOME/.../kubernetes/cluster/libvirt-coreos/l
 ```
 
 In order to fix that issue, you have several possibilities:
+
 * set `POOL_PATH` inside `cluster/libvirt-coreos/config-default.sh` to a directory:
   * backed by a filesystem with a lot of free disk space
   * writable by your user;

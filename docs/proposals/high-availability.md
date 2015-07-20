@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -48,6 +49,7 @@ For complete reference see [this](https://www.ibm.com/developerworks/community/b
 ## Design Discussion Notes on Leader Election
 
 Implementation References:
+
 * [zookeeper](http://zookeeper.apache.org/doc/trunk/recipes.html#sc_leaderElection)
 * [etcd](https://groups.google.com/forum/#!topic/etcd-dev/EbAa4fjypb4)
 * [initialPOC](https://github.com/rrati/etcd-ha)

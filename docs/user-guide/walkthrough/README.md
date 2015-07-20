@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -164,6 +165,7 @@ spec:
 ```
 
 Notes:
+
 - The volume mount name is a reference to a specific empty dir volume.
 - The volume mount path is the path to mount the empty dir volume within the container.
 

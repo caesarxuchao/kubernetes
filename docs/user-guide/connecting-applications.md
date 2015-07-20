@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -237,6 +238,7 @@ Address 1: 10.0.116.146
 ## Securing the Service
 
 Till now we have only accessed the nginx server from within the cluster. Before exposing the Service to the internet, you want to make sure the communication channel is secure. For this, you will need:
+
 * Self signed certificates for https (unless you already have an identitiy certificate)
 * An nginx server configured to use the cretificates
 * A [secret](secrets.md) that makes the certificates accessible to pods
@@ -303,6 +305,7 @@ spec:
 ```
 
 Noteworthy points about the nginx-app manifest:
+
 - It contains both rc and service specification in the same file
 - The [nginx server](../../examples/https-nginx/default.conf) serves http traffic on port 80 and https traffic on 443, and nginx Service exposes both ports.
 - Each container has access to the keys through a volume mounted at /etc/nginx/ssl. This is setup *before* the nginx server is started.

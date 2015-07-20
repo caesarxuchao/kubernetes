@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Bare Metal CoreOS with Kubernetes (OFFLINE)
+
 ------------------------------------------
 Deploy a CoreOS running Kubernetes environment. This particular guild is made to help those in an OFFLINE system, wither for testing a POC before the real deal, or you are restricted to be totally offline for your applications.
 
@@ -218,6 +220,7 @@ We will be specifying the node configuration later in the guide.
 ## Kubernetes
 
 To deploy our configuration we need to create an `etcd` master. To do so we want to pxe CoreOS with a specific cloud-config.yml. There are two options we have here. 
+
 1. Is to template the cloud config file and programmatically create new static configs for different cluster setups.
 2. Have a service discovery protocol running in our stack to do auto discovery.
 
@@ -269,13 +272,16 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
 
 
     #cloud-config
+
     ---
     write_files:
+
       - path: /opt/bin/waiter.sh
         owner: root
         content: |
           #! /usr/bin/bash
           until curl http://127.0.0.1:4001/v2/machines; do sleep 2; done
+
       - path: /opt/bin/kubernetes-download.sh
         owner: root
         permissions: 0755
@@ -285,6 +291,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
           /usr/bin/wget -N -P "/opt/bin" "http://<PXE_SERVER_IP>/kubernetes"
           /usr/bin/wget -N -P "/opt/bin" "http://<PXE_SERVER_IP>/kubecfg"
           chmod +x /opt/bin/*
+
       - path: /etc/profile.d/opt-path.sh
         owner: root
         permissions: 0755
@@ -293,6 +300,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
           PATH=$PATH/opt/bin
     coreos:
       units:
+
         - name: 10-eno1.network
           runtime: true
           content: |
@@ -300,6 +308,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             Name=eno1
             [Network]
             DHCP=yes
+
         - name: 20-nodhcp.network
           runtime: true
           content: |
@@ -307,6 +316,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             Name=en*
             [Network]
             DHCP=none
+
         - name: get-kube-tools.service
           runtime: true
           command: start
@@ -316,6 +326,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/opt/bin/kubernetes-download.sh
             RemainAfterExit=yes
             Type=oneshot
+
         - name: setup-network-environment.service
           command: start
           content: |
@@ -331,6 +342,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
+
         - name: etcd.service
           command: start
           content: |
@@ -343,6 +355,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             User=etcd
             PermissionsStartOnly=true
             ExecStart=/usr/bin/etcd \
+
             --name ${DEFAULT_IPV4} \
             --addr ${DEFAULT_IPV4}:4001 \
             --bind-addr 0.0.0.0 \
@@ -353,11 +366,13 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             --snapshot true
             Restart=always
             RestartSec=10s
+
         - name: fleet.socket
           command: start
           content: |
             [Socket]
             ListenStream=/var/run/fleet.sock
+
         - name: fleet.service
           command: start
           content: |
@@ -373,6 +388,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/usr/bin/fleetd
             Restart=always
             RestartSec=10s
+
         - name: etcd-waiter.service
           command: start
           content: |
@@ -389,6 +405,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/usr/bin/bash /opt/bin/waiter.sh
             RemainAfterExit=true
             Type=oneshot
+
         - name: flannel.service
           command: start
           content: |
@@ -407,6 +424,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
             ExecStartPre=-/usr/bin/etcdctl mk /coreos.com/network/config '{"Network":"10.100.0.0/16", "Backend": {"Type": "vxlan"}}'
             ExecStart=/opt/bin/flanneld
+
         - name: kube-apiserver.service
           command: start
           content: |
@@ -420,6 +438,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/kube-apiserver
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-apiserver
             ExecStart=/opt/bin/kube-apiserver \
+
             --address=0.0.0.0 \
             --port=8080 \
             --service-cluster-ip-range=10.100.0.0/16 \
@@ -427,6 +446,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             --logtostderr=true
             Restart=always
             RestartSec=10
+
         - name: kube-controller-manager.service 
           command: start
           content: |
@@ -439,10 +459,12 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/kube-controller-manager
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-controller-manager
             ExecStart=/opt/bin/kube-controller-manager \
+
             --master=127.0.0.1:8080 \
             --logtostderr=true
             Restart=always
             RestartSec=10
+
         - name: kube-scheduler.service
           command: start
           content: |
@@ -457,6 +479,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/opt/bin/kube-scheduler --master=127.0.0.1:8080
             Restart=always
             RestartSec=10
+
         - name: kube-register.service
           command: start
           content: |
@@ -471,6 +494,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/kube-register
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-register
             ExecStart=/opt/bin/kube-register \
+
             --metadata=role=node \
             --fleet-endpoint=unix:///var/run/fleet.sock \
             --healthz-port=10248 \
@@ -481,6 +505,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
         group: stable
         reboot-strategy: off
     ssh_authorized_keys:
+
       - ssh-rsa AAAAB3NzaC1yc2EAAAAD...
 
 
@@ -489,13 +514,16 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
 On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cloud-config-slave.yml`.
 
     #cloud-config
+
     ---
     write_files:
+
       - path: /etc/default/docker
         content: |
           DOCKER_EXTRA_OPTS='--insecure-registry="rdocker.example.com:5000"'
     coreos:
       units:
+
         - name: 10-eno1.network
           runtime: true
           content: |
@@ -503,6 +531,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             Name=eno1
             [Network]
             DHCP=yes
+
         - name: 20-nodhcp.network
           runtime: true
           content: |
@@ -510,14 +539,18 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             Name=en*
             [Network]
             DHCP=none
+
         - name: etcd.service
           mask: true
+
         - name: docker.service
           drop-ins:
+
             - name: 50-insecure-registry.conf
               content: |
                 [Service]
                 Environment="HTTP_PROXY=http://rproxy.example.com:3128/" "NO_PROXY=localhost,127.0.0.0/8,rdocker.example.com"
+
         - name: fleet.service
           command: start
           content: |
@@ -531,6 +564,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/usr/bin/fleetd
             Restart=always
             RestartSec=10s
+
         - name: flannel.service
           command: start
           content: |
@@ -544,6 +578,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/flanneld
             ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
             ExecStart=/opt/bin/flanneld -etcd-endpoints http://<MASTER_SERVER_IP>:4001
+
         - name: docker.service
           command: start
           content: |
@@ -559,6 +594,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/usr/bin/docker -d --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} -s=overlay -H fd:// ${DOCKER_EXTRA_OPTS}
             [Install]
             WantedBy=multi-user.target
+
         - name: setup-network-environment.service
           command: start
           content: |
@@ -574,6 +610,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStart=/opt/bin/setup-network-environment
             RemainAfterExit=yes
             Type=oneshot
+
         - name: kube-proxy.service
           command: start
           content: |
@@ -586,10 +623,12 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/kube-proxy
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-proxy
             ExecStart=/opt/bin/kube-proxy \
+
             --etcd_servers=http://<MASTER_SERVER_IP>:4001 \
             --logtostderr=true
             Restart=always
             RestartSec=10
+
         - name: kube-kubelet.service
           command: start
           content: |
@@ -603,6 +642,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
             ExecStartPre=/usr/bin/wget -N -P /opt/bin http://<PXE_SERVER_IP>/kubelet
             ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
             ExecStart=/opt/bin/kubelet \
+
             --address=0.0.0.0 \
             --port=10250 \
             --hostname_override=${DEFAULT_IPV4} \
@@ -616,6 +656,7 @@ On the PXE server make and fill in the variables `vi /var/www/html/coreos/pxe-cl
         group: stable
         reboot-strategy: off
     ssh_authorized_keys:
+
       - ssh-rsa AAAAB3NzaC1yc2EAAAAD...
 
 

@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started on [CloudStack](http://cloudstack.apache.org)
+
 ------------------------------------------------------------
 
 **Table of Contents**

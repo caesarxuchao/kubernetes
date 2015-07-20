@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -50,6 +51,7 @@ When setting up a large Kubernetes cluster, the following issues must be conside
 ### Quota Issues
 
 To avoid running into cloud provider quota issues, when creating a cluster with many nodes, consider:
+
 * Increase the quota for things like CPU, IPs, etc.
   * In [GCE, for example,](https://cloud.google.com/compute/docs/resource-quotas) you'll want to increase the quota for:
     * CPUs
@@ -81,6 +83,7 @@ containers:
 These limits, however, are based on data collected from addons running on 4-node clusters (see [#10335](https://github.com/GoogleCloudPlatform/kubernetes/issues/10335#issuecomment-117861225)). The addons consume a lot more resources when running on large deployment clusters (see [#5880](https://github.com/GoogleCloudPlatform/kubernetes/issues/5880#issuecomment-113984085)). So, if a large cluster is deployed without adjusting these values, the addons may continuously get killed because they keep hitting the limits.
 
 To avoid running into cluster addon resource issues, when creating a cluster with many nodes, consider the following:
+
 * Scale memory and CPU limits for each of the following addons, if used, along with the size of cluster (there is one replica of each handling the entire cluster so memory and CPU usage tends to grow proportionally with size/load on cluster):
   * Heapster ([GCM/GCL backed](../../cluster/addons/cluster-monitoring/google/heapster-controller.yaml), [InfluxDB backed](../../cluster/addons/cluster-monitoring/influxdb/heapster-controller.yaml), [InfluxDB/GCL backed](../../cluster/addons/cluster-monitoring/googleinfluxdb/heapster-controller-combined.yaml), [standalone](../../cluster/addons/cluster-monitoring/standalone/heapster-controller.yaml))
   * [InfluxDB and Grafana](../../cluster/addons/cluster-monitoring/influxdb/influxdb-grafana-controller.yaml)

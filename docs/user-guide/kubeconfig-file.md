@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -86,6 +87,7 @@ users:
 ## Loading and merging rules
 
 The rules for loading and merging the kubeconfig files are straightforward, but there are a lot of them.  The final config is built in this order:
+
   1.  Get the kubeconfig  from disk.  This is done with the following hierarchy and merge rules:
 
 
@@ -100,6 +102,7 @@ The rules for loading and merging the kubeconfig files are straightforward, but 
 
 
       Otherwise, use HomeDirectoryLocation (~/.kube/config) with no merging.
+
   1.  Determine the context to use based on the first hit in this chain
       1.  command line argument - the value of the `context` command line option
       1.  current-context from the merged kubeconfig file

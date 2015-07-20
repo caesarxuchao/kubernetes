@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -66,8 +67,10 @@ Processes in pods will need to have consistent UID/GID/SELinux category labels i
 * It is out of the scope of this document to prescribe a specific set 
   of constraints to isolate containers from their host. Different use cases need different
   settings.
+
 * The concept of a security context should not be tied to a particular security mechanism or platform 
   (ie. SELinux, AppArmor)
+
 * Applying a different security context to a scope (namespace or pod) requires a solution such as the one proposed for
   [service accounts](service_accounts.md).
 
@@ -78,6 +81,7 @@ be addressed with security contexts:
 
 1.  Kubernetes is used to run a single cloud application. In order to protect
     nodes from containers:
+
     * All containers run as a single non-root user
     * Privileged containers are disabled
     * All containers run with a particular MCS label 
@@ -85,16 +89,20 @@ be addressed with security contexts:
     
 2.  Just like case #1, except that I have more than one application running on
     the Kubernetes cluster.
+
     * Each application is run in its own namespace to avoid name collisions
     * For each application a different uid and MCS label is used
     
 3.  Kubernetes is used as the base for a PAAS with 
     multiple projects, each project represented by a namespace. 
+
     * Each namespace is associated with a range of uids/gids on the node that
       are mapped to uids/gids on containers using linux user namespaces. 
+
     * Certain pods in each namespace have special privileges to perform system
       actions such as talking back to the server for deployment, run docker
       builds, etc.
+
     * External NFS storage is assigned to each namespace and permissions set
       using the range of uids/gids assigned to that namespace. 
 

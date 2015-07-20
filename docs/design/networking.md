@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -148,12 +149,15 @@ a pod tries to egress beyond GCE's project the packets must be SNAT'ed
 
 With the primary aim of providing IP-per-pod-model, other implementations exist
 to serve the purpose outside of GCE.
+
   - [OpenVSwitch with GRE/VxLAN](../admin/ovs-networking.md)
   - [Flannel](https://github.com/coreos/flannel#flannel)
   - [L2 networks](http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/)
     ("With Linux Bridge devices" section)
+
   - [Weave](https://github.com/zettio/weave) is yet another way to build an
     overlay network, primarily aiming at Docker integration.
+
   - [Calico](https://github.com/Metaswitch/calico) uses BGP to enable real
     container IPs.
 

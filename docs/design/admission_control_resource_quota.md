@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -126,6 +127,7 @@ Any resource that is not part of core Kubernetes must follow the resource naming
 This means the resource must have a fully-qualified name (i.e. mycompany.org/shinynewresource)
 
 If the incoming request does not cause the total usage to exceed any of the enumerated hard resource limits, the plug-in will post a
+
 **ResourceQuotaUsage** document to the server to atomically update the observed usage based on the previously read 
 **ResourceQuota.ResourceVersion**.  This keeps incremental usage atomically consistent, but does introduce a bottleneck (intentionally)
 into the system.

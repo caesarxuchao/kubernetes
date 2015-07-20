@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started locally
+
 -----------------------
 
 **Table of Contents**
@@ -59,6 +61,7 @@ Not running Linux? Consider running Linux in a local virtual machine with [Vagra
 #### Docker
 
 At least [Docker](https://docs.docker.com/installation/#installation)
+
 1.3+. Ensure the Docker daemon is running and can be contacted (try `docker
 ps`).  Some of the kubernetes components need to run as root, which normally
 works fine with docker.

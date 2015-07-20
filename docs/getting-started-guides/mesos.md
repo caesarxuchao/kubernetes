@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started with Kubernetes on Mesos
+
 ----------------------------------------
 
 **Table of Contents**
@@ -252,6 +254,7 @@ started the Kubernetes pod.
 Kube-dns is an addon for Kubernetes which adds DNS-based service discovery to the cluster. For a detailed explanation see [DNS in Kubernetes][4].
 
 The kube-dns addon runs as a pod inside the cluster. The pod consists of three co-located containers:
+
 - a local etcd instance
 - the [skydns][11] DNS server
 - the kube2sky process to glue skydns to the state of the Kubernetes cluster.
@@ -259,6 +262,7 @@ The kube-dns addon runs as a pod inside the cluster. The pod consists of three c
 The skydns container offers DNS service via port 53 to the cluster. The etcd communication works via local 127.0.0.1 communication
 
 We assume that kube-dns will use
+
 - the service IP `10.10.10.10`
 - and the `cluster.local` domain.
 

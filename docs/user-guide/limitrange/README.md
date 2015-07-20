@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -60,12 +61,14 @@ apply default resource limits to pods in the absence of an end-user specified va
 See [LimitRange design doc](../../design/admission_control_limit_range.md) for more information. For a detailed description of the Kubernetes resource model, see [Resources](../../../docs/user-guide/compute-resources.md)
 
 Step 0: Prerequisites
+
 -----------------------------------------
 This example requires a running Kubernetes cluster.  See the [Getting Started guides](../../../docs/getting-started-guides/) for how to get started.
 
 Change to the `<kubernetes>/examples/limitrange` directory if you're not already there.
 
 Step 1: Create a namespace
+
 -----------------------------------------
 This example will work in a custom namespace to demonstrate the concepts involved.
 
@@ -81,6 +84,7 @@ limit-example   <none>             Active
 ```
 
 Step 2: Apply a limit to the namespace
+
 -----------------------------------------
 Let's create a simple limit in our namespace.
 
@@ -112,6 +116,7 @@ specify an explicit resource limit, each container in a pod will get 100Mi of me
 not specify an explicit resource limit, each container in a pod will get 250m of cpu.
 
 Step 3: Enforcing limits at point of creation
+
 -----------------------------------------
 The limits enumerated in a namespace are only enforced when a pod is created or updated in
 the cluster.  If you change the limits to a different value range, it does not affect pods that
@@ -182,6 +187,7 @@ $ kubectl get pods valid-pod --namespace=limit-example -o yaml | grep -C 5 resou
 Note that this pod specifies explicit resource limits so it did not pick up the namespace default values.
 
 Step 4: Cleanup
+
 ----------------------------
 To remove the resources used by this example, you can just delete the limit-example namespace.
 
@@ -194,6 +200,7 @@ default   <none>    Active
 ```
 
 Summary
+
 ----------------------------
 Cluster operators that want to restrict the amount of resources a single container or pod may consume
 are able to define allowable ranges per Kubernetes namespace.  In the absence of any hard limits,

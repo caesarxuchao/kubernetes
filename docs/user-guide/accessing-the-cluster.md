@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -81,6 +82,7 @@ kubectl and complete documentation is found in the [kubectl manual](kubectl/kube
 Kubectl handles locating and authenticating to the apiserver.
 If you want to directly access the REST API with an http client like
 curl or wget, or a browser, there are several ways to locate and authenticate:
+
   - Run kubectl in proxy mode.
     - Recommended approach.
     - Uses stored apiserver location.
@@ -170,11 +172,13 @@ service account is placed into the filesystem tree of each container in that pod
 at `/var/run/secrets/kubernetes.io/serviceaccount/token`.
 
 From within a pod the recommended ways to connect to API are:
+
   - run a kubectl proxy as one of the containers in the pod, or as a background
     process within a container.  This proxies the
     kubernetes API to the localhost interface of the pod, so that other processes
     in any container of the pod can access it.  See this [example of using kubectl proxy
     in a pod](../../examples/kubectl-container/).
+
   - use the Go client library, and create a client using the `client.NewInCluster()` factory.
     This handles locating and authenticating to the apiserver.
 In each case, the credentials of the pod are used to communicate securely with the apiserver.
@@ -192,27 +196,34 @@ such as your desktop machine.
 ### Ways to connect
 
 You have several options for connecting to nodes, pods and services from outside the cluster:
+
   - Access services through public IPs.
     - Use a service with type `NodePort` or `LoadBalancer` to make the service reachable outside
       the cluster.  See the [services](services.md) and
       [kubectl expose](kubectl/kubectl_expose.md) documentation.
+
     - Depending on your cluster environment, this may just expose the service to your corporate network,
       or it may expose it to the internet.  Think about whether the service being exposed is secure.
       Does it do its own authentication?
+
     - Place pods behind services.  To access one specific pod from a set of replicas, such as for debugging,
       place a unique label on the pod it and create a new service which selects this label.
+
     - In most cases, it should not be necessary for application developer to directly access
       nodes via their nodeIPs.
+
   - Access services, nodes, or pods using the Proxy Verb.
     - Does apiserver authentication and authorization prior to accessing the remote service.
       Use this if the services are not secure enough to expose to the internet, or to gain
       access to ports on the node IP, or for debugging.
+
     - Proxies may cause problems for some web applications.
     - Only works for HTTP/HTTPS.
     - Described [here](#discovering-builtin-services).
   - Access from a node or pod in the cluster.
     - Run a pod, and then connect to a shell in it using [kubectl exec](kubectl/kubectl_exec.md).
       Connect to other nodes, pods, and services from that shell.
+
     - Some clusters may allow you to ssh to a node in the cluster.  From there you may be able to
       access cluster services.  This is a non-standard method, and will work on some clusters but
       not others.  Browsers and other tools may or may not be installed.  Cluster DNS may not work.
@@ -269,8 +280,10 @@ about namespaces? 'proxy' verb? -->
 #### Using web browsers to access services running on the cluster
 
 You may be able to put an apiserver proxy url into the address bar of a browser. However:
+
   - Web browsers cannot usually pass tokens, so you may need to use basic (password) auth.  Apiserver can be configured to accept basic auth,
     but your cluster may not be configured to accept basic auth.
+
   - Some web apps may not work, particularly those with client side javascript that construct urls in a
     way that is unaware of the proxy path prefix.
 
@@ -281,6 +294,7 @@ The redirect capabilities have been deprecated and removed.  Please use a proxy 
 ## So Many Proxies
 
 There are several different proxies you may encounter when using kubernetes:
+
   1. The [kubectl proxy](#directly-accessing-the-rest-api):
     - runs on a user's desktop or in a pod
     - proxies from a localhost address to the kubernetes apiserver

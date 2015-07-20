@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -100,10 +101,12 @@ A pod runs in a *security context* under a *service account* that is defined by 
 2. All infrastructure components (kubelets, kube-proxies, controllers, scheduler) should have an infrastructure user that they can authenticate with and be authorized to perform only the functions they require against the API.
 3. Most infrastructure components should use the API as a way of exchanging data and changing the system, and only the API should have access to the underlying data store (etcd)
 4. When containers run on the cluster and need to talk to other containers or the API server, they should be identified and authorized clearly as an autonomous process via a [service account](service_accounts.md)
+
    1.  If the user who started a long-lived process is removed from access to the cluster, the process should be able to continue without interruption
    2.  If the user who started processes are removed from the cluster, administrators may wish to terminate their processes in bulk
    3.  When containers run with a service account, the user that created / triggered the service account behavior must be associated with the container's action
 5. When container processes run on the cluster, they should run in a [security context](security_context.md) that isolates those processes via Linux user security, user namespaces, and permissions.
+
    1.  Administrators should be able to configure the cluster to automatically confine all container processes as a non-root, randomly assigned UID
    2.  Administrators should be able to ensure that container processes within the same namespace are all assigned the same unix user UID
    3.  Administrators should be able to limit which developers and project administrators have access to higher privilege actions
@@ -113,6 +116,7 @@ A pod runs in a *security context* under a *service account* that is defined by 
    7.  When available, Linux kernel user namespaces can be used to ensure 5.2 and 5.4 are met.
    8.  When application developers want to share filesystem data via distributed filesystems, the Unix user ids on those filesystems must be consistent across different container processes
 6. Developers should be able to define [secrets](secrets.md) that are automatically added to the containers when pods are run
+
    1.  Secrets are files injected into the container whose values should not be displayed within a pod. Examples:
        1. An SSH private key for git cloning remote data
        2. A client certificate for accessing a remote system

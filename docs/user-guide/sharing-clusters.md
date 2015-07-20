@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -106,8 +107,10 @@ $ kubectl config set-context $CONTEXT_NAME --cluster=$CLUSTER_NICKNAME --user=$U
 ```
 
 Notes:
+
 * The `--embed-certs` flag is needed to generate a standalone
 `kubeconfig`, that will work as-is on another host.
+
 * `--kubeconfig` is both the preferred file to load config from and the file to
 save config too. In the above commands the `--kubeconfig` file could be
 omitted if you first run

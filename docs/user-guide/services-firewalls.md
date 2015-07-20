@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -64,10 +65,13 @@ as they listen on IP addresses that are different than the host node's external
 IP address.
 
 Consider:
+
    * You create a Service with an external load balancer (IP Address 1.2.3.4)
      and port 80
+
    * You open the firewall for port 80 for all nodes in your cluster, so that
      the external Service actually can deliver packets to your Service
+
    * You start an nginx server, running on port 80 on the host virtual machine
      (IP Address 2.3.4.5).  This nginx is **also** exposed to the internet on
      the VM's external IP address.

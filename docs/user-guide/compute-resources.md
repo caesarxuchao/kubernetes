@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -122,10 +123,12 @@ When kubelet starts a container of a pod, it passes the CPU and memory limits to
 runner (Docker or rkt).
 
 When using Docker:
+
 - The `spec.container[].resources.limits.cpu` is multiplied by 1024, converted to an integer, and
   used as the value of the [`--cpu-shares`](
   https://docs.docker.com/reference/run/#runtime-constraints-on-resources) flag to the `docker run`
   command.
+
 - The `spec.container[].resources.limits.memory` is converted to an integer, and used as the value
   of the [`--memory`](https://docs.docker.com/reference/run/#runtime-constraints-on-resources) flag
   to the `docker run` command.
@@ -164,6 +167,7 @@ Events:
 ```
 
 If a pod or pods are pending with this message, then there are several things to try:
+
 - Add more nodes to the cluster.
 - Terminate unneeded pods to make room for pending pods.
 - Check that the pod is not larger than all the nodes.  For example, if all the nodes
@@ -171,6 +175,7 @@ have a capacity of `cpu: 1`, then a pod with a limit of `cpu: 1.1` will never be
 
 You can check node capacities with the `kubectl get nodes -o <format>` command.
 Here are some example command lines that extract just the necessary information:
+
 - `kubectl get nodes -o yaml | grep '\sname\|cpu\|memory'`
 - `kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, cap: .status.capacity}'`
 

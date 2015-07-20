@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -59,14 +60,17 @@ of use cases (intentionally vague):
 1. _"Preferentially run my workloads in my on-premise cluster(s), but
    automatically overflow to my cloud-hosted cluster(s) if I run out
    of on-premise capacity"_.
+
 1. _"Most of my workloads should run in my preferred cloud-hosted
    cluster(s), but some are privacy-sensitive, and should be
    automatically diverted to run in my secure, on-premise
    cluster(s)"_.
+
 1. _"I want to avoid vendor lock-in, so I want my workloads to run
    across multiple cloud providers all the time.  I change my set of
    such cloud providers, and my pricing contracts with them,
    periodically"_.
+
 1. _"I want to be immune to any single data centre or cloud
    availability zone outage, so I want to spread my service across
    multiple such zones (and ideally even across multiple cloud
@@ -148,11 +152,14 @@ It seems that most of this boils down to:
 1. **location affinity** (pods relative to each other, and to other
    stateful services like persistent storage - how is this expressed
    and enforced?)
+
 1. **cross-cluster scheduling** (given location affinity constraints
    and other scheduling policy, which resources are assigned to which
    clusters, and by what?)
+
 1. **cross-cluster service discovery** (how do pods in one cluster
    discover and communicate with pods in another cluster?)
+
 1. **cross-cluster migration** (how do compute and storage resources,
    and the distributed applications to which they belong, move from
    one cluster to another)
@@ -212,6 +219,7 @@ It seems useful to split this into two sub use cases:
    which feature sets like private networks, load balancing,
    persistent disks, data snapshots etc are typically consistent and
    explicitly designed to inter-operate).
+
 1. Multiple cloud providers (typically with inconsistent feature sets
    and more limited interoperability).
 
@@ -254,9 +262,11 @@ initial implementation targeting single cloud provider only.
 1. I "manually" update my replica count configurations in the
    remaining clusters by 1/n when the failure occurs, and Kubernetes
    takes care of the rest for me, or
+
 1. Auto-scaling (not yet available) in the remaining clusters takes
    care of it for me automagically as the additional failed-over
    traffic arrives (with some latency).
+
 1. I manually specify "additional resources to be provisioned" per
    remaining cluster, possibly proportional to both the remaining functioning resources
    and the unavailable resources in the failed cluster(s).
@@ -312,6 +322,7 @@ location affinity:
    principle is much the same.  In some cases moving the data might be
    prohibitively expensive or time-consuming, in which case these
    applications may be effectively _immovable_.
+
 1. **"Strictly Decoupled"**: Those applications that can be
    indefinitely partitioned across more than one cluster, to no
    disadvantage.  An embarrassingly parallel YouTube porn detector,
@@ -322,6 +333,7 @@ location affinity:
    (other than the source of YouTube videos, which is assumed to be
    equally remote from all clusters in this example).  Each pod can be
    scheduled independently, in any cluster, and moved at any time.
+
 1. **"Preferentially Coupled"**: Somewhere between Coupled and Decoupled.  These applications prefer to have all of their pods located in the same cluster (e.g. for failure correlation, network latency or bandwidth cost reasons), but can tolerate being partitioned for "short" periods of time (for example while migrating the application from one cluster to another). Most small to medium sized LAMP stacks with not-very-strict latency goals probably fall into this category (provided that they use sane service discovery and reconnect-on-fail, which they need to do anyway to run effectively, even in a single Kubernetes cluster).  
 
 And then there's what I'll call _absolute_ location affinity.  Some
@@ -368,6 +380,7 @@ to be able to:
    the properties of the application (Location Affinity class --
    Strictly Coupled, Strictly Decoupled etc, privacy class etc) will
    be required.
+
 1. Multiplex the responses from the individual clusters into an
    aggregate response.
 
@@ -409,6 +422,7 @@ These are often left implicit by customers, but are worth calling out explicitly
    and look just like any other Kubernetes API client, with no special
    treatment.  If the federation system fails catastrophically, the
    underlying Kubernetes clusters should remain independently usable.
+
 1. Unified monitoring, alerting and auditing across federated Kubernetes clusters.
 1. Unified authentication, authorization and quota management across
    clusters (this is in direct conflict with failure isolation above,

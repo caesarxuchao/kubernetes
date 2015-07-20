@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -113,6 +114,7 @@ are `value-1` and `value-2`, respectively, with carriage return and newline char
 Create the secret using [`kubectl create`](kubectl/kubectl_create.md).
 
 Once the secret is created, you can:
+
   - create pods that automatically use it via a [Service Account](service-accounts.md).
   - modify your pod specification to use the secret
 
@@ -517,13 +519,16 @@ Pod level](#use-case-two-containers).
 
  - Applications still need to protect the value of secret after reading it from the volume,
    such as not accidentally logging it or transmitting it to an untrusted party.
+
  - A user who can create a pod that uses a secret can also see the value of that secret.  Even
    if apiserver policy does not allow that user to read the secret object, the user could
    run a pod which exposes the secret.
    If multiple replicas of etcd are run, then the secrets will be shared between them.
    By default, etcd does not secure peer-to-peer communication with SSL/TLS, though this can be configured.
+
  - It is not possible currently to control which users of a kubernetes cluster can
    access a secret.  Support for this is planned.
+
  - Currently, anyone with root on any node can read any secret from the apiserver,
    by impersonating the kubelet.  It is a planned feature to only send secrets to
    nodes that actually require them, to restrict the impact of a root exploit on a

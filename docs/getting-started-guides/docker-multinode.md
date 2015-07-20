@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Running Multi-Node Kubernetes Using Docker
+
 ------------------------------------------
 
 _Note_:
@@ -66,6 +68,7 @@ Here's a diagram of what the final result will look like:
 ### Bootstrap Docker
 
 This guide also uses a pattern of running two instances of the Docker daemon
+
    1) A _bootstrap_ Docker instance which is used to start system daemons like `flanneld` and `etcd`
    2) A _main_ Docker instance which is used for the Kubernetes infrastructure and user's scheduled containers
 

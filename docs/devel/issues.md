@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -36,11 +37,13 @@ GitHub Issues for the Kubernetes Project
 A list quick overview of how we will review and prioritize incoming issues at https://github.com/GoogleCloudPlatform/kubernetes/issues
 
 Priorities
+
 ----------
 
 We will use GitHub issue labels for prioritization.  The absence of a priority label means the bug has not been reviewed and prioritized yet.
 
 Definitions
+
 -----------
 * P0 - something broken for users, build broken, or critical security issue.  Someone must drop everything and work on it.
 * P1 - must fix for earliest possible binary release (every two weeks)

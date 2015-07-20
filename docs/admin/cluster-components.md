@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -81,6 +82,7 @@ These controllers include:
 * Replication Controller
  * Responsible for maintaining the correct number of pods for every replication
    controller object in the system.
+
 * Endpoints Controller
  * Populates the Endpoints object (i.e., join Services & Pods).
 * Service Account & Token Controllers
@@ -102,11 +104,14 @@ to create these pods and services does run on the master VM. See:
 Addon objects are created in the "kube-system" namespace.
 
 Example addons are:
+
 * [DNS](../../cluster/addons/dns/) provides cluster local DNS.
 * [kube-ui](../../cluster/addons/kube-ui/) provides a graphical UI for the
   cluster.
+
 * [fluentd-elasticsearch](../../cluster/addons/fluentd-elasticsearch/) provides
   log storage. Also see the [gcp version](../../cluster/addons/fluentd-gcp/).
+
 * [cluster-monitoring](../../cluster/addons/cluster-monitoring/) provides
   monitoring for the cluster.
 
@@ -118,14 +123,17 @@ the Kubernetes runtime environment.
 ### kubelet
 
 [kubelet](kubelet.md) is the primary node agent. It:
+
 * Watches for pods that have been assigned to its node (either by apiserver or
   or via local configuration file) and:
+
  * Mounts the pod's required volumes
  * Downloads the pod's secrets
  * Run the pod's containers via docker (or, experimentally, rkt).
  * Periodically executes any requested container liveness probes.
  * Reports the status of the pod back to the rest of the system, by creating a
    "mirror pod" if necessary.
+
 * Reports the status of the node back to the rest of the system.
 
 ### kube-proxy

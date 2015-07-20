@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started on Google Compute Engine
+
 ----------------------------------------
 
 **Table of Contents**
@@ -230,6 +232,7 @@ If you're having trouble SSHing into your instances, ensure the GCE firewall
 isn't blocking port 22 to your VMs.  By default, this should work but if you
 have edited firewall rules or created a new non-default network, you'll need to
 expose it: `gcloud compute firewall-rules create default-ssh --network=<network-name>
+
 --description "SSH allowed from anywhere" --allow tcp:22`
 
 Additionally, your GCE SSH key must either have no passcode or you need to be

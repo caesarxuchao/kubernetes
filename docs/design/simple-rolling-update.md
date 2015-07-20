@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -57,6 +58,7 @@ The value of that label is the hash of the complete JSON representation of the`f
 
 If a rollout fails or is terminated in the middle, it is important that the user be able to resume the roll out.
 To facilitate recovery in the case of a crash of the updating process itself, we add the following annotations to each replication controller in the `kubernetes.io/` annotation namespace:
+
    * `desired-replicas` The desired number of replicas for this replication controller (either N or zero)
    * `update-partner` A pointer to the replication controller resource that is the other half of this update (syntax `<name>` the namespace is assumed to be identical to the namespace of this replication controller.)
 
@@ -113,6 +115,7 @@ then `foo-next` is synthesized using the pattern `<controller-name>-<hash-of-nex
       * increase size of `foo-next`
       * if size of `foo` > 0
          decrease size of `foo`
+
    * Goto Rename
 
 #### Rename

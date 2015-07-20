@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -252,6 +253,7 @@ This enables consumers to WATCH /registry/{resourceType} for changes across name
 ### Kubelet
 
 The kubelet will register pod's it sources from a file or http source with a namespace associated with the 
+
 *cluster-id*
 
 ### Example: OpenShift Origin managing a Kubernetes Namespace

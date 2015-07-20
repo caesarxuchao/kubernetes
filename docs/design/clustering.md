@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -46,6 +47,7 @@ Once a cluster is established, the following is true:
   2. **Target AuthN** A way to securely talk to the kubelet on that node.  Currently we call out to the kubelet over HTTP.  This should be over HTTPS and the master should know what CA to trust for that node.
   3. **Caller AuthN/Z** This would be the master verifying itself (and permissions) when calling the node.  Currently, this is only used to collect statistics as authorization isn't critical.  This may change in the future though.
 2. **Node -> Master**  The nodes currently talk to the master to know which pods have been assigned to them and to publish events.
+
   1. **Location** The nodes must know where the master is at.
   2. **Target AuthN** Since the master is assigning work to the nodes, it is critical that they verify whom they are talking to.
   3. **Caller AuthN/Z** The nodes publish events and so must be authenticated to the master. Ideally this authentication is specific to each node so that authorization can be narrowly scoped.  The details of the work to run (including things like environment variables) might be considered sensitive and should be locked down also.

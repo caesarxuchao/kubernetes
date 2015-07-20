@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -44,6 +45,7 @@ is [here](../../../docs/user-guide/container-environment.md).
 ![Diagram](diagram.png)
 
 Prerequisites
+
 -------------
 This example assumes that you have a Kubernetes cluster installed and
 running, and that you have installed the `kubectl` command line tool
@@ -52,11 +54,13 @@ started](../../../docs/getting-started-guides/) for installation instructions
 for your platform.
 
 Optional: Build your own containers
+
 -----------------------------------
 The code for the containers is under
 [containers/](containers/)
 
 Get everything running
+
 ----------------------
 
     kubectl create -f ./backend-rc.yaml
@@ -65,6 +69,7 @@ Get everything running
     kubectl create -f ./show-srv.yaml
 
 Query the service
+
 -----------------
 Use `kubectl describe service show-srv` to determine the public IP of
 your service.
@@ -116,6 +121,7 @@ service. This results in a different backend pod servicing each
 request as well.
 
 Cleanup
+
 -------
     kubectl delete rc,service -l type=show-type
     kubectl delete rc,service -l type=backend-type

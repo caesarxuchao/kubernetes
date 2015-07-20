@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -36,6 +37,7 @@ Documentation for other releases can be found at
 We'll begin by setting up the master node.  For the purposes of illustration, we'll assume that the IP of this machine is `${MASTER_IP}`
 
 There are two main phases to installing the master:
+
    * [Setting up `flanneld` and `etcd`](#setting-up-flanneld-and-etcd)
    * [Starting the Kubernetes master components](#starting-the-kubernetes-master)
 

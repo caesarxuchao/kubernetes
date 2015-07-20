@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -37,6 +38,7 @@ This example demonstrates how [resource quota](../../admin/admission-controllers
 This example assumes you have a functional Kubernetes setup.
 
 Step 1: Create a namespace
+
 -----------------------------------------
 This example will work in a custom namespace to demonstrate the concepts involved.
 
@@ -51,6 +53,7 @@ quota-example   <none>             Active
 ```
 
 Step 2: Apply a quota to the namespace
+
 -----------------------------------------
 By default, a pod will run with unbounded CPU and memory limits.  This means that any pod in the
 system will be able to consume as much CPU and memory on the node that executes the pod.
@@ -89,6 +92,7 @@ services                0       5
 ```
 
 Step 3: Applying default resource limits
+
 -----------------------------------------
 Pod authors rarely specify resource limits for their pods.
 
@@ -176,6 +180,7 @@ You can now see the pod that was created is consuming explicit amounts of resour
 tracked by the Kubernetes system properly.
 
 Summary
+
 ----------------------------
 Actions that consume node resources for cpu and memory can be subject to hard quota limits defined
 by the namespace quota.

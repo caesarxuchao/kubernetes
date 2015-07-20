@@ -25,12 +25,14 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
 Getting started with Juju
+
 -------------------------
 
 Juju handles provisioning machines and deploying complex systems to a
@@ -112,6 +114,7 @@ Software Defined Networking.
 Juju status provides information about each unit in the cluster:
 
     juju status --format=oneline
+
     - docker/0: 52.4.92.78 (started)
       - flannel-docker/0: 52.4.92.78 (started)
       - kubernetes/0: 52.4.92.78 (started)
@@ -244,6 +247,7 @@ Juju runs natively against a variety of cloud providers and can be
 made to work against many more using a generic manual provider.
 
 Provider          | v0.15.0
+
 --------------    | -------
 AWS               | TBD
 HPCloud           | TBD
@@ -256,6 +260,7 @@ GCE               | TBD
 
 
 Provider          | v0.8.1
+
 --------------    | -------
 AWS               | [Pass](http://reports.vapour.ws/charm-test-details/charm-bundle-test-parent-136)
 HPCloud           | [Pass](http://reports.vapour.ws/charm-test-details/charm-bundle-test-parent-136)

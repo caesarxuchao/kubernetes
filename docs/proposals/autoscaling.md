@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -56,13 +57,17 @@ done automatically based on statistical analysis and thresholds.
 * This proposal is for horizontal scaling only.  Vertical scaling will be handled in [issue 2072](https://github.com/GoogleCloudPlatform/kubernetes/issues/2072)
 * `ReplicationControllers` will not know about the auto-scaler, they are the target of the auto-scaler.  The `ReplicationController` responsibilities are
 constrained to only ensuring that the desired number of pods are operational per the [Replication Controller Design](../user-guide/replication-controller.md#responsibilities-of-the-replication-controller)
+
 * Auto-scalers will be loosely coupled with data gathering components in order to allow a wide variety of input sources
 * Auto-scalable resources will support a scale verb ([1629](https://github.com/GoogleCloudPlatform/kubernetes/issues/1629))
 such that the auto-scaler does not directly manipulate the underlying resource.
+
 * Initially, most thresholds will be set by application administrators. It should be possible for an autoscaler to be
 written later that sets thresholds automatically based on past behavior (CPU used vs incoming requests).
+
 * The auto-scaler must be aware of user defined actions so it does not override them unintentionally (for instance someone
 explicitly setting the replica count to 0 should mean that the auto-scaler does not try to scale the application up)
+
 * It should be possible to write and deploy a custom auto-scaler without modifying existing auto-scalers
 * Auto-scalers must be able to monitor multiple replication controllers while only targeting a single scalable
 object (for now a ReplicationController, but in the future it could be a job or any resource that implements scale)

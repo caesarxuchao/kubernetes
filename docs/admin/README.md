@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -42,20 +43,27 @@ There are many different examples of how to setup a kubernetes cluster.  Many of
 [matrix](../getting-started-guides/README.md).  We call each of the combinations in this matrix a *distro*.
 
 Before choosing a particular guide, here are some things to consider:
+
  - Are you just looking to try out Kubernetes on your laptop, or build a high-availability many-node cluster? Both
    models are supported, but some distros are better for one case or the other.
+
  - Will you be using a hosted Kubernetes cluster, such as [GKE](https://cloud.google.com/container-engine), or setting
    one up yourself?
+
  - Will your cluster be on-premises, or in the cloud (IaaS)?  Kubernetes does not directly support hybrid clusters.  We
    recommend setting up multiple clusters rather than spanning distant locations.
+
  - Will you be running Kubernetes on "bare metal" or virtual machines?  Kubernetes supports both, via different distros.
  - Do you just want to run a cluster, or do you expect to do active development of kubernetes project code?  If the
    latter, it is better to pick a distro actively used by other developers.  Some distros only use binary releases, but
    offer is a greater variety of choices.
+
  - Not all distros are maintained as actively.  Prefer ones which are listed as tested on a more recent version of
    Kubernetes.
+
  - If you are configuring kubernetes on-premises, you will need to consider what [networking
    model](networking.md) fits best.
+
  - If you are designing for very high-availability, you may want [clusters in multiple zones](multi-cluster.md).
  - You may want to familiarize yourself with the various
    [components](cluster-components.md) needed to run a cluster.

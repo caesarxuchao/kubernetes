@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -96,6 +97,7 @@ Do the following:
 1. `git fetch upstream && git checkout -b release-${VER} ${BRANCHPOINT}` (you did set `${BRANCHPOINT}`, right?)
 1. Make sure you don't have any files you care about littering your repo (they
    better be checked in or outside the repo, or the next step will delete them).
+
 1. `make clean && git reset --hard HEAD && git clean -xdf`
 1. `make` (TBD: you really shouldn't have to do this, but the swagger output step requires it right now)
 1. `./build/mark-new-version.sh v${VER}.0` to mark the new release and get further
@@ -103,6 +105,7 @@ Do the following:
    on (`release-${VER}`), including forking our documentation for the release,
    the release version commit (which is then tagged), and the post-release
    version commit.
+
 1. Follow the instructions given to you by that script. They are canon for the
    remainder of the Git process. If you don't understand something in that
    process, please ask!
@@ -142,6 +145,7 @@ manage cherry picks prior to cutting the release.
 1. `git fetch upstream && git checkout -b upstream/release-${VER}`
 1. Make sure you don't have any files you care about littering your repo (they
    better be checked in or outside the repo, or the next step will delete them).
+
 1. `make clean && git reset --hard HEAD && git clean -xdf`
 1. `make` (TBD: you really shouldn't have to do this, but the swagger output step requires it right now)
 1. `./build/mark-new-version.sh v${VER}.${PATCH}` to mark the new release and get further
@@ -149,6 +153,7 @@ manage cherry picks prior to cutting the release.
    on (`release-${VER}`), including forking our documentation for the release,
    the release version commit (which is then tagged), and the post-release
    version commit.
+
 1. Follow the instructions given to you by that script. They are canon for the
    remainder of the Git process. If you don't understand something in that
    process, please ask! When proposing PRs, you can pre-fill the body with
@@ -164,6 +169,7 @@ In your git repo (you still have `${VER}` and `${PATCH}` set from above right?):
 1. `git checkout upstream/master && build/build-official-release.sh
    v${VER}.${PATCH}` (the `build-official-release.sh` script is version
    agnostic, so it's best to run it off `master` directly).
+
 1. Follow the instructions given to you by that script. At this point, you've
    done all the Git bits, you've got all the binary bits pushed, and you've got
    the template for the release started on GitHub.
@@ -199,16 +205,19 @@ may end up representing the Kubernetes version. Here are a few examples:
 - **v0.5**: This is official version 0.5 and this version will only be used
   when building from a clean git tree at the v0.5 git tag, or from a tree
   extracted from the tarball corresponding to that specific release.
+
 - **v0.5-15-g0123abcd4567**: This is the `git describe` output and it indicates
   that we are 15 commits past the v0.5 release and that the SHA1 of the commit
   where the binaries were built was `0123abcd4567`. It is only possible to have
   this level of detail in the version information when building from git, not
   when building from a tarball.
+
 - **v0.5-15-g0123abcd4567-dirty** or **v0.5-dirty**: The extra `-dirty` prefix
   means that the tree had local modifications or untracked files at the time of
   the build, so there's no guarantee that the source code matches exactly the
   state of the tree at the `0123abcd4567` commit or at the `v0.5` git tag
   (resp.)
+
 - **v0.5-dev**: This means we are building from a tarball or using `go get` or,
   if we have a git tree, we are using `go install` directly, so it is not
   possible to inject the git version into the build information. Additionally,
@@ -286,6 +295,7 @@ do not match the official `v0.5` exactly.)
 We then send PR 100 with both commits in it.
 
 Once the PR is accepted, we can use `git tag -a` to create an annotated tag
+
 *pointing to the one commit* that has `v0.5` in `pkg/version/base.go` and push
 it to GitHub. (Unfortunately GitHub tags/releases are not annotated tags, so
 this needs to be done from a git client and pushed to GitHub using SSH or

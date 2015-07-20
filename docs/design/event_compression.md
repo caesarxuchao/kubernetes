@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -49,6 +50,7 @@ Event compression should be best effort (not guaranteed). Meaning, in the worst 
 ## Design
 
 Instead of a single Timestamp, each event object [contains](../../pkg/api/types.go#L1111) the following fields:
+
  * `FirstTimestamp util.Time` 
    * The date/time of the first occurrence of the event.
  * `LastTimestamp util.Time`
@@ -59,6 +61,7 @@ Instead of a single Timestamp, each event object [contains](../../pkg/api/types.
    * On first occurrence, this is 1.
 
 Each binary that generates events:
+
  * Maintains a historical record of previously generated events:
    * Implemented with ["Least Recently Used Cache"](https://github.com/golang/groupcache/blob/master/lru/lru.go) in [`pkg/client/record/events_cache.go`](../../pkg/client/record/events_cache.go).
    * The key in the cache is generated from the event object minus timestamps/count/transient fields, specifically the following events fields are used to construct a unique key for an event:

@@ -25,6 +25,7 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
@@ -132,6 +133,7 @@ Resource Quota objects are independent of the Cluster Capacity.  They are
 expressed in absolute units.
 
 Sometimes more complex policies may be desired, such as:
+
   - proportionally divide total cluster resources among several teams.
   - allow each tenant to grow resource usage as needed, but have a generous
     limit to prevent accidental resource exhaustion.

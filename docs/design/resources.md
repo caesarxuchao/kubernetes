@@ -25,11 +25,13 @@ The latest 1.0.x release of this document can be found
 Documentation for other releases can be found at
 [releases.k8s.io](http://releases.k8s.io).
 </strong>
+
 --
 
 <!-- END STRIP_FOR_RELEASE -->
 
 <!-- END MUNGE: UNVERSIONED_WARNING -->
+
 **Note: this is a design doc, which describes features that have not been completely implemented.
 User documentation of the current state is [here](../user-guide/compute-resources.md).  The tracking issue for
 implementation of this model is
@@ -42,6 +44,7 @@ milli-cores.**
 To do good pod placement, Kubernetes needs to know how big pods are, as well as the sizes of the nodes onto which they are being placed.  The definition of "how big" is given by the Kubernetes resource model &mdash; the subject of this document.
 
 The resource model aims to be:
+
 * simple, for common cases;
 * extensible, to accommodate future growth;
 * regular, with few special cases; and
@@ -60,6 +63,7 @@ Note that the resource model currently prohibits over-committing resources; we w
 All resources have a _type_ that is identified by their _typename_ (a string, e.g., "memory").  Several resource types are predefined by Kubernetes (a full list is below), although only two will be supported at first: CPU and memory.  Users and system administrators can define their own resource types if they wish (e.g., Hadoop slots).
 
 A fully-qualified resource typename is constructed from a DNS-style _subdomain_, followed by a slash `/`, followed by a name.
+
 * The subdomain must conform to [RFC 1123](http://www.ietf.org/rfc/rfc1123.txt) (e.g., `kubernetes.io`, `example.com`).
 * The name must be not more than 63 characters, consisting of upper- or lower-case alphanumeric characters, with the `-`, `_`, and `.` characters allowed anywhere except the first or last character.
 * As a shorthand, any resource typename that does not start with a subdomain and a slash will automatically be prefixed with the built-in Kubernetes _namespace_, `kubernetes.io/` in order to fully-qualify it.  This namespace is reserved for code in the open source Kubernetes repository; as a result, all user typenames MUST be fully qualified, and cannot be created in this namespace.
@@ -75,11 +79,13 @@ Initially, all Kubernetes resource types are _quantitative_, and have an associa
 Resource quantities can be added and subtracted: for example, a node has a fixed quantity of each resource type that can be allocated to pods/containers; once such an allocation has been made, the allocated resources cannot be made available to other pods/containers without over-committing the resources.
 
 To make life easier for people, quantities can be represented externally as unadorned integers, or as fixed-point integers with one of these SI suffices  (E, P, T, G, M, K, m) or their power-of-two equivalents (Ei, Pi, Ti, Gi, Mi, Ki).  For example, the following represent roughly the same value: 128974848, "129e6", "129M" , "123Mi".  Small quantities can be represented directly as decimals (e.g., 0.3), or using milli-units (e.g., "300m").
+
   * "Externally" means in user interfaces, reports, graphs, and in JSON or YAML resource specifications that might be generated or read by people.
   * Case is significant: "m" and "M" are not the same, so "k" is not a valid SI suffix. There are no power-of-two equivalents for SI suffixes that represent multipliers less than 1.
   * These conventions only apply to resource quantities, not arbitrary values.
 
 Internally (i.e., everywhere else), Kubernetes will represent resource quantities as integers so it can avoid problems with rounding errors, and will not use strings to represent numeric values. To achieve this, quantities that naturally have fractional parts (e.g., CPU seconds/second) will be scaled to integral numbers of milli-units (e.g., milli-CPUs) as soon as they are read in.  Internal APIs, data structures, and protobufs will use these scaled integer units.  Raw measurement data such as usage may still need to be tracked and calculated using floating point values, but internally they should be rescaled to avoid some values being in milli-units and some not.
+
   * Note that reading in a resource quantity and writing it out again may change the way its values are represented, and truncate precision (e.g., 1.0001 may become 1.000), so comparison and difference operations (e.g., by an updater) must be done on the internal representations.
   * Avoiding milli-units in external representations has advantages for people who will use Kubernetes, but runs the risk of developers forgetting to rescale or accidentally using floating-point representations. That seems like the right choice. We will try to reduce the risk by providing libraries that automatically do the quantization for JSON/YAML inputs.
 
@@ -97,6 +103,7 @@ resourceRequirementSpec: [
 ```
 
 Where:
+
 * _request_ [optional]: the amount of resources being requested, or that were requested and have been allocated. Scheduler algorithms will use these quantities to test feasibility (whether a pod will fit onto a node).  If a container (or pod) tries to use more resources than its _request_, any associated SLOs are voided &mdash; e.g., the program it is running may be throttled (compressible resource types), or the attempt may be denied. If _request_ is omitted for a container, it defaults to _limit_ if that is explicitly specified, otherwise to an implementation-defined value; this will always be 0 for a user-defined resource type. If _request_ is omitted for a pod, it defaults to the sum of the (explicit or implicit) _request_ values for the containers it encloses.
 
 * _limit_ [optional]: an upper bound or cap on the maximum amount of resources that will be made available to a container or pod; if a container or pod uses more resources than its _limit_, it may be terminated. The _limit_ defaults to "unbounded"; in practice, this probably means the capacity of an enclosing container, pod, or node, but may result in non-deterministic behavior, especially for memory.
@@ -110,6 +117,7 @@ resourceCapacitySpec: [
 ```
 
 Where:
+
 * _total_: the total allocatable resources of a node.  Initially, the resources at a given scope will bound the resources of the sum of inner scopes. 
 
 #### Notes
