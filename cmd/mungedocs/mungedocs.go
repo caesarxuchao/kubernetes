@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	verify   = flag.Bool("verify", false, "Exit with status 1 if files would have needed changes but do not change.")
+	Verify   = flag.Bool("verify", false, "Exit with status 1 if files would have needed changes but do not change.")
 	rootDir  = flag.String("root-dir", "", "Root directory containing documents to be processed.")
 	repoRoot = flag.String("repo-root", "..", `Appended to --root-dir to get the repository root.
 It's done this way so that generally you just have to set --root-dir.
@@ -53,6 +53,7 @@ Examples:
 		{"analytics", checkAnalytics},
 		{"kubectl-dash-f", checkKubectlFileTargets},
 		{"sync-examples", syncExamples},
+		{"check-long-cmd", checkLongCmd},
 	}
 	availableMungeList = func() string {
 		names := []string{}
@@ -183,7 +184,7 @@ func main() {
 
 	fp := fileProcessor{
 		munges:     wantedMunges(),
-		verifyOnly: *verify,
+		verifyOnly: *Verify,
 	}
 
 	// For each markdown file under source docs root, process the doc.
@@ -200,7 +201,7 @@ func main() {
 		os.Exit(2)
 	}
 	if changesNeeded {
-		if *verify {
+		if *Verify {
 			fmt.Fprintf(os.Stderr, "FAIL: changes needed but not made due to --verify\n")
 		} else {
 			fmt.Fprintf(os.Stderr, "FAIL: some manual changes are still required.\n")
