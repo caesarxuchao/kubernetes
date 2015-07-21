@@ -44,6 +44,11 @@ in [Accessing the cluster](../user-guide/accessing-the-cluster.md).
 
 ## Ports and IPs Served On
 
+```sh
+$ echo "fakjlea\
+	hello"
+```
+
 The Kubernetes API is served by the Kubernetes apiserver process.  Typically,
 there is one of these running on a single kubernetes-master node.
 
