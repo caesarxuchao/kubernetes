@@ -1,0 +1,13 @@
+apiVersion: experimental/v1alpha1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: test 
+  labels:
+    name: test 
+spec:
+  scaleRef:
+    name: "a"
+  minCount: 1
+  maxCount: 2
+  target:
+    resource: "cpu"
