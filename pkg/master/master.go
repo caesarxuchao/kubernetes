@@ -777,8 +777,8 @@ func (m *Master) api_v1() *apiserver.APIGroupVersion {
 
 // expapi returns the resources and codec for the experimental api
 func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
-	controllerStorage := expcontrolleretcd.NewStorage(c.DatabaseStorage)
-	autoscalerStorage := horizontalpodautoscaleretcd.NewREST(c.DatabaseStorage)
+	controllerStorage := expcontrolleretcd.NewStorage(c.ExpDatabaseStorage)
+	autoscalerStorage := horizontalpodautoscaleretcd.NewREST(c.ExpDatabaseStorage)
 
 	storage := map[string]rest.Storage{
 		strings.ToLower("replicationControllers"):       controllerStorage.ReplicationController,
