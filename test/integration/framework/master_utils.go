@@ -131,11 +131,11 @@ func startMasterOrDie(masterConfig *master.Config) (*master.Master, *httptest.Se
 	var err error
 	if masterConfig == nil {
 		etcdClient := NewEtcdClient()
-		etcdStorage, err = master.NewEtcdStorage(etcdClient, latest.InterfacesFor, latest.Version, etcdtest.PathPrefix())
+		etcdStorage, err = master.NewEtcdStorage(etcdClient, latest.InterfacesFor, latest.GroupVersion.LatestVersion, etcdtest.PathPrefix())
 		if err != nil {
 			glog.Fatalf("Failed to create etcd storage for master %v", err)
 		}
-		expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.Version, etcdtest.PathPrefix())
+		expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.GroupVersion.LatestVersion, etcdtest.PathPrefix())
 		if err != nil {
 			glog.Fatalf("Failed to create etcd storage for master %v", err)
 		}
@@ -272,7 +272,7 @@ func RunAMaster(t *testing.T) (*master.Master, *httptest.Server) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.Version, etcdtest.PathPrefix())
+	expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.GroupVersion.LatestVersion, etcdtest.PathPrefix())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

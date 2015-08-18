@@ -125,7 +125,7 @@ func TestGetUnknownSchemaObject(t *testing.T) {
 		Resp:  &http.Response{StatusCode: 200, Body: objBody(codec, &internalType{Name: "foo"})},
 	}
 	tf.Namespace = "test"
-	tf.ClientConfig = &client.Config{Version: latest.Version}
+	tf.ClientConfig = &client.Config{Version: latest.GroupVersion.LatestVersion}
 	buf := bytes.NewBuffer([]byte{})
 
 	cmd := NewCmdGet(f, buf)
@@ -150,9 +150,9 @@ func TestGetUnknownSchemaObject(t *testing.T) {
 //
 // The expected behavior of the `kubectl get` command is:
 // 1. objects using unrecognized schemes will always be returned using that scheme/version, "unlikelyversion" in this test;
-// 2. if the specified output-version is a recognized, valid Scheme, then the list should use that scheme, and otherwise it will default to the client version, latest.Version in this test;
+// 2. if the specified output-version is a recognized, valid Scheme, then the list should use that scheme, and otherwise it will default to the client version, latest.GroupVersion.LatestVersion in this test;
 // 3a. if the specified output-version is a recognized, valid Scheme, in which the requested object (replicationcontroller) can be represented, then the object should be returned using that version;
-// 3b. otherwise if the specified output-version is unrecognized, but the requested object (replicationcontroller) is recognized by the client's codec, then it will be converted to the client version, latest.Version in this test.
+// 3b. otherwise if the specified output-version is unrecognized, but the requested object (replicationcontroller) is recognized by the client's codec, then it will be converted to the client version, latest.GroupVersion.LatestVersion in this test.
 func TestGetUnknownSchemaObjectListGeneric(t *testing.T) {
 	testCases := map[string]struct {
 		outputVersion   string
@@ -161,16 +161,16 @@ func TestGetUnknownSchemaObjectListGeneric(t *testing.T) {
 		rcVersion       string
 	}{
 		"handles specific version": {
-			outputVersion:   latest.Version,
-			listVersion:     latest.Version,
+			outputVersion:   latest.GroupVersion.LatestVersion,
+			listVersion:     latest.GroupVersion.LatestVersion,
 			testtypeVersion: "unlikelyversion",
-			rcVersion:       latest.Version,
+			rcVersion:       latest.GroupVersion.LatestVersion,
 		},
 		"handles second specific version": {
 			outputVersion:   "unlikelyversion",
-			listVersion:     latest.Version,
+			listVersion:     latest.GroupVersion.LatestVersion,
 			testtypeVersion: "unlikelyversion",
-			rcVersion:       latest.Version, // see expected behavior 3b
+			rcVersion:       latest.GroupVersion.LatestVersion, // see expected behavior 3b
 		},
 		"handles common version": {
 			outputVersion:   testapi.Version(),
@@ -197,7 +197,7 @@ func TestGetUnknownSchemaObjectListGeneric(t *testing.T) {
 			}),
 		}
 		tf.Namespace = "test"
-		tf.ClientConfig = &client.Config{Version: latest.Version}
+		tf.ClientConfig = &client.Config{Version: latest.GroupVersion.LatestVersion}
 		buf := bytes.NewBuffer([]byte{})
 		cmd := NewCmdGet(f, buf)
 		cmd.SetOutput(buf)

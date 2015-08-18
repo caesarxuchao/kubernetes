@@ -107,12 +107,12 @@ func setExperimentalDefaults(config *Config) error {
 		config.UserAgent = DefaultKubernetesUserAgent()
 	}
 	if config.Version == "" {
-		config.Version = explatest.GroupVersion
+		config.Version = explatest.GroupVersion.LatestGroupVersion
 	}
 	versionInterfaces, err := explatest.InterfacesFor(apiutil.GetVersion(config.Version))
 	if err != nil {
 		return fmt.Errorf("Experimental API version '%s' is not recognized (valid values: %s)",
-			config.Version, strings.Join(explatest.GroupVersions, ", "))
+			config.Version, strings.Join(explatest.GroupVersion.GroupVersions, ", "))
 	}
 	if config.Codec == nil {
 		config.Codec = versionInterfaces.Codec

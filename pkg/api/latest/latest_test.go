@@ -53,7 +53,7 @@ func TestCodec(t *testing.T) {
 	if err := json.Unmarshal(data, &other); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if other.APIVersion != Version || other.Kind != "Pod" {
+	if other.APIVersion != GroupVersion.LatestVersion || other.Kind != "Pod" {
 		t.Errorf("unexpected unmarshalled object %#v", other)
 	}
 }
@@ -62,7 +62,7 @@ func TestInterfacesFor(t *testing.T) {
 	if _, err := InterfacesFor(""); err == nil {
 		t.Fatalf("unexpected non-error: %v", err)
 	}
-	for i, version := range append([]string{Version, OldestVersion}, Versions...) {
+	for i, version := range append([]string{GroupVersion.LatestVersion, GroupVersion.OldestVersion}, GroupVersion.Versions...) {
 		if vi, err := InterfacesFor(version); err != nil || vi == nil {
 			t.Fatalf("%d: unexpected result: %v", i, err)
 		}
@@ -78,7 +78,7 @@ func TestRESTMapper(t *testing.T) {
 		t.Errorf("unexpected version mapping: %#v %v", m, err)
 	}
 
-	for _, version := range Versions {
+	for _, version := range GroupVersion.Versions {
 		mapping, err := RESTMapper.RESTMapping("ReplicationController", version)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)

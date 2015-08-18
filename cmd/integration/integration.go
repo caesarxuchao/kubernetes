@@ -133,11 +133,11 @@ func startComponents(firstManifestURL, secondManifestURL, apiVersion string) (st
 
 	cl := client.NewOrDie(&client.Config{Host: apiServer.URL, Version: apiVersion})
 
-	etcdStorage, err := master.NewEtcdStorage(etcdClient, latest.InterfacesFor, latest.Version, etcdtest.PathPrefix())
+	etcdStorage, err := master.NewEtcdStorage(etcdClient, latest.InterfacesFor, latest.GroupVersion.LatestVersion, etcdtest.PathPrefix())
 	if err != nil {
 		glog.Fatalf("Unable to get etcd storage: %v", err)
 	}
-	expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.Version, etcdtest.PathPrefix())
+	expEtcdStorage, err := master.NewEtcdStorage(etcdClient, explatest.InterfacesFor, explatest.GroupVersion.LatestVersion, etcdtest.PathPrefix())
 	if err != nil {
 		glog.Fatalf("Unable to get etcd storage for experimental: %v", err)
 	}
@@ -891,7 +891,7 @@ func runSchedulerNoPhantomPodsTest(client *client.Client) {
 type testFunc func(*client.Client)
 
 func addFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&apiVersion, "api-version", latest.Version, "API version that should be used by the client for communicating with the server")
+	fs.StringVar(&apiVersion, "api-version", latest.GroupVersion.LatestVersion, "API version that should be used by the client for communicating with the server")
 	fs.IntVar(
 		&maxConcurrency, "max-concurrency", -1, "Maximum number of tests to be run simultaneously. Unlimited if set to negative.")
 }

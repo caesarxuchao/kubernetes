@@ -29,26 +29,7 @@ import (
 	"k8s.io/kubernetes/pkg/util"
 )
 
-// GroupVersion is the string that represents the current external default groupVersion.
-var GroupVersion string
-
-//
-var Group string
-
-//Version is the string that represents the current external default Version.
-var Version string
-
-// OldestVersion is the string that represents the oldest server version supported,
-// for client code that wants to hardcode the lowest common denominator.
-var OldestVersion string
-
-// GroupVersions is the list of groupVersions that are recognized in code. The
-// order provided may be assumed to be least feature rich to most feature rich,
-// and clients may choose to prefer the latter items in the list over the former
-// items when presented with a set of versions to choose.
-var GroupVersions []string
-
-var Versions []string
+var GroupVersion apiutil.GroupVersion
 
 // Codec is the default codec for serializing output that should use
 // the latest supported version.  Use this Codec when writing to
@@ -77,18 +58,8 @@ const importPrefix = "k8s.io/kubernetes/pkg/api"
 func init() {
 	// Native v1 object has an empty group name.
 	apiGroupVersions := registered.GroupVersionsForGroup("")
-	// Use the first API version in the list of registered versions as the latest.
-	GroupVersion = apiGroupVersions[0]
-	Group = apiutil.GetGroup(GroupVersion)
-	Version = apiutil.GetVersion(GroupVersion)
-	OldestVersion = apiGroupVersions[len(apiGroupVersions)-1]
-	Codec = runtime.CodecFor(api.Scheme, GroupVersion)
-	// Put the registered groupVersions in GroupVersions in reverse order.
-	GroupVersions = []string{}
-	for i := len(apiGroupVersions) - 1; i >= 0; i-- {
-		GroupVersions = append(GroupVersions, apiGroupVersions[i])
-		Versions = append(Versions, apiutil.GetVersion(apiGroupVersions[i]))
-	}
+	GroupVersion.Init(apiGroupVersions)
+	Codec = runtime.CodecFor(api.Scheme, GroupVersion.LatestGroupVersion)
 
 	// the list of kinds that are scoped at the root of the api hierarchy
 	// if a kind is not enumerated here, it is assumed to have a namespace scope
@@ -113,7 +84,7 @@ func init() {
 		"ThirdPartyResourceData",
 		"ThirdPartyResourceList")
 
-	mapper := api.NewDefaultRESTMapper(Group, apiGroupVersions, InterfacesFor, importPrefix, ignoredKinds, rootScoped)
+	mapper := api.NewDefaultRESTMapper(GroupVersion.Group, apiGroupVersions, InterfacesFor, importPrefix, ignoredKinds, rootScoped)
 	// setup aliases for groups of resources
 	mapper.AddResourceAlias("all", userResources...)
 	RESTMapper = mapper
@@ -131,6 +102,6 @@ func InterfacesFor(version string) (*meta.VersionInterfaces, error) {
 			MetadataAccessor: accessor,
 		}, nil
 	default:
-		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", version, strings.Join(GroupVersions, ", "))
+		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", version, strings.Join(GroupVersion.GroupVersions, ", "))
 	}
 }

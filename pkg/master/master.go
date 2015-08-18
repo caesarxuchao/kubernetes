@@ -565,7 +565,7 @@ func (m *Master) init(c *Config) {
 	}
 
 	apiserver.InstallSupport(m.muxHelper, m.rootWebService, c.EnableProfiling, healthzChecks...)
-	apiserver.AddApiWebService(m.handlerContainer, m.apiPrefix+latest.Group, apiVersions)
+	apiserver.AddApiWebService(m.handlerContainer, m.apiPrefix+latest.GroupVersion.Group, apiVersions)
 	defaultVersion := m.defaultAPIGroupVersion()
 	requestInfoResolver := &apiserver.APIRequestInfoResolver{APIPrefixes: util.NewStringSet(strings.TrimPrefix(defaultVersion.Root, "/")), RestMapper: defaultVersion.Mapper}
 	apiserver.InstallServiceErrorHandler(m.handlerContainer, requestInfoResolver, apiVersions)
@@ -575,7 +575,7 @@ func (m *Master) init(c *Config) {
 		if err := expVersion.InstallREST(m.handlerContainer); err != nil {
 			glog.Fatalf("Unable to setup experimental api: %v", err)
 		}
-		apiserver.AddApiWebService(m.handlerContainer, m.apiPrefix+explatest.Group, explatest.Versions)
+		apiserver.AddApiWebService(m.handlerContainer, m.apiPrefix+explatest.GroupVersion.Group, explatest.GroupVersion.Versions)
 		expRequestInfoResolver := &apiserver.APIRequestInfoResolver{util.NewStringSet(strings.TrimPrefix(expVersion.Root, "/")), expVersion.Mapper}
 		apiserver.InstallServiceErrorHandler(m.handlerContainer, expRequestInfoResolver, []string{expVersion.GroupVersion})
 	}
@@ -770,7 +770,7 @@ func (m *Master) api_v1() *apiserver.APIGroupVersion {
 	version := m.defaultAPIGroupVersion()
 	version.Root = m.apiPrefix
 	version.Storage = storage
-	version.GroupVersion = latest.GroupVersion
+	version.GroupVersion = latest.GroupVersion.LatestGroupVersion
 	version.Codec = v1.Codec
 	return version
 }
@@ -796,8 +796,8 @@ func (m *Master) expapi(c *Config) *apiserver.APIGroupVersion {
 		Codec:         explatest.Codec,
 		Linker:        explatest.SelfLinker,
 		Storage:       storage,
-		GroupVersion:  explatest.GroupVersion,
-		ServerVersion: latest.GroupVersion,
+		GroupVersion:  explatest.GroupVersion.LatestGroupVersion,
+		ServerVersion: latest.GroupVersion.LatestGroupVersion,
 
 		Admit:   m.admissionControl,
 		Context: m.requestContextMapper,

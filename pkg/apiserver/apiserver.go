@@ -35,6 +35,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/latest"
 	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/rest"
+	apiutil "k8s.io/kubernetes/pkg/api/util"
 	"k8s.io/kubernetes/pkg/apiserver/metrics"
 	"k8s.io/kubernetes/pkg/healthz"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -177,7 +178,7 @@ func serviceErrorHandler(requestResolver *APIRequestInfoResolver, apiVersions []
 		}
 	}
 
-	errorJSON(apierrors.NewGenericServerResponse(serviceErr.Code, "", "", "", "", 0, false), latest.GroupVersion, codec, response.ResponseWriter)
+	errorJSON(apierrors.NewGenericServerResponse(serviceErr.Code, "", "", "", "", 0, false), latest.GroupVersion.LatestGroupVersion, codec, response.ResponseWriter)
 }
 
 // Adds a service to return the supported api versions.
@@ -283,7 +284,7 @@ func writeJSON(statusCode int, codec runtime.Codec, object runtime.Object, w htt
 func errorJSON(err error, groupVersion string, codec runtime.Codec, w http.ResponseWriter) int {
 	status := errToAPIStatus(err)
 	//write versioned status if using a codec for legacy APIVersion
-	if util.GetGroup(groupVersion) == "" {
+	if apiutil.GetGroup(groupVersion) == "" {
 		writeJSON(status.Code, codec, status, w, true)
 	} else {
 		writeRawJSON(status.Code, status, w)

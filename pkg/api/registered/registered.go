@@ -21,8 +21,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang/glog"
 	apiutil "k8s.io/kubernetes/pkg/api/util"
+
+	"github.com/golang/glog"
 )
 
 // List of registered API versions.

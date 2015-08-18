@@ -336,7 +336,7 @@ func TestSetKubernetesDefaults(t *testing.T) {
 			Config{},
 			Config{
 				Prefix:  "/api",
-				Version: latest.Version,
+				Version: latest.GroupVersion.LatestVersion,
 				Codec:   latest.Codec,
 				QPS:     5,
 				Burst:   10,

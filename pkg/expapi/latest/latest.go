@@ -31,11 +31,7 @@ import (
 )
 
 var (
-	GroupVersion  string
-	Version       string
-	Group         string
-	GroupVersions []string
-	Versions      []string
+	GroupVersion apiutil.GroupVersion
 
 	accessor   = meta.NewAccessor()
 	Codec      runtime.Codec
@@ -50,15 +46,8 @@ func init() {
 	if len(expGroupVersions) == 0 {
 		return
 	}
-	GroupVersion = expGroupVersions[0]
-	Group = apiutil.GetGroup(GroupVersion)
-	Version = apiutil.GetVersion(GroupVersion)
-	Codec = runtime.CodecFor(api.Scheme, GroupVersion)
-	// Put the registered versions in Versions in reverse order.
-	for i := len(expGroupVersions) - 1; i >= 0; i-- {
-		GroupVersions = append(GroupVersions, expGroupVersions[i])
-		Versions = append(Versions, apiutil.GetVersion(expGroupVersions[i]))
-	}
+	GroupVersion.Init(expGroupVersions)
+	Codec = runtime.CodecFor(api.Scheme, GroupVersion.LatestGroupVersion)
 
 	// the list of kinds that are scoped at the root of the api hierarchy
 	// if a kind is not enumerated here, it is assumed to have a namespace scope
@@ -66,7 +55,7 @@ func init() {
 
 	ignoredKinds := util.NewStringSet()
 
-	RESTMapper = api.NewDefaultRESTMapper(Group, GroupVersions, InterfacesFor, importPrefix, ignoredKinds, rootScoped)
+	RESTMapper = api.NewDefaultRESTMapper(GroupVersion.Group, expGroupVersions, InterfacesFor, importPrefix, ignoredKinds, rootScoped)
 	api.RegisterRESTMapper(RESTMapper)
 }
 
@@ -81,6 +70,6 @@ func InterfacesFor(version string) (*meta.VersionInterfaces, error) {
 			MetadataAccessor: accessor,
 		}, nil
 	default:
-		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", version, strings.Join(GroupVersions, ", "))
+		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", version, strings.Join(GroupVersion.GroupVersions, ", "))
 	}
 }

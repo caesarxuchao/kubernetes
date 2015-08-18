@@ -42,7 +42,7 @@ func createDNSPod(namespace, wheezyProbeCmd, jessieProbeCmd string) *api.Pod {
 	pod := &api.Pod{
 		TypeMeta: api.TypeMeta{
 			Kind:       "Pod",
-			APIVersion: latest.Version,
+			APIVersion: latest.GroupVersion.LatestVersion,
 		},
 		ObjectMeta: api.ObjectMeta{
 			Name:      "dns-test-" + string(util.NewUUID()),

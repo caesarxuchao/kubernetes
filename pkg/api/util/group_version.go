@@ -18,6 +18,45 @@ package util
 
 import "strings"
 
+type GroupVersion struct {
+	// Group represents the name of the group
+	Group string
+	// LatestGroupVersion represents the current external default version of
+	// the group. It is in the form of "group/version".
+	LatestGroupVersion string
+
+	// LatestVersion represents the current external default version of the
+	// group. It equals to the "version" part of DefaultGroupVersion
+	LatestVersion string
+
+	// OldestVersion represents the oldest server version supported, for client
+	// code that wants to hardcode the lowest common denominator.
+	OldestVersion string
+
+	// GroupVersions is the list of "group/versions" that are recognized in
+	// code.  The order provided may be assumed to be least feature rich to most
+	// feature rich, and clients may choose to prefer the latter items in the
+	// list over the former items when presented with a set of versions to
+	// choose.
+	GroupVersions []string
+
+	// Versions is the "version" part of GroupVersions
+	Versions []string
+}
+
+func (g *GroupVersion) Init(registeredGroupVersions []string) {
+	// Use the first registered GroupVersion as the latest.
+	g.LatestGroupVersion = registeredGroupVersions[0]
+	g.Group = GetGroup(g.LatestGroupVersion)
+	g.LatestVersion = GetVersion(g.LatestGroupVersion)
+	g.OldestVersion = registeredGroupVersions[len(registeredGroupVersions)-1]
+	// Put the registered groupVersions in GroupVersions in reverse order.
+	for i := len(registeredGroupVersions) - 1; i >= 0; i-- {
+		g.GroupVersions = append(g.GroupVersions, registeredGroupVersions[i])
+		g.Versions = append(g.Versions, GetVersion(registeredGroupVersions[i]))
+	}
+}
+
 func GetVersion(groupVersion string) string {
 	s := strings.Split(groupVersion, "/")
 	if len(s) != 2 {

@@ -31,7 +31,7 @@ import (
 func Version() string {
 	version := os.Getenv("KUBE_API_VERSION")
 	if version == "" {
-		version = latest.Version
+		version = latest.GroupVersion.LatestVersion
 	}
 	return version
 }
