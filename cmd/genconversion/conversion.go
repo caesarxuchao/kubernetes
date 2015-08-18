@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"k8s.io/kubernetes/pkg/api"
+	apiutil "k8s.io/kubernetes/pkg/api/util"
 	_ "k8s.io/kubernetes/pkg/api/v1"
 	_ "k8s.io/kubernetes/pkg/expapi"
 	_ "k8s.io/kubernetes/pkg/expapi/v1alpha1"
@@ -62,8 +63,8 @@ func main() {
 
 	data := new(bytes.Buffer)
 
-	group := util.GetGroup(*groupVersion)
-	version := util.GetVersion(*groupVersion)
+	group := apiutil.GetGroup(*groupVersion)
+	version := apiutil.GetVersion(*groupVersion)
 
 	_, err := data.WriteString(fmt.Sprintf("package %v\n", version))
 	if err != nil {

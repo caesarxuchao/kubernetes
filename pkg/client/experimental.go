@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"k8s.io/kubernetes/pkg/api"
+	apiutil "k8s.io/kubernetes/pkg/api/util"
 	explatest "k8s.io/kubernetes/pkg/expapi/latest"
-	"k8s.io/kubernetes/pkg/util"
 	"k8s.io/kubernetes/pkg/version"
 )
 
@@ -109,7 +109,7 @@ func setExperimentalDefaults(config *Config) error {
 	if config.Version == "" {
 		config.Version = explatest.GroupVersion
 	}
-	versionInterfaces, err := explatest.InterfacesFor(util.GetVersion(config.Version))
+	versionInterfaces, err := explatest.InterfacesFor(apiutil.GetVersion(config.Version))
 	if err != nil {
 		return fmt.Errorf("Experimental API version '%s' is not recognized (valid values: %s)",
 			config.Version, strings.Join(explatest.GroupVersions, ", "))

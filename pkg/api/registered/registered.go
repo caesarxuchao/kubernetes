@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/util"
+	apiutil "k8s.io/kubernetes/pkg/api/util"
 )
 
 // List of registered API versions.
@@ -69,7 +69,7 @@ func IsRegisteredAPIVersion(groupVersion string) bool {
 func GroupVersionsForGroup(group string) []string {
 	ret := []string{}
 	for _, v := range RegisteredGroupVersions {
-		if util.GetGroup(v) == group {
+		if apiutil.GetGroup(v) == group {
 			ret = append(ret, v)
 		}
 	}

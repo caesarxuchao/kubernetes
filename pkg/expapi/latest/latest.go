@@ -23,6 +23,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/registered"
+	apiutil "k8s.io/kubernetes/pkg/api/util"
 	_ "k8s.io/kubernetes/pkg/expapi"
 	"k8s.io/kubernetes/pkg/expapi/v1alpha1"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -50,13 +51,13 @@ func init() {
 		return
 	}
 	GroupVersion = expGroupVersions[0]
-	Group = util.GetGroup(GroupVersion)
-	Version = util.GetVersion(GroupVersion)
+	Group = apiutil.GetGroup(GroupVersion)
+	Version = apiutil.GetVersion(GroupVersion)
 	Codec = runtime.CodecFor(api.Scheme, GroupVersion)
 	// Put the registered versions in Versions in reverse order.
 	for i := len(expGroupVersions) - 1; i >= 0; i-- {
 		GroupVersions = append(GroupVersions, expGroupVersions[i])
-		Versions = append(Versions, util.GetVersion(expGroupVersions[i]))
+		Versions = append(Versions, apiutil.GetVersion(expGroupVersions[i]))
 	}
 
 	// the list of kinds that are scoped at the root of the api hierarchy
