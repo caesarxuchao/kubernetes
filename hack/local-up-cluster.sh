@@ -213,10 +213,13 @@ function start_apiserver {
     runtime_config=""
     if [[ -n "${RUNTIME_CONFIG}" ]]; then
       runtime_config="--runtime-config=\"${RUNTIME_CONFIG}\""
+      echo "CHAO"
+      echo $runtime_config
     fi
 
     APISERVER_LOG=/tmp/kube-apiserver.log
-    sudo -E "${GO_OUT}/kube-apiserver" ${priv_arg} ${runtime_config}\
+    set -x
+    sudo -E "${GO_OUT}/kube-apiserver" ${priv_arg} \
       --v=${LOG_LEVEL} \
       --cert-dir="${CERT_DIR}" \
       --service-account-key-file="${SERVICE_ACCOUNT_KEY}" \
@@ -226,8 +229,14 @@ function start_apiserver {
       --insecure-port="${API_PORT}" \
       --etcd-servers="http://127.0.0.1:4001" \
       --service-cluster-ip-range="10.0.0.0/24" \
+      --runtime-config="${RUNTIME_CONFIG}" \
       --cors-allowed-origins="${API_CORS_ALLOWED_ORIGINS}" >"${APISERVER_LOG}" 2>&1 &
     APISERVER_PID=$!
+
+#--runtime-config="experimental/v1alpha1=true" \
+
+
+    set +x
 
     # Wait for kube-apiserver to come up before launching the rest of the components.
     echo "Waiting for apiserver to come up"
