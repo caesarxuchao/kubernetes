@@ -35,7 +35,6 @@ import (
 	"k8s.io/kubernetes/pkg/api/latest"
 	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/rest"
-	apiutil "k8s.io/kubernetes/pkg/api/util"
 	"k8s.io/kubernetes/pkg/apiserver/metrics"
 	"k8s.io/kubernetes/pkg/healthz"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -283,12 +282,7 @@ func writeJSON(statusCode int, codec runtime.Codec, object runtime.Object, w htt
 // errorJSON renders an error to the response. Returns the HTTP status code of the error.
 func errorJSON(err error, codec runtime.Codec, w http.ResponseWriter) int {
 	status := errToAPIStatus(err)
-	//write versioned status if using a codec for legacy APIVersion
-	if apiutil.GetGroup(groupVersion) == "" {
-		writeJSON(status.Code, codec, status, w, true)
-	} else {
-		writeRawJSON(status.Code, status, w)
-	}
+	writeJSON(status.Code, codec, status, w, true)
 	return status.Code
 }
 
