@@ -151,6 +151,8 @@ func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	httpCode = http.StatusOK
 	newReq.Header = req.Header
+	newReq.ContentLength = req.ContentLength
+	newReq.TransferEncoding = req.TransferEncoding
 
 	// TODO convert this entire proxy to an UpgradeAwareProxy similar to
 	// https://github.com/openshift/origin/blob/master/pkg/util/httpproxy/upgradeawareproxy.go.
