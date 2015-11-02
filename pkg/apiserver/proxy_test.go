@@ -17,6 +17,7 @@ limitations under the License.
 package apiserver
 
 import (
+	"bytes"
 	"compress/gzip"
 	"crypto/tls"
 	"crypto/x509"
@@ -33,6 +34,129 @@ import (
 	"golang.org/x/net/websocket"
 	"k8s.io/kubernetes/pkg/api/rest"
 )
+
+func expectContentLength(reqBody string, encoding string) int64 {
+	switch {
+	case encoding == "":
+		return int64(len(reqBody))
+	case encoding == "gzip":
+		var b bytes.Buffer
+		gzw := gzip.NewWriter(&b)
+		gzw.Write([]byte(reqBody))
+		return int64(b.Len())
+	}
+	return int64(len(reqBody))
+}
+
+func TestProxyContentLength(t *testing.T) {
+	table := []struct {
+		method            string
+		path              string
+		transferEncodings string
+		reqBody           string
+		respBody          string
+		respContentType   string
+		reqNamespace      string
+	}{
+		{"GET", "/some/dir", "", "", "answer", "text/css", "default"},
+		{"GET", "/some/dir", "", "", "<html><head></head><body>answer</body></html>", "text/html", "default"},
+		{"POST", "/some/other/dir", "", "question", "answer", "text/css", "default"},
+		{"PUT", "/some/dir/id", "", "different question", "answer", "text/css", "default"},
+		{"PUT", "/some/dir/id", "gzip", "qqqqqqqqqqqqqqqqqqqqq", "answer", "text/css", "default"},
+		{"DELETE", "/some/dir/id", "", "", "ok", "text/css", "default"},
+		{"GET", "/some/dir/id", "", "", "answer", "text/css", "other"},
+		{"GET", "/trailing/slash/", "", "", "answer", "text/css", "default"},
+		{"GET", "/", "", "", "answer", "text/css", "default"},
+	}
+
+	for _, item := range table {
+		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			//gotBody, err := ioutil.ReadAll(req.Body)
+			//if err != nil {
+			//		t.Errorf("%v - unexpected error %v", item.method, err)
+			//	}
+			//if e, a := item.reqBody, string(gotBody); e != a {
+			//	t.Errorf("%v - expected %v, got %v", item.method, e, a)
+			//}
+			if e, a := expectContentLength(item.reqBody, item.transferEncodings), req.ContentLength; e != a {
+				t.Errorf("%v - expected %v, got %v", item.method, e, a)
+			}
+			if e, a := item.path, req.URL.Path; e != a {
+				t.Errorf("%v - expected %v, got %v", item.method, e, a)
+			}
+			w.Header().Set("Content-Type", item.respContentType)
+			var out io.Writer = w
+			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
+				// The proxier can ask for gzip'd data; we need to provide it with that
+				// in order to test our processing of that data.
+				w.Header().Set("Content-Encoding", "gzip")
+				gzw := gzip.NewWriter(w)
+				out = gzw
+				defer gzw.Close()
+			}
+			fmt.Fprint(out, item.respBody)
+		}))
+		defer proxyServer.Close()
+
+		serverURL, _ := url.Parse(proxyServer.URL)
+		simpleStorage := &SimpleRESTStorage{
+			errors:                    map[string]error{},
+			resourceLocation:          serverURL,
+			expectedResourceNamespace: item.reqNamespace,
+		}
+
+		namespaceHandler := handleNamespaced(map[string]rest.Storage{"foo": simpleStorage})
+		namespaceServer := httptest.NewServer(namespaceHandler)
+		defer namespaceServer.Close()
+
+		// test each supported URL pattern for finding the redirection resource in the proxy in a particular namespace
+		serverPatterns := []struct {
+			server           *httptest.Server
+			proxyTestPattern string
+		}{
+			{namespaceServer, "/api/version2/proxy/namespaces/" + item.reqNamespace + "/foo/id" + item.path},
+		}
+
+		for _, serverPattern := range serverPatterns {
+			server := serverPattern.server
+			proxyTestPattern := serverPattern.proxyTestPattern
+			var reader io.Reader
+			if item.transferEncodings == "gzip" {
+				var b bytes.Buffer
+				gzw := gzip.NewWriter(&b)
+				if _, err := gzw.Write([]byte(item.reqBody)); err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				reader = &b
+			} else {
+				reader = strings.NewReader(item.reqBody)
+			}
+			req, err := http.NewRequest(
+				item.method,
+				server.URL+proxyTestPattern,
+				reader,
+			)
+			if err != nil {
+				t.Errorf("%v - unexpected error %v", item.method, err)
+				continue
+			}
+			req.Header.Set("Transfer-Encoding", item.transferEncodings)
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Errorf("%v - unexpected error %v", item.method, err)
+				continue
+			}
+			gotResp, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Errorf("%v - unexpected error %v", item.method, err)
+			}
+			resp.Body.Close()
+			if e, a := item.respBody, string(gotResp); e != a {
+				t.Errorf("%v - expected %v, got %v. url: %#v", item.method, e, a, req.URL)
+			}
+		}
+	}
+}
 
 func TestProxy(t *testing.T) {
 	table := []struct {
