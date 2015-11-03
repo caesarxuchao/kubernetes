@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -35,7 +36,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/rest"
 )
 
-func expectContentLength(reqBody string, transferEncodings []string) int64 {
+func calculateContentLength(reqBody string, transferEncodings []string) int64 {
 	if len(transferEncodings) == 0 || (len(transferEncodings) == 1 && transferEncodings[0] == "identity") {
 		return int64(len(reqBody))
 	}
@@ -53,7 +54,8 @@ func containGzip(transferEncodings []string) bool {
 	return false
 }
 
-func TestProxyContentLengthAndTransferEncoding(t *testing.T) {
+func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
+	serverResponse := "got response"
 	table := []struct {
 		transferEncodings []string
 		reqBody           string
@@ -70,9 +72,26 @@ func TestProxyContentLengthAndTransferEncoding(t *testing.T) {
 
 	for _, item := range table {
 		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			if e, a := expectContentLength(item.reqBody, item.transferEncodings), req.ContentLength; e != a {
+			expectedContentLength := calculateContentLength(item.reqBody, item.transferEncodings)
+			if e, a := expectedContentLength, req.ContentLength; e != a {
 				t.Errorf("expected %v, got %v", e, a)
 			}
+			// We expect Content-Length header field be set
+			if expectedContentLength != -1 {
+				contentLengthInHeader, err := strconv.Atoi(req.Header.Get("Content-Length"))
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if e, a := expectedContentLength, int64(contentLengthInHeader); e != a {
+					t.Errorf("expected %v, got %v", e, a)
+				}
+			}
+
+			// Help wanted: why is the transfer-encoding header field always empty?
+			if e, a := "", req.Header.Get("Transfer-Encoding"); e != a {
+				t.Errorf("expected %v, got %v", e, a)
+			}
+			fmt.Fprint(w, serverResponse)
 		}))
 		defer proxyServer.Close()
 
@@ -87,7 +106,7 @@ func TestProxyContentLengthAndTransferEncoding(t *testing.T) {
 		server := httptest.NewServer(namespaceHandler)
 		defer server.Close()
 
-		proxyTestPattern := "/api/version2/proxy/namespaces/" + item.reqNamespace
+		proxyTestPattern := "/api/version2/proxy/namespaces/default/foo/id/some/dir"
 		var reader io.Reader
 		if containGzip(item.transferEncodings) {
 			var b bytes.Buffer
@@ -109,14 +128,18 @@ func TestProxyContentLengthAndTransferEncoding(t *testing.T) {
 			continue
 		}
 		req.TransferEncoding = item.transferEncodings
+		req.Header.Set("Transfer-Encoding", strings.Join(item.transferEncodings, ","))
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Errorf(" unexpected error %v", err)
 			continue
 		}
-		_, err = ioutil.ReadAll(resp.Body)
+		gotResp, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
+		}
+		if e, a := serverResponse, string(gotResp); e != a {
+			t.Errorf("expected %v, got %v", e, a)
 		}
 		resp.Body.Close()
 	}
