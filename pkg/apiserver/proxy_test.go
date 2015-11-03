@@ -84,6 +84,10 @@ func TestProxyContentLength(t *testing.T) {
 			if e, a := item.path, req.URL.Path; e != a {
 				t.Errorf("%v - expected %v, got %v", item.method, e, a)
 			}
+
+			fmt.Println("CHAO: HEADER after proxy")
+			fmt.Println(req.Header)
+			//			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 			w.Header().Set("Content-Type", item.respContentType)
 			var out io.Writer = w
 			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
@@ -140,7 +144,15 @@ func TestProxyContentLength(t *testing.T) {
 				t.Errorf("%v - unexpected error %v", item.method, err)
 				continue
 			}
+			if item.transferEncodings == "gzip" {
+				req.TransferEncoding = []string{"gzip"}
+			}
 			req.Header.Set("Transfer-Encoding", item.transferEncodings)
+			//req.Header.Set("TE", item.transferEncodings)
+			//req.Header.Set("Content-Encoding", item.transferEncodings)
+			//req.Header.Set("XYZ", item.transferEncodings)
+			fmt.Println("CHAO: original request header")
+			fmt.Println(req.Header)
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Errorf("%v - unexpected error %v", item.method, err)
