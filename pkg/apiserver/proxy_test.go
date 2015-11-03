@@ -155,7 +155,8 @@ func TestProxy(t *testing.T) {
 		reqNamespace    string
 	}{
 		{"GET", "/some/dir", "", "answer", "text/css", "default"},
-		{"POST", "/somer/dir", "question", "answer", "text/css", "default"},
+		{"GET", "/some/dir", "", "<html><head></head><body>answer</body></html>", "text/html", "default"},
+		{"POST", "/some/other/dir", "question", "answer", "text/css", "default"},
 		{"PUT", "/some/dir/id", "different question", "answer", "text/css", "default"},
 		{"DELETE", "/some/dir/id", "", "ok", "text/css", "default"},
 		{"GET", "/some/dir/id", "", "answer", "text/css", "other"},
