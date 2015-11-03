@@ -42,12 +42,6 @@ func expectContentLength(reqBody string, transferEncodings []string) int64 {
 	// RFC2616 section 4.4: The Content-Length header field MUST NOT be sent if these two lengths
 	// are different (i.e., if a Transfer-Encoding header field is present).
 	return int64(-1)
-	//case encoding == "gzip":
-	//	var b bytes.Buffer
-	//	gzw := gzip.NewWriter(&b)
-	//	gzw.Write([]byte(reqBody))
-	//	return int64(b.Len())
-	//}
 }
 
 func containGzip(transferEncodings []string) bool {
@@ -59,50 +53,26 @@ func containGzip(transferEncodings []string) bool {
 	return false
 }
 
-func TestProxyContentLength(t *testing.T) {
+func TestProxyContentLengthAndTransferEncoding(t *testing.T) {
 	table := []struct {
-		method            string
-		path              string
 		transferEncodings []string
 		reqBody           string
 		reqNamespace      string
 	}{
-		{"GET", "/some/dir", []string{}, "", "default"},
-		{"POST", "/some/dir", []string{"identity"}, "question", "default"},
-		{"POST", "/some/dir", []string{"chunked"}, "question", "default"},
-		// http://tools.ietf.org/html/rfc2616#section-3.6: Whenever a transfer-coding is applied to
-		// a message-body, the set of transfer-codings MUST include "chunked", unless the message is
-		// terminated by closing the connection.
-		{"POST", "/some/dir", []string{"chunked", "gzip"}, "qqqqqqqqqquestion", "default"},
+		{[]string{}, "", "default"},
+		{[]string{"identity"}, "question", "default"},
+		{[]string{"chunked"}, "question", "default"},
+		// RFC2616 section-3.6: Whenever a transfer-coding is applied to a message-body, the set of
+		// transfer-codings MUST include "chunked", unless the message is terminated by closing the
+		// connection.
+		{[]string{"chunked", "gzip"}, "qqqqqqqqqquestion", "default"},
 	}
 
 	for _, item := range table {
 		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			//gotBody, err := ioutil.ReadAll(req.Body)
-			//if err != nil {
-			//		t.Errorf("%v - unexpected error %v", item.method, err)
-			//	}
-			//if e, a := item.reqBody, string(gotBody); e != a {
-			//	t.Errorf("%v - expected %v, got %v", item.method, e, a)
-			//}
-			fmt.Println("CHAO: req.ContentLength", req.ContentLength)
 			if e, a := expectContentLength(item.reqBody, item.transferEncodings), req.ContentLength; e != a {
-				t.Errorf("%v - expected %v, got %v", item.method, e, a)
+				t.Errorf("expected %v, got %v", e, a)
 			}
-			fmt.Println("CHAO: HEADER after proxy")
-			fmt.Println(req.Header)
-			//			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-			var out io.Writer = w
-			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-				// The proxier can ask for gzip'd data; we need to provide it with that
-				// in order to test our processing of that data.
-				w.Header().Set("Content-Encoding", "gzip")
-				gzw := gzip.NewWriter(w)
-				out = gzw
-				defer gzw.Close()
-			}
-			// return an empty response, as we don't care about response
-			fmt.Fprint(out, "")
 		}))
 		defer proxyServer.Close()
 
@@ -114,58 +84,41 @@ func TestProxyContentLength(t *testing.T) {
 		}
 
 		namespaceHandler := handleNamespaced(map[string]rest.Storage{"foo": simpleStorage})
-		namespaceServer := httptest.NewServer(namespaceHandler)
-		defer namespaceServer.Close()
+		server := httptest.NewServer(namespaceHandler)
+		defer server.Close()
 
-		// test each supported URL pattern for finding the redirection resource in the proxy in a particular namespace
-		serverPatterns := []struct {
-			server           *httptest.Server
-			proxyTestPattern string
-		}{
-			{namespaceServer, "/api/version2/proxy/namespaces/" + item.reqNamespace + "/foo/id" + item.path},
+		proxyTestPattern := "/api/version2/proxy/namespaces/" + item.reqNamespace
+		var reader io.Reader
+		if containGzip(item.transferEncodings) {
+			var b bytes.Buffer
+			gzw := gzip.NewWriter(&b)
+			if _, err := gzw.Write([]byte(item.reqBody)); err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			reader = &b
+		} else {
+			reader = strings.NewReader(item.reqBody)
 		}
-
-		for _, serverPattern := range serverPatterns {
-			server := serverPattern.server
-			proxyTestPattern := serverPattern.proxyTestPattern
-			var reader io.Reader
-			if containGzip(item.transferEncodings) {
-				var b bytes.Buffer
-				gzw := gzip.NewWriter(&b)
-				if _, err := gzw.Write([]byte(item.reqBody)); err != nil {
-					t.Errorf("unexpected error: %v", err)
-				}
-				reader = &b
-			} else {
-				reader = strings.NewReader(item.reqBody)
-			}
-			req, err := http.NewRequest(
-				item.method,
-				server.URL+proxyTestPattern,
-				reader,
-			)
-			if err != nil {
-				t.Errorf("%v - unexpected error %v", item.method, err)
-				continue
-			}
-			req.TransferEncoding = item.transferEncodings
-			//req.Header.Set("Transfer-Encoding", item.transferEncodings)
-			//req.Header.Set("TE", item.transferEncodings)
-			//req.Header.Set("Content-Encoding", item.transferEncodings)
-			//req.Header.Set("XYZ", item.transferEncodings)
-			fmt.Println("CHAO: original request header")
-			fmt.Println(req.Header)
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Errorf("%v - unexpected error %v", item.method, err)
-				continue
-			}
-			_, err = ioutil.ReadAll(resp.Body)
-			if err != nil {
-				t.Errorf("%v - unexpected error %v", item.method, err)
-			}
-			resp.Body.Close()
+		req, err := http.NewRequest(
+			"POST",
+			server.URL+proxyTestPattern,
+			reader,
+		)
+		if err != nil {
+			t.Errorf("unexpected error %v", err)
+			continue
 		}
+		req.TransferEncoding = item.transferEncodings
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Errorf(" unexpected error %v", err)
+			continue
+		}
+		_, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+		resp.Body.Close()
 	}
 }
 
