@@ -35,38 +35,45 @@ import (
 	"k8s.io/kubernetes/pkg/api/rest"
 )
 
-func expectContentLength(reqBody string, encoding string) int64 {
-	switch {
-	case encoding == "":
+func expectContentLength(reqBody string, transferEncodings []string) int64 {
+	if len(transferEncodings) == 0 || (len(transferEncodings) == 1 && transferEncodings[0] == "identity") {
 		return int64(len(reqBody))
-	case encoding == "gzip":
-		var b bytes.Buffer
-		gzw := gzip.NewWriter(&b)
-		gzw.Write([]byte(reqBody))
-		return int64(b.Len())
 	}
-	return int64(len(reqBody))
+	// RFC2616 section 4.4: The Content-Length header field MUST NOT be sent if these two lengths
+	// are different (i.e., if a Transfer-Encoding header field is present).
+	return int64(-1)
+	//case encoding == "gzip":
+	//	var b bytes.Buffer
+	//	gzw := gzip.NewWriter(&b)
+	//	gzw.Write([]byte(reqBody))
+	//	return int64(b.Len())
+	//}
+}
+
+func containGzip(transferEncodings []string) bool {
+	for _, encoding := range transferEncodings {
+		if encoding == "gzip" {
+			return true
+		}
+	}
+	return false
 }
 
 func TestProxyContentLength(t *testing.T) {
 	table := []struct {
 		method            string
 		path              string
-		transferEncodings string
+		transferEncodings []string
 		reqBody           string
-		respBody          string
-		respContentType   string
 		reqNamespace      string
 	}{
-		{"GET", "/some/dir", "", "", "answer", "text/css", "default"},
-		{"GET", "/some/dir", "", "", "<html><head></head><body>answer</body></html>", "text/html", "default"},
-		{"POST", "/some/other/dir", "", "question", "answer", "text/css", "default"},
-		{"PUT", "/some/dir/id", "", "different question", "answer", "text/css", "default"},
-		{"PUT", "/some/dir/id", "gzip", "qqqqqqqqqqqqqqqqqqqqq", "answer", "text/css", "default"},
-		{"DELETE", "/some/dir/id", "", "", "ok", "text/css", "default"},
-		{"GET", "/some/dir/id", "", "", "answer", "text/css", "other"},
-		{"GET", "/trailing/slash/", "", "", "answer", "text/css", "default"},
-		{"GET", "/", "", "", "answer", "text/css", "default"},
+		{"GET", "/some/dir", []string{}, "", "default"},
+		{"POST", "/some/dir", []string{"identity"}, "question", "default"},
+		{"POST", "/some/dir", []string{"chunked"}, "question", "default"},
+		// http://tools.ietf.org/html/rfc2616#section-3.6: Whenever a transfer-coding is applied to
+		// a message-body, the set of transfer-codings MUST include "chunked", unless the message is
+		// terminated by closing the connection.
+		{"POST", "/some/dir", []string{"chunked", "gzip"}, "qqqqqqqqqquestion", "default"},
 	}
 
 	for _, item := range table {
@@ -78,17 +85,13 @@ func TestProxyContentLength(t *testing.T) {
 			//if e, a := item.reqBody, string(gotBody); e != a {
 			//	t.Errorf("%v - expected %v, got %v", item.method, e, a)
 			//}
+			fmt.Println("CHAO: req.ContentLength", req.ContentLength)
 			if e, a := expectContentLength(item.reqBody, item.transferEncodings), req.ContentLength; e != a {
 				t.Errorf("%v - expected %v, got %v", item.method, e, a)
 			}
-			if e, a := item.path, req.URL.Path; e != a {
-				t.Errorf("%v - expected %v, got %v", item.method, e, a)
-			}
-
 			fmt.Println("CHAO: HEADER after proxy")
 			fmt.Println(req.Header)
 			//			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
-			w.Header().Set("Content-Type", item.respContentType)
 			var out io.Writer = w
 			if strings.Contains(req.Header.Get("Accept-Encoding"), "gzip") {
 				// The proxier can ask for gzip'd data; we need to provide it with that
@@ -98,7 +101,8 @@ func TestProxyContentLength(t *testing.T) {
 				out = gzw
 				defer gzw.Close()
 			}
-			fmt.Fprint(out, item.respBody)
+			// return an empty response, as we don't care about response
+			fmt.Fprint(out, "")
 		}))
 		defer proxyServer.Close()
 
@@ -125,7 +129,7 @@ func TestProxyContentLength(t *testing.T) {
 			server := serverPattern.server
 			proxyTestPattern := serverPattern.proxyTestPattern
 			var reader io.Reader
-			if item.transferEncodings == "gzip" {
+			if containGzip(item.transferEncodings) {
 				var b bytes.Buffer
 				gzw := gzip.NewWriter(&b)
 				if _, err := gzw.Write([]byte(item.reqBody)); err != nil {
@@ -144,10 +148,8 @@ func TestProxyContentLength(t *testing.T) {
 				t.Errorf("%v - unexpected error %v", item.method, err)
 				continue
 			}
-			if item.transferEncodings == "gzip" {
-				req.TransferEncoding = []string{"gzip"}
-			}
-			req.Header.Set("Transfer-Encoding", item.transferEncodings)
+			req.TransferEncoding = item.transferEncodings
+			//req.Header.Set("Transfer-Encoding", item.transferEncodings)
 			//req.Header.Set("TE", item.transferEncodings)
 			//req.Header.Set("Content-Encoding", item.transferEncodings)
 			//req.Header.Set("XYZ", item.transferEncodings)
@@ -158,14 +160,11 @@ func TestProxyContentLength(t *testing.T) {
 				t.Errorf("%v - unexpected error %v", item.method, err)
 				continue
 			}
-			gotResp, err := ioutil.ReadAll(resp.Body)
+			_, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("%v - unexpected error %v", item.method, err)
 			}
 			resp.Body.Close()
-			if e, a := item.respBody, string(gotResp); e != a {
-				t.Errorf("%v - expected %v, got %v. url: %#v", item.method, e, a, req.URL)
-			}
 		}
 	}
 }
@@ -180,8 +179,7 @@ func TestProxy(t *testing.T) {
 		reqNamespace    string
 	}{
 		{"GET", "/some/dir", "", "answer", "text/css", "default"},
-		{"GET", "/some/dir", "", "<html><head></head><body>answer</body></html>", "text/html", "default"},
-		{"POST", "/some/other/dir", "question", "answer", "text/css", "default"},
+		{"POST", "/somer/dir", "question", "answer", "text/css", "default"},
 		{"PUT", "/some/dir/id", "different question", "answer", "text/css", "default"},
 		{"DELETE", "/some/dir/id", "", "ok", "text/css", "default"},
 		{"GET", "/some/dir/id", "", "answer", "text/css", "other"},
