@@ -30,15 +30,16 @@ kube::util::ensure-temp-dir
 REPO_DIR=${REPO_DIR:-"${KUBE_ROOT}"}
 DEFAULT_OUTPUT_PATH="${REPO_DIR}/docs/api-reference"
 OUTPUT=${1:-${DEFAULT_OUTPUT_PATH}}
-OUTPUT_TEMP="${KUBE_TEMP}/generated_html"
+TMP_SUBPATH="_output/generated_html"
+OUTPUT_TMP="${KUBE_ROOT}/$TMP_SUBPATH"
 
 echo "Generating api reference docs at ${OUTPUT}"
 
 V1_PATH="${OUTPUT}/v1/"
-V1_TEMP_PATH="${OUTPUT_TEMP}/v1/"
+V1_TEMP_PATH="${REPO_DIR}/${TMP_SUBPATH}/v1/"
 mkdir -p ${V1_TEMP_PATH}
 V1BETA1_PATH="${OUTPUT}/extensions/v1beta1/"
-V1BETA1_TEMP_PATH="${OUTPUT_TEMP}/extensions/v1beta1/"
+V1BETA1_TEMP_PATH="${REPO_DIR}/${TMP_SUBPATH}/extensions/v1beta1/"
 mkdir -p ${V1BETA1_TEMP_PATH}
 SWAGGER_PATH="${REPO_DIR}/api/swagger-spec/"
 
@@ -56,17 +57,17 @@ docker run -u $(id -u) --rm -v $V1BETA1_TEMP_PATH:/output:z -v ${SWAGGER_PATH}:/
     https://raw.githubusercontent.com/kubernetes/kubernetes/master/pkg/apis/extensions/v1beta1/register.go
 
 # Check if we actually changed anything
-pushd "${OUTPUT_TEMP}" > /dev/null
+pushd "${OUTPUT_TMP}" > /dev/null
 touch .generated_html
 find . -type f | cut -sd / -f 2- | LC_ALL=C sort > .generated_html
 popd > /dev/null
 
 while read file; do
-  if [[ -e "${OUTPUT}/${file}" && -e "${OUTPUT_TEMP}/${file}" ]]; then
-    echo "comparing ${OUTPUT}/${file} with ${OUTPUT_TEMP}/${file}"
+  if [[ -e "${OUTPUT}/${file}" && -e "${OUTPUT_TMP}/${file}" ]]; then
+    echo "comparing ${OUTPUT}/${file} with ${OUTPUT_TMP}/${file}"
     # Filter all munges from original content.
     original=$(cat "${OUTPUT}/${file}")
-    generated=$(cat "${OUTPUT_TEMP}/${file}")
+    generated=$(cat "${OUTPUT_TMP}/${file}")
 
     # Filter out meaningless lines with timestamps
     original=$(echo "${original}" | grep -v "Last updated" || :)
@@ -76,11 +77,11 @@ while read file; do
     # auto-managed content.  
     if diff -Bw >/dev/null <(echo "${original}") <(echo "${generated}"); then
       # actual contents same, overwrite generated with original.
-      cp "${OUTPUT}/${file}" "${OUTPUT_TEMP}/${file}"
+      cp "${OUTPUT}/${file}" "${OUTPUT_TMP}/${file}"
     fi
   fi
-done <"${OUTPUT_TEMP}/.generated_html"
+done <"${OUTPUT_TMP}/.generated_html"
 
-cp -af "${OUTPUT_TEMP}"/* "${OUTPUT}"
+cp -af "${OUTPUT_TMP}"/* "${OUTPUT}"
 
 # ex: ts=2 sw=2 et filetype=sh
