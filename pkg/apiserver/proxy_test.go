@@ -45,7 +45,7 @@ func calculateContentLength(reqBody string, transferEncodings []string) int64 {
 	return int64(-1)
 }
 
-func containGzip(transferEncodings []string) bool {
+func shouldGzip(transferEncodings []string) bool {
 	for _, encoding := range transferEncodings {
 		if encoding == "gzip" {
 			return true
@@ -71,7 +71,7 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 	}
 
 	for _, item := range table {
-		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		downstreamServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			expectedContentLength := calculateContentLength(item.reqBody, item.transferEncodings)
 			if e, a := expectedContentLength, req.ContentLength; e != a {
 				t.Errorf("expected %v, got %v", e, a)
@@ -93,9 +93,9 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 			}
 			fmt.Fprint(w, serverResponse)
 		}))
-		defer proxyServer.Close()
+		defer downstreamServer.Close()
 
-		serverURL, _ := url.Parse(proxyServer.URL)
+		serverURL, _ := url.Parse(downstreamServer.URL)
 		simpleStorage := &SimpleRESTStorage{
 			errors:                    map[string]error{},
 			resourceLocation:          serverURL,
@@ -108,12 +108,13 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 
 		proxyTestPattern := "/api/version2/proxy/namespaces/default/foo/id/some/dir"
 		var reader io.Reader
-		if containGzip(item.transferEncodings) {
+		if shouldGzip(item.transferEncodings) {
 			var b bytes.Buffer
 			gzw := gzip.NewWriter(&b)
 			if _, err := gzw.Write([]byte(item.reqBody)); err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
+			gzw.Close()
 			reader = &b
 		} else {
 			reader = strings.NewReader(item.reqBody)
@@ -128,7 +129,9 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 			continue
 		}
 		req.TransferEncoding = item.transferEncodings
-		req.Header.Set("Transfer-Encoding", strings.Join(item.transferEncodings, ","))
+		for _, encoding := range item.transferEncodings {
+			req.Header.Add("Transfer-Encoding", encoding)
+		}
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Errorf(" unexpected error %v", err)
@@ -165,7 +168,7 @@ func TestProxy(t *testing.T) {
 	}
 
 	for _, item := range table {
-		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		downstreamServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			gotBody, err := ioutil.ReadAll(req.Body)
 			if err != nil {
 				t.Errorf("%v - unexpected error %v", item.method, err)
@@ -188,9 +191,9 @@ func TestProxy(t *testing.T) {
 			}
 			fmt.Fprint(out, item.respBody)
 		}))
-		defer proxyServer.Close()
+		defer downstreamServer.Close()
 
-		serverURL, _ := url.Parse(proxyServer.URL)
+		serverURL, _ := url.Parse(downstreamServer.URL)
 		simpleStorage := &SimpleRESTStorage{
 			errors:                    map[string]error{},
 			resourceLocation:          serverURL,
@@ -366,7 +369,7 @@ func TestRedirectOnMissingTrailingSlash(t *testing.T) {
 	}
 
 	for _, item := range table {
-		proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		downstreamServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			if req.URL.Path != item.proxyServerPath {
 				t.Errorf("Unexpected request on path: %s, expected path: %s, item: %v", req.URL.Path, item.proxyServerPath, item)
 			}
@@ -374,9 +377,9 @@ func TestRedirectOnMissingTrailingSlash(t *testing.T) {
 				t.Errorf("Unexpected query on url: %s, expected: %s", req.URL.RawQuery, item.query)
 			}
 		}))
-		defer proxyServer.Close()
+		defer downstreamServer.Close()
 
-		serverURL, _ := url.Parse(proxyServer.URL)
+		serverURL, _ := url.Parse(downstreamServer.URL)
 		simpleStorage := &SimpleRESTStorage{
 			errors:                    map[string]error{},
 			resourceLocation:          serverURL,
