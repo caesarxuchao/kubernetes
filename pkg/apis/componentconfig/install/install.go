@@ -51,7 +51,7 @@ func init() {
 	registeredGroupVersions := registered.GroupVersionsForGroup("componentconfig")
 	groupVersion := registeredGroupVersions[0]
 	*groupMeta = latest.GroupMeta{
-		GroupVersion: groupVersion.String(),
+		GroupVersion: groupVersion,
 		Group:        groupVersion.Group,
 		Version:      groupVersion.Version,
 		Codec:        runtime.CodecFor(api.Scheme, groupVersion.String()),

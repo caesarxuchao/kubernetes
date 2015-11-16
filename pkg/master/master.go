@@ -1021,7 +1021,7 @@ func (m *Master) thirdpartyapi(group, kind, version string) *apiserver.APIGroupV
 		strings.ToLower(kind) + "s": resourceStorage,
 	}
 
-	serverGroupVersion := unversioned.ParseGroupVersionOrDie(latest.GroupOrDie("").GroupVersion)
+	serverGroupVersion := latest.GroupOrDie("").GroupVersion
 
 	return &apiserver.APIGroupVersion{
 		Root:                apiRoot,
@@ -1111,7 +1111,7 @@ func (m *Master) experimental(c *Config) *apiserver.APIGroupVersion {
 	}
 
 	extensionsGroup := latest.GroupOrDie("extensions")
-	serverGroupVersion := unversioned.ParseGroupVersionOrDie(latest.GroupOrDie("").GroupVersion)
+	serverGroupVersion := latest.GroupOrDie("").GroupVersion
 
 	return &apiserver.APIGroupVersion{
 		Root:                m.apiGroupPrefix,
@@ -1125,7 +1125,7 @@ func (m *Master) experimental(c *Config) *apiserver.APIGroupVersion {
 		Codec:              extensionsGroup.Codec,
 		Linker:             extensionsGroup.SelfLinker,
 		Storage:            storage,
-		GroupVersion:       unversioned.ParseGroupVersionOrDie(extensionsGroup.GroupVersion),
+		GroupVersion:       extensionsGroup.GroupVersion,
 		ServerGroupVersion: &serverGroupVersion,
 
 		Admit:   m.admissionControl,

@@ -58,7 +58,7 @@ func TestCodec(t *testing.T) {
 	if err := json.Unmarshal(data, &other); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if other.APIVersion != latest.GroupOrDie("extensions").GroupVersion || other.Kind != "DaemonSet" {
+	if other.APIVersion != latest.GroupOrDie("extensions").GroupVersion.String() || other.Kind != "DaemonSet" {
 		t.Errorf("unexpected unmarshalled object %#v", other)
 	}
 }
@@ -67,7 +67,7 @@ func TestInterfacesFor(t *testing.T) {
 	if _, err := latest.GroupOrDie("extensions").InterfacesFor(""); err == nil {
 		t.Fatalf("unexpected non-error: %v", err)
 	}
-	for i, groupVersion := range append([]string{latest.GroupOrDie("extensions").GroupVersion}, latest.GroupOrDie("extensions").GroupVersions...) {
+	for i, groupVersion := range append([]string{latest.GroupOrDie("extensions").GroupVersion.String()}, latest.GroupOrDie("extensions").GroupVersions...) {
 		if vi, err := latest.GroupOrDie("extensions").InterfacesFor(groupVersion); err != nil || vi == nil {
 			t.Fatalf("%d: unexpected result: %v", i, err)
 		}
