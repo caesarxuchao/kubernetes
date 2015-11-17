@@ -69,11 +69,12 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 		// transfer-codings MUST include "chunked", unless the message is terminated by closing the
 		// connection.
 		{[]string{"chunked", "gzip"}, "gzip", "qqqqqqqqqquestion", "default"},
+		{[]string{"chunked"}, "gzip", "qqqqqqqqqquestion", "default"},
+		{[]string{}, "gzip", "qqqqqqqqqquestion", "default"},
 	}
 
 	for _, item := range table {
 		downstreamServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			fmt.Println("CHAO: downstream got header: ", req.Header)
 			expectedContentLength := calculateContentLength(item.reqBody, item.transferEncodings)
 			if e, a := expectedContentLength, req.ContentLength; e != a {
 				t.Errorf("expected %v, got %v", e, a)
