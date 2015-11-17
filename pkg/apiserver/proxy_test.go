@@ -58,20 +58,22 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 	serverResponse := "got response"
 	table := []struct {
 		transferEncodings []string
+		contentEncoding   string
 		reqBody           string
 		reqNamespace      string
 	}{
-		{[]string{}, "", "default"},
-		{[]string{"identity"}, "question", "default"},
-		{[]string{"chunked"}, "question", "default"},
+		{[]string{}, "", "", "default"},
+		{[]string{"identity"}, "", "question", "default"},
+		{[]string{"chunked"}, "", "question", "default"},
 		// RFC2616 section-3.6: Whenever a transfer-coding is applied to a message-body, the set of
 		// transfer-codings MUST include "chunked", unless the message is terminated by closing the
 		// connection.
-		{[]string{"chunked", "gzip"}, "qqqqqqqqqquestion", "default"},
+		{[]string{"chunked", "gzip"}, "gzip", "qqqqqqqqqquestion", "default"},
 	}
 
 	for _, item := range table {
 		downstreamServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			fmt.Println("CHAO: downstream got header: ", req.Header)
 			expectedContentLength := calculateContentLength(item.reqBody, item.transferEncodings)
 			if e, a := expectedContentLength, req.ContentLength; e != a {
 				t.Errorf("expected %v, got %v", e, a)
@@ -87,8 +89,11 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 				}
 			}
 
-			// Help wanted: why is the transfer-encoding header field always empty?
+			// The http library will strip the "Transfer-Encoding" field from request.Header.
 			if e, a := "", req.Header.Get("Transfer-Encoding"); e != a {
+				t.Errorf("expected %v, got %v", e, a)
+			}
+			if e, a := item.contentEncoding, req.Header.Get("Content-Encoding"); e != a {
 				t.Errorf("expected %v, got %v", e, a)
 			}
 			fmt.Fprint(w, serverResponse)
@@ -132,6 +137,7 @@ func TestProxyRequestContentLengthAndTransferEncoding(t *testing.T) {
 		for _, encoding := range item.transferEncodings {
 			req.Header.Add("Transfer-Encoding", encoding)
 		}
+		req.Header.Add("Content-Encoding", item.contentEncoding)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			t.Errorf(" unexpected error %v", err)
