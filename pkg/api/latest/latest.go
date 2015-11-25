@@ -113,9 +113,6 @@ type GroupMeta struct {
 	// It equals to the "version" part of GroupVersion.
 	Version string
 
-	// Group represents the name of the group
-	Group string
-
 	// Versions is the list of versions that are recognized in code. The order
 	// provided is assumed to be from the oldest to the newest, e.g.,
 	// Versions[0] == oldest and Versions[N-1] == newest.
