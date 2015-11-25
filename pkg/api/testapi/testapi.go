@@ -102,7 +102,7 @@ func (g TestGroup) InternalGroupVersion() unversioned.GroupVersion {
 // KUBE_TEST_API env var.
 func (g TestGroup) Codec() runtime.Codec {
 	// TODO: caesarxuchao: Restructure the body once we have a central `latest`.
-	interfaces, err := latest.GroupOrDie(g.Group).InterfacesFor(g.GroupVersionUnderTest)
+	interfaces, err := latest.GroupOrDie(g.Group).InterfacesFor(unversioned.ParseGroupVersionOrDie(g.GroupVersionUnderTest))
 	if err != nil {
 		panic(err)
 	}
@@ -114,14 +114,14 @@ func (g TestGroup) Codec() runtime.Codec {
 func (g TestGroup) Converter() runtime.ObjectConvertor {
 	// TODO: caesarxuchao: Restructure the body once we have a central `latest`.
 	if g.Group == "" {
-		interfaces, err := latest.GroupOrDie("").InterfacesFor(g.VersionUnderTest)
+		interfaces, err := latest.GroupOrDie("").InterfacesFor(unversioned.ParseGroupVersionOrDie(g.VersionUnderTest))
 		if err != nil {
 			panic(err)
 		}
 		return interfaces.ObjectConvertor
 	}
 	if g.Group == "extensions" {
-		interfaces, err := latest.GroupOrDie("extensions").InterfacesFor(g.VersionUnderTest)
+		interfaces, err := latest.GroupOrDie("extensions").InterfacesFor(unversioned.ParseGroupVersionOrDie(g.VersionUnderTest))
 		if err != nil {
 			panic(err)
 		}
@@ -136,14 +136,14 @@ func (g TestGroup) Converter() runtime.ObjectConvertor {
 func (g TestGroup) MetadataAccessor() meta.MetadataAccessor {
 	// TODO: caesarxuchao: Restructure the body once we have a central `latest`.
 	if g.Group == "" {
-		interfaces, err := latest.GroupOrDie("").InterfacesFor(g.VersionUnderTest)
+		interfaces, err := latest.GroupOrDie("").InterfacesFor(unversioned.ParseGroupVersionOrDie(g.VersionUnderTest))
 		if err != nil {
 			panic(err)
 		}
 		return interfaces.MetadataAccessor
 	}
 	if g.Group == "extensions" {
-		interfaces, err := latest.GroupOrDie("extensions").InterfacesFor(g.VersionUnderTest)
+		interfaces, err := latest.GroupOrDie("extensions").InterfacesFor(unversioned.ParseGroupVersionOrDie(g.VersionUnderTest))
 		if err != nil {
 			panic(err)
 		}

@@ -138,5 +138,5 @@ type GroupMeta struct {
 
 	// InterfacesFor returns the default Codec and ResourceVersioner for a given version
 	// string, or an error if the version is not known.
-	InterfacesFor func(version string) (*meta.VersionInterfaces, error)
+	InterfacesFor func(groupVersion unversioned.GroupVersion) (*meta.VersionInterfaces, error)
 }

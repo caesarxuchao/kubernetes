@@ -352,7 +352,11 @@ type Master struct {
 // NewEtcdStorage returns a storage.Interface for the provided arguments or an error if the version
 // is incorrect.
 func NewEtcdStorage(client tools.EtcdClient, interfacesFunc meta.VersionInterfacesFunc, version, prefix string) (etcdStorage storage.Interface, err error) {
-	versionInterfaces, err := interfacesFunc(version)
+	groupVersion, err := unversioned.ParseGroupVersion(version)
+	if err != nil {
+		return etcdStorage, err
+	}
+	versionInterfaces, err := interfacesFunc(groupVersion)
 	if err != nil {
 		return etcdStorage, err
 	}

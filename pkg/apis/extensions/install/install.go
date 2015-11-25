@@ -77,9 +77,9 @@ func init() {
 
 // InterfacesFor returns the default Codec and ResourceVersioner for a given version
 // string, or an error if the version is not known.
-func interfacesFor(version string) (*meta.VersionInterfaces, error) {
-	switch version {
-	case "extensions/v1beta1":
+func interfacesFor(groupVersion unversioned.GroupVersion) (*meta.VersionInterfaces, error) {
+	switch groupVersion {
+	case unversioned.ParseGroupVersionOrDie("extensions/v1beta1"):
 		return &meta.VersionInterfaces{
 			Codec:            v1beta1.Codec,
 			ObjectConvertor:  api.Scheme,
@@ -87,6 +87,6 @@ func interfacesFor(version string) (*meta.VersionInterfaces, error) {
 		}, nil
 	default:
 		g, _ := latest.Group("extensions")
-		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", version, strings.Join(g.Versions, ", "))
+		return nil, fmt.Errorf("unsupported storage version: %s (valid: %s)", groupVersion, strings.Join(g.Versions, ", "))
 	}
 }

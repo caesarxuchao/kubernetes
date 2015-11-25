@@ -143,7 +143,7 @@ func setExtensionsDefaults(config *Config) error {
 	config.GroupVersion = &g.GroupVersion
 	//}
 
-	versionInterfaces, err := g.InterfacesFor(config.GroupVersion.String())
+	versionInterfaces, err := g.InterfacesFor(*config.GroupVersion)
 	if err != nil {
 		return fmt.Errorf("Extensions API group/version '%v' is not recognized (valid values: %s)",
 			config.GroupVersion, strings.Join(latest.GroupOrDie("extensions").Versions, ", "))
