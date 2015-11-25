@@ -109,10 +109,6 @@ type GroupMeta struct {
 	// GroupVersion represents the current external default version of the group.
 	GroupVersion unversioned.GroupVersion
 
-	// Version represents the current external default version of the group.
-	// It equals to the "version" part of GroupVersion.
-	Version string
-
 	// Versions is the list of versions that are recognized in code. The order
 	// provided is assumed to be from the oldest to the newest, e.g.,
 	// Versions[0] == oldest and Versions[N-1] == newest.
