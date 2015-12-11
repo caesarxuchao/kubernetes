@@ -254,6 +254,7 @@ type PersistentVolumeClaimVolumeSource struct {
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
+// +genclient=true
 type PersistentVolume struct {
 	unversioned.TypeMeta `json:",inline"`
 	ObjectMeta           `json:"metadata,omitempty"`
@@ -310,6 +311,7 @@ type PersistentVolumeList struct {
 	Items                []PersistentVolume `json:"items"`
 }
 
+// +genclient=true
 // PersistentVolumeClaim is a user's request for and claim to a persistent volume
 type PersistentVolumeClaim struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1095,6 +1097,7 @@ type PodStatusResult struct {
 	Status PodStatus `json:"status,omitempty"`
 }
 
+// +genclient=true
 // Pod is a collection of containers, used as either input (create, update) or as output (list, get).
 type Pod struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1117,6 +1120,7 @@ type PodTemplateSpec struct {
 	Spec PodSpec `json:"spec,omitempty"`
 }
 
+// +genclient=true
 // PodTemplate describes a template for creating copies of a predefined pod.
 type PodTemplate struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1165,6 +1169,7 @@ type ReplicationControllerStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
+// +genclient=true
 // ReplicationController represents the configuration of a replication controller.
 type ReplicationController struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1314,6 +1319,7 @@ type ServicePort struct {
 	NodePort int `json:"nodePort"`
 }
 
+// +genclient=true
 // Service is a named abstraction of software service (for example, mysql) consisting of local port
 // (for example 3306) that the proxy listens on, and the selector that determines which pods
 // will answer requests sent through the proxy.
@@ -1328,6 +1334,7 @@ type Service struct {
 	Status ServiceStatus `json:"status,omitempty"`
 }
 
+// +genclient=true
 // ServiceAccount binds together:
 // * a name, understood by users, and perhaps by peripheral systems, for an identity
 // * a principal that can be authenticated and authorized
@@ -1353,6 +1360,7 @@ type ServiceAccountList struct {
 	Items []ServiceAccount `json:"items"`
 }
 
+// +genclient=true
 // Endpoints is a collection of endpoints that implement the actual service.  Example:
 //   Name: "mysvc",
 //   Subsets: [
@@ -1558,6 +1566,7 @@ const (
 // ResourceList is a set of (resource name, quantity) pairs.
 type ResourceList map[ResourceName]resource.Quantity
 
+// +genclient=true
 // Node is a worker node in Kubernetes
 // The name of the node according to etcd is in ObjectMeta.Name.
 type Node struct {
@@ -1608,6 +1617,7 @@ const (
 	NamespaceTerminating NamespacePhase = "Terminating"
 )
 
+// +genclient=true
 // A namespace provides a scope for Names.
 // Use of multiple namespaces is optional
 type Namespace struct {
@@ -1796,6 +1806,7 @@ const (
 	EventTypeWarning string = "Warning"
 )
 
+// +genclient=true
 // Event is a report of an event somewhere in the cluster.
 // TODO: Decide whether to store these separately or with the object they apply to.
 type Event struct {
@@ -1879,6 +1890,7 @@ type LimitRangeSpec struct {
 	Limits []LimitRangeItem `json:"limits"`
 }
 
+// +genclient=true
 // LimitRange sets resource usage limits for each kind of resource in a Namespace
 type LimitRange struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1927,6 +1939,7 @@ type ResourceQuotaStatus struct {
 	Used ResourceList `json:"used,omitempty"`
 }
 
+// +genclient=true
 // ResourceQuota sets aggregate quota restrictions enforced per namespace
 type ResourceQuota struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -1948,6 +1961,7 @@ type ResourceQuotaList struct {
 	Items []ResourceQuota `json:"items"`
 }
 
+// +genclient=true
 // Secret holds secret data of a certain type.  The total bytes of the values in
 // the Data field must be less than MaxSecretSize bytes.
 type Secret struct {
@@ -2082,6 +2096,7 @@ type ComponentCondition struct {
 	Error   string                 `json:"error,omitempty"`
 }
 
+// +genclient=true
 // ComponentStatus (and ComponentStatusList) holds the cluster validation info.
 type ComponentStatus struct {
 	unversioned.TypeMeta `json:",inline"`
