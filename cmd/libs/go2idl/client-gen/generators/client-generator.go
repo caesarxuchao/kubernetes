@@ -49,6 +49,59 @@ func DefaultNameSystem() string {
 	return "public"
 }
 
+func packageForGroup(group string, version string, typeList []*types.Type, basePath string, boilerplate []byte) generator.Package {
+	outputPackagePath := filepath.Join(basePath, group, version)
+	return &generator.DefaultPackage{
+		PackageName: version,
+		PackagePath: outputPackagePath,
+		HeaderText:  boilerplate,
+		PackageDocumentation: []byte(
+			`// Package unversioned has the automatically generated clients for unversioned resources.
+`),
+		// GeneratorFunc returns a list of generators. Each generator makes a
+		// single file.
+		GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
+			generators = []generator.Generator{
+				// Always generate a "doc.go" file.
+				generator.DefaultGen{OptionalName: "doc"},
+			}
+			// Since we want a file per type that we generate a client for, we
+			// have to provide a function for this.
+			for _, t := range typeList {
+				generators = append(generators, &genClientForType{
+					DefaultGen: generator.DefaultGen{
+						// Use the privatized version of the
+						// type name as the file name.
+						//
+						// TODO: make a namer that converts
+						// camelCase to '-' separation for file
+						// names?
+						OptionalName: c.Namers["private"].Name(t),
+					},
+					outputPackage: outputPackagePath,
+					group:         group,
+					typeToMatch:   t,
+					imports:       generator.NewImportTracker(),
+				})
+			}
+
+			generators = append(generators, &genGroup{
+				DefaultGen: generator.DefaultGen{
+					OptionalName: group + "_client",
+				},
+				outputPackage: outputPackagePath,
+				group:         group,
+				types:         typeList,
+				imports:       generator.NewImportTracker(),
+			})
+			return generators
+		},
+		FilterFunc: func(c *generator.Context, t *types.Type) bool {
+			return types.ExtractCommentTags("+", t.CommentLines)["genclient"] == "true"
+		},
+	}
+}
+
 // Packages makes the client package definition.
 func Packages(context *generator.Context, arguments *args.GeneratorArgs) generator.Packages {
 	boilerplate, err := arguments.LoadGoBoilerplate()
@@ -66,7 +119,7 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 			group := filepath.Base(t.Name.Package)
 			// Special case for the legacy API.
 			if group == "api" {
-				group = ""
+				group = "legacy"
 			}
 			if _, found := groupToTypes[group]; !found {
 				groupToTypes[group] = []*types.Type{}
@@ -75,54 +128,10 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 		}
 	}
 
-	return generator.Packages{&generator.DefaultPackage{
-		PackageName: filepath.Base(arguments.OutputPackagePath),
-		PackagePath: arguments.OutputPackagePath,
-		HeaderText:  boilerplate,
-		PackageDocumentation: []byte(
-			`// Package unversioned has the automatically generated clients for unversioned resources.
-`),
-		// GeneratorFunc returns a list of generators. Each generator makes a
-		// single file.
-		GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
-			generators = []generator.Generator{
-				// Always generate a "doc.go" file.
-				generator.DefaultGen{OptionalName: "doc"},
-			}
-			// Since we want a file per type that we generate a client for, we
-			// have to provide a function for this.
-			for _, t := range c.Order {
-				generators = append(generators, &genClientForType{
-					DefaultGen: generator.DefaultGen{
-						// Use the privatized version of the
-						// type name as the file name.
-						//
-						// TODO: make a namer that converts
-						// camelCase to '-' separation for file
-						// names?
-						OptionalName: c.Namers["private"].Name(t),
-					},
-					outputPackage: arguments.OutputPackagePath,
-					typeToMatch:   t,
-					imports:       generator.NewImportTracker(),
-				})
-			}
+	var packageList []generator.Package
+	for group, types := range groupToTypes {
+		packageList = append(packageList, packageForGroup(group, "unversioned", types, arguments.OutputPackagePath, boilerplate))
+	}
 
-			for group, types := range groupToTypes {
-				generators = append(generators, &genGroup{
-					DefaultGen: generator.DefaultGen{
-						OptionalName: group,
-					},
-					outputPackage: arguments.OutputPackagePath,
-					group:         group,
-					types:         types,
-					imports:       generator.NewImportTracker(),
-				})
-			}
-			return generators
-		},
-		FilterFunc: func(c *generator.Context, t *types.Type) bool {
-			return types.ExtractCommentTags("+", t.CommentLines)["genclient"] == "true"
-		},
-	}}
+	return generator.Packages(packageList)
 }

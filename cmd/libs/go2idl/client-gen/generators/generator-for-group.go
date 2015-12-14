@@ -54,15 +54,23 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 	const pkgUnversioned = "k8s.io/kubernetes/pkg/client/unversioned"
 	const pkgLatest = "k8s.io/kubernetes/pkg/api/latest"
 	prefix := func(group string) string {
-		if group == "" {
+		if group == "legacy" {
 			return `"/api"`
 		}
 		return `"/apis"`
 	}
 
+	canonize := func(group string) string {
+		if group == "legacy" {
+			return ""
+		}
+		return group
+	}
+
 	m := map[string]interface{}{
 		"group":                      g.group,
 		"Group":                      namer.IC(g.group),
+		".canonicalGroup":            canonize(g.group),
 		"types":                      g.types,
 		"Config":                     c.Universe.Type(types.Name{Package: pkgUnversioned, Name: "Config"}),
 		"DefaultKubernetesUserAgent": c.Universe.Function(types.Name{Package: pkgUnversioned, Name: "DefaultKubernetesUserAgent"}),
@@ -90,8 +98,7 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 
 var groupInterfaceTemplate = `
 type $.Group$Interface interface {
-    $range .types$
-        $.Name.Name$Namespacer
+    $range .types$ $.Name.Name$Namespacer
     $end$
 }
 `
@@ -139,7 +146,7 @@ func New$.Group$OrDie(c *$.Config|raw$) *$.Group$Client {
 var setClientDefaultsTemplate = `
 func set$.Group$Defaults(config *$.Config|raw$) error {
 	// if $.group$ group is not registered, return an error
-	g, err := $.latestGroup|raw$("$.group$")
+	g, err := $.latestGroup|raw$("$.canonicalGroup$")
 	if err != nil {
 		return err
 	}
