@@ -70,7 +70,7 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 	m := map[string]interface{}{
 		"group":                      g.group,
 		"Group":                      namer.IC(g.group),
-		".canonicalGroup":            canonize(g.group),
+		"canonicalGroup":             canonize(g.group),
 		"types":                      g.types,
 		"Config":                     c.Universe.Type(types.Name{Package: pkgUnversioned, Name: "Config"}),
 		"DefaultKubernetesUserAgent": c.Universe.Function(types.Name{Package: pkgUnversioned, Name: "DefaultKubernetesUserAgent"}),

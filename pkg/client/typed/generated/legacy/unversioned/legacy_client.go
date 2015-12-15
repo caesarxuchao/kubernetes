@@ -130,7 +130,7 @@ func NewLegacyOrDie(c *unversioned.Config) *LegacyClient {
 
 func setLegacyDefaults(config *unversioned.Config) error {
 	// if legacy group is not registered, return an error
-	g, err := latest.Group("<no value>")
+	g, err := latest.Group("")
 	if err != nil {
 		return err
 	}

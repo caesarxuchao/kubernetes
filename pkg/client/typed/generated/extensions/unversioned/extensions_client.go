@@ -85,7 +85,7 @@ func NewExtensionsOrDie(c *unversioned.Config) *ExtensionsClient {
 
 func setExtensionsDefaults(config *unversioned.Config) error {
 	// if extensions group is not registered, return an error
-	g, err := latest.Group("<no value>")
+	g, err := latest.Group("extensions")
 	if err != nil {
 		return err
 	}
