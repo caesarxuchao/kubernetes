@@ -27,9 +27,10 @@ type Orderer struct {
 	Namer
 }
 
-// Order assigns a name to every type, and returns a list sorted by those
+// OrderUniverse assigns a name to every type in the Universe, including Types,
+// Functions and Varialbes, and returns a list sorted by those
 // names.
-func (o *Orderer) Order(u types.Universe) []*types.Type {
+func (o *Orderer) OrderUniverse(u types.Universe) []*types.Type {
 	list := tList{
 		namer: o.Namer,
 	}
@@ -43,6 +44,17 @@ func (o *Orderer) Order(u types.Universe) []*types.Type {
 		for _, v := range p.Variables {
 			list.types = append(list.types, v)
 		}
+	}
+	sort.Sort(list)
+	return list.types
+}
+
+// OrderTypes assigns a name to every type, and returns a list sorted by those
+// names.
+func (o *Orderer) OrderTypes(typeList []*types.Type) []*types.Type {
+	list := tList{
+		namer: o.Namer,
+		types: typeList,
 	}
 	sort.Sort(list)
 	return list.types
