@@ -61,7 +61,7 @@ func (c *ExtensionsClient) ThirdPartyResources(namespace string) ThirdPartyResou
 }
 
 // NewExtensions creates a new ExtensionsClient for the given config.
-func NewExtensions(c *unversioned.Config) (*ExtensionsClient, error) {
+func NewExtensionsForConfig(c *unversioned.Config) (*ExtensionsClient, error) {
 	config := *c
 	if err := setExtensionsDefaults(&config); err != nil {
 		return nil, err
@@ -75,12 +75,17 @@ func NewExtensions(c *unversioned.Config) (*ExtensionsClient, error) {
 
 // NewExtensionsOrDie creates a new ExtensionsClient for the given config and
 // panics if there is an error in the config.
-func NewExtensionsOrDie(c *unversioned.Config) *ExtensionsClient {
-	client, err := NewExtensions(c)
+func NewExtensionsForConfigOrDie(c *unversioned.Config) *ExtensionsClient {
+	client, err := NewExtensionsForConfig(c)
 	if err != nil {
 		panic(err)
 	}
 	return client
+}
+
+// NewExtensions creates a new ExtensionsClient for the given RESTClient.
+func NewExtensionsForRESTClient(c *unversioned.RESTClient) *ExtensionsClient {
+	return &ExtensionsClient{c}
 }
 
 func setExtensionsDefaults(config *unversioned.Config) error {

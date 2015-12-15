@@ -89,8 +89,9 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 		}
 		sw.Do(namespacerImplTemplate, wrapper)
 	}
-	sw.Do(newClientTemplate, m)
-	sw.Do(newClientOrDieTemplate, m)
+	sw.Do(newClientForConfigTemplate, m)
+	sw.Do(newClientForConfigOrDieTemplate, m)
+	sw.Do(newClientForRESTClientTemplate, m)
 	sw.Do(setClientDefaultsTemplate, m)
 
 	return sw.Error()
@@ -116,9 +117,9 @@ func (c *$.Group$Client) $.type|publicPlural$(namespace string) $.type.Name.Name
 }
 `
 
-var newClientTemplate = `
+var newClientForConfigTemplate = `
 // New$.Group$ creates a new $.Group$Client for the given config.
-func New$.Group$(c *$.Config|raw$) (*$.Group$Client, error) {
+func New$.Group$ForConfig(c *$.Config|raw$) (*$.Group$Client, error) {
 	config := *c
 	if err := set$.Group$Defaults(&config); err != nil {
 		return nil, err
@@ -131,11 +132,11 @@ func New$.Group$(c *$.Config|raw$) (*$.Group$Client, error) {
 }
 `
 
-var newClientOrDieTemplate = `
+var newClientForConfigOrDieTemplate = `
 // New$.Group$OrDie creates a new $.Group$Client for the given config and
 // panics if there is an error in the config.
-func New$.Group$OrDie(c *$.Config|raw$) *$.Group$Client {
-	client, err := New$.Group$(c)
+func New$.Group$ForConfigOrDie(c *$.Config|raw$) *$.Group$Client {
+	client, err := New$.Group$ForConfig(c)
 	if err != nil {
 		panic(err)
 	}
@@ -143,6 +144,12 @@ func New$.Group$OrDie(c *$.Config|raw$) *$.Group$Client {
 }
 `
 
+var newClientForRESTClientTemplate = `
+// New$.Group$ creates a new $.Group$Client for the given RESTClient.
+func New$.Group$ForRESTClient(c *$.RESTClient|raw$) *$.Group$Client {
+	return &$.Group$Client{c}
+}
+`
 var setClientDefaultsTemplate = `
 func set$.Group$Defaults(config *$.Config|raw$) error {
 	// if $.group$ group is not registered, return an error

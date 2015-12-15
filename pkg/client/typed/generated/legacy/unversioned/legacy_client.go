@@ -106,7 +106,7 @@ func (c *LegacyClient) ServiceAccounts(namespace string) ServiceAccountInterface
 }
 
 // NewLegacy creates a new LegacyClient for the given config.
-func NewLegacy(c *unversioned.Config) (*LegacyClient, error) {
+func NewLegacyForConfig(c *unversioned.Config) (*LegacyClient, error) {
 	config := *c
 	if err := setLegacyDefaults(&config); err != nil {
 		return nil, err
@@ -120,12 +120,17 @@ func NewLegacy(c *unversioned.Config) (*LegacyClient, error) {
 
 // NewLegacyOrDie creates a new LegacyClient for the given config and
 // panics if there is an error in the config.
-func NewLegacyOrDie(c *unversioned.Config) *LegacyClient {
-	client, err := NewLegacy(c)
+func NewLegacyForConfigOrDie(c *unversioned.Config) *LegacyClient {
+	client, err := NewLegacyForConfig(c)
 	if err != nil {
 		panic(err)
 	}
 	return client
+}
+
+// NewLegacy creates a new LegacyClient for the given RESTClient.
+func NewLegacyForRESTClient(c *unversioned.RESTClient) *LegacyClient {
+	return &LegacyClient{c}
 }
 
 func setLegacyDefaults(config *unversioned.Config) error {
