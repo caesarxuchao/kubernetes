@@ -129,8 +129,9 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 	}
 
 	var packageList []generator.Package
+	orderer := namer.Orderer{namer.NewPrivateNamer(0)}
 	for group, types := range groupToTypes {
-		packageList = append(packageList, packageForGroup(group, "unversioned", types, arguments.OutputPackagePath, boilerplate))
+		packageList = append(packageList, packageForGroup(group, "unversioned", orderer.OrderTypes(types), arguments.OutputPackagePath, boilerplate))
 	}
 
 	return generator.Packages(packageList)
