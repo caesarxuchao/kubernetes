@@ -23,8 +23,8 @@ import (
 )
 
 type Interface interface {
-	Legacy() legacy_unversioned.LegacyClient
-	Extensions() extensions_unversioned.ExtensionsClient
+	Legacy() *legacy_unversioned.LegacyClient
+	Extensions() *extensions_unversioned.ExtensionsClient
 }
 
 // Clientset contains the clients for groups. Each group has exactly one

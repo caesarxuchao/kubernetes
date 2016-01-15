@@ -34,6 +34,7 @@ import (
 
 	"k8s.io/kubernetes/cmd/kube-controller-manager/app/options"
 	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/client/clientset_generated/release_1_1"
 	client "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	"k8s.io/kubernetes/pkg/cloudprovider"
@@ -96,6 +97,17 @@ func clientForUserAgentOrDie(config client.Config, userAgent string) *client.Cli
 	fullUserAgent := client.DefaultKubernetesUserAgent() + "/" + userAgent
 	config.UserAgent = fullUserAgent
 	kubeClient, err := client.New(&config)
+	if err != nil {
+		glog.Fatalf("Invalid API configuration: %v", err)
+	}
+	return kubeClient
+}
+
+// clientsetForUserAgentOrDie is going to replace clientForUserAgentOrDie
+func clientsetForUserAgentOrDie(config client.Config, userAgent string) release_1_1.Interface {
+	fullUserAgent := client.DefaultKubernetesUserAgent() + "/" + userAgent
+	config.UserAgent = fullUserAgent
+	kubeClient, err := release_1_1.NewForConfig(&config)
 	if err != nil {
 		glog.Fatalf("Invalid API configuration: %v", err)
 	}
@@ -237,7 +249,7 @@ func Run(s *options.CMServer) error {
 
 		if containsResource(resources, "deployments") {
 			glog.Infof("Starting deployment controller")
-			go deployment.NewDeploymentController(clientForUserAgentOrDie(*kubeconfig, "deployment-controller"), ResyncPeriod(s)).
+			go deployment.NewDeploymentController(clientsetForUserAgentOrDie(*kubeconfig, "deployment-controller"), ResyncPeriod(s)).
 				Run(s.ConcurrentDeploymentSyncs, util.NeverStop)
 		}
 	}
