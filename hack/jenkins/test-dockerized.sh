@@ -47,11 +47,10 @@ export KUBE_TEST_ETCD_PREFIXES=registry
 godep go install ./...
 ./hack/install-etcd.sh
 
-./hack/verify-all.sh -v
-
-./hack/test-go.sh
-./hack/test-cmd.sh
-./hack/test-integration.sh
-./hack/test-update-storage-objects.sh
-
-
+i=0
+while true
+do
+echo "============run $i============="
+./hack/test-cmd.sh || true
+let i=i+1
+done
