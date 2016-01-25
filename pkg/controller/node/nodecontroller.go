@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -392,6 +393,8 @@ func forcefullyDeletePod(c client.Interface, pod *api.Pod) {
 	var zero int64
 	err := c.Pods(pod.Namespace).Delete(pod.Name, &api.DeleteOptions{GracePeriodSeconds: &zero})
 	if err != nil {
+		fmt.Println("CHAO: in error of forcefullyDeletePod, print stack now:")
+		debug.PrintStack()
 		util.HandleError(err)
 	}
 }
