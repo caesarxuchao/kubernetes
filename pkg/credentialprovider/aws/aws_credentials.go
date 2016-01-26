@@ -69,6 +69,7 @@ type ecrProvider struct {
 // init registers the various means by which ECR credentials may
 // be resolved.
 func init() {
+	return
 	credentialprovider.RegisterCredentialProvider("aws-ecr-key",
 		&credentialprovider.CachingDockerConfigProvider{
 			Provider: &ecrProvider{},
