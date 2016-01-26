@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"math"
 	"net"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -175,6 +174,7 @@ func NewNodeController(
 		generatedCIDR:          false,
 	}
 
+	fmt.Println("CHAO init podController")
 	nc.podStore.Store, nc.podController = framework.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
@@ -226,7 +226,8 @@ func (nc *NodeController) generateAvailableCIDRs() {
 // Run starts an asynchronous loop that monitors the status of cluster nodes.
 func (nc *NodeController) Run(period time.Duration) {
 	go nc.nodeController.Run(util.NeverStop)
-	go nc.podController.Run(util.NeverStop)
+	go nc.podController.Run(util.NeverStop, true)
+	fmt.Println("CHAO: runned podController")
 
 	// Incorporate the results of node status pushed from kubelet to master.
 	go util.Until(func() {
@@ -339,18 +340,23 @@ var gracefulDeletionVersion = version.MustParse("v1.1.0")
 // maybeDeleteTerminatingPod non-gracefully deletes pods that are terminating
 // that should not be gracefully terminated.
 func (nc *NodeController) maybeDeleteTerminatingPod(obj interface{}) {
+	fmt.Println("CHAO: pod.Name1=")
 	pod, ok := obj.(*api.Pod)
 	if !ok {
 		return
 	}
 
+	fmt.Println("CHAO: pod.Name2=", pod.Name)
 	// consider only terminating pods
 	if pod.DeletionTimestamp == nil {
 		return
 	}
 
+	fmt.Println("CHAO: pod.Name3", pod.Name)
 	// delete terminating pods that have not yet been scheduled
 	if len(pod.Spec.NodeName) == 0 {
+		fmt.Println("CHAO: pod.Name4=", pod.Name)
+		fmt.Println("CHAO:	pod.DeletionTimestamp=", pod.DeletionTimestamp)
 		nc.forcefullyDeletePod(pod)
 		return
 	}
@@ -391,10 +397,13 @@ func (nc *NodeController) maybeDeleteTerminatingPod(obj interface{}) {
 
 func forcefullyDeletePod(c client.Interface, pod *api.Pod) {
 	var zero int64
+	fmt.Println("CHAO: who calls forcefullyDeletePod?")
+	fmt.Println("CHAO: pod.Name=", pod.Name)
+	// debug.PrintStack()
 	err := c.Pods(pod.Namespace).Delete(pod.Name, &api.DeleteOptions{GracePeriodSeconds: &zero})
 	if err != nil {
 		fmt.Println("CHAO: in error of forcefullyDeletePod, print stack now:")
-		debug.PrintStack()
+		fmt.Println("CHAO: pod.Name=", pod.Name)
 		util.HandleError(err)
 	}
 }

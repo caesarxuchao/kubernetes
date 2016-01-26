@@ -299,7 +299,11 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
   # Command
-  kubectl delete pod valid-pod "${kube_flags[@]}" --grace-period=0
+  echo "nodename"
+  sleep 3
+  kubectl get pods -o go-template="{{range.items}}{{.spec.nodeName}}{{end}}"
+ echo "going to delete 1"
+kubectl delete pod valid-pod "${kube_flags[@]}" --grace-period=0
   # Post-condition: valid-pod POD doesn't exist
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" ''
 
@@ -315,6 +319,10 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
   # Command
+  echo "nodename"
+  sleep 3
+  kubectl get pods -o go-template="{{range.items}}{{.spec.nodeName}}{{end}}"
+ echo "going to delete 2"
   kubectl delete -f docs/admin/limitrange/valid-pod.yaml "${kube_flags[@]}" --grace-period=0
   # Post-condition: valid-pod POD doesn't exist
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" ''
@@ -331,7 +339,11 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert "pods -l'name in (valid-pod)'" '{{range.items}}{{$id_field}}:{{end}}' 'valid-pod:'
   # Command
-  kubectl delete pods -l'name in (valid-pod)' "${kube_flags[@]}" --grace-period=0
+  echo "nodename"
+  sleep 3
+  kubectl get pods -o go-template="{{range.items}}{{.spec.nodeName}}{{end}}"
+ echo "going to delete 3"
+kubectl delete pods -l'name in (valid-pod)' "${kube_flags[@]}" --grace-period=0
   # Post-condition: valid-pod POD doesn't exist
   kube::test::get_object_assert "pods -l'name in (valid-pod)'" '{{range.items}}{{$id_field}}:{{end}}' ''
 
@@ -347,6 +359,7 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
   # Command
+  echo "failed deletion"
   ! kubectl delete pods "${kube_flags[@]}"
   # Post-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
@@ -355,6 +368,7 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
   # Command
+  echo "failed deletion"
   ! kubectl delete --all pods -l'name in (valid-pod)' "${kube_flags[@]}"
   # Post-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
@@ -363,6 +377,10 @@ runTests() {
   # Pre-condition: valid-pod POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" 'valid-pod:'
   # Command
+  echo "nodename"
+  sleep 3
+  kubectl get pods -o go-template="{{range.items}}{{.spec.nodeName}}{{end}}"
+ echo "going to delete 4"
   kubectl delete --all pods "${kube_flags[@]}" --grace-period=0 # --all remove all the pods
   # Post-condition: no POD exists
   kube::test::get_object_assert "pods -l'name in (valid-pod)'" '{{range.items}}{{$id_field}}:{{end}}' ''
@@ -382,13 +400,18 @@ runTests() {
   #debug
   echo "!!!!!!!!!!!!!!!!describe the pods:"
   kubectl describe pods redis-proxy
-  kbuectl describe pods valid-pod
+  kubectl describe pods valid-pod
   echo "!!!!!!!!!!!!!!!!end of describing the pods:"
   # Command
-  kubectl delete pods valid-pod redis-proxy "${kube_flags[@]}" --grace-period=0 # delete multiple pods at once
+  echo "nodename"
+  sleep 3
+  kubectl get pods -o go-template="{{range.items}}{{.spec.nodeName}}{{end}}"
+ echo "going to delete 5"
+kubectl delete pods valid-pod redis-proxy "${kube_flags[@]}" --grace-period=0 # delete multiple pods at once
   # Post-condition: no POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" ''
 
+  exit 0 
   ### Create valid-pod POD
   # Pre-condition: no POD exists
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" ''

@@ -78,14 +78,24 @@ func New(c *Config) *Controller {
 // Run begins processing items, and will continue until a value is sent down stopCh.
 // It's an error to call Run more than once.
 // Run blocks; call via go.
-func (c *Controller) Run(stopCh <-chan struct{}) {
+func (c *Controller) Run(stopCh <-chan struct{}, isPod ...bool) {
 	defer util.HandleCrash()
-	r := cache.NewReflector(
-		c.config.ListerWatcher,
-		c.config.ObjectType,
-		c.config.Queue,
-		c.config.FullResyncPeriod,
-	)
+	var r *cache.Reflector
+	if len(isPod) > 0 {
+		r = cache.NewPodReflector(
+			c.config.ListerWatcher,
+			c.config.ObjectType,
+			c.config.Queue,
+			c.config.FullResyncPeriod,
+		)
+	} else {
+		r = cache.NewReflector(
+			c.config.ListerWatcher,
+			c.config.ObjectType,
+			c.config.Queue,
+			c.config.FullResyncPeriod,
+		)
+	}
 
 	c.reflectorMutex.Lock()
 	c.reflector = r

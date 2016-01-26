@@ -73,6 +73,8 @@ type Reflector struct {
 	lastSyncResourceVersion string
 	// lastSyncResourceVersionMutex guards read/write access to lastSyncResourceVersion
 	lastSyncResourceVersionMutex sync.RWMutex
+
+	isPodController bool
 }
 
 var (
@@ -105,6 +107,25 @@ func NewNamespaceKeyedIndexerAndReflector(lw ListerWatcher, expectedType interfa
 // well as incrementally processing the things that change.
 func NewReflector(lw ListerWatcher, expectedType interface{}, store Store, resyncPeriod time.Duration) *Reflector {
 	return NewNamedReflector(getDefaultReflectorName(internalPackages...), lw, expectedType, store, resyncPeriod)
+}
+
+func NewPodReflector(lw ListerWatcher, expectedType interface{}, store Store, resyncPeriod time.Duration) *Reflector {
+	return NewNamedPodReflector(getDefaultReflectorName(internalPackages...), lw, expectedType, store, resyncPeriod)
+}
+
+// NewNamedReflector same as NewReflector, but with a specified name for logging
+func NewNamedPodReflector(name string, lw ListerWatcher, expectedType interface{}, store Store, resyncPeriod time.Duration) *Reflector {
+	r := &Reflector{
+		name:            name,
+		listerWatcher:   lw,
+		store:           store,
+		expectedType:    reflect.TypeOf(expectedType),
+		period:          time.Second,
+		resyncPeriod:    resyncPeriod,
+		now:             time.Now,
+		isPodController: true,
+	}
+	return r
 }
 
 // NewNamedReflector same as NewReflector, but with a specified name for logging
@@ -342,6 +363,9 @@ loop:
 			case watch.Added:
 				r.store.Add(event.Object)
 			case watch.Modified:
+				fmt.Println("CHAO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+				fmt.Println("CHAO: watch Modified event=", event)
+				fmt.Println("CHAO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 				r.store.Update(event.Object)
 			case watch.Deleted:
 				// TODO: Will any consumers need access to the "last known
