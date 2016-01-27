@@ -106,6 +106,7 @@ const (
 	podRespondingTimeout     = 2 * time.Minute
 	serviceRespondingTimeout = 2 * time.Minute
 	endpointRegisterTimeout  = time.Minute
+	podDeletionGracePeriod   = 1 * time.Minute
 )
 
 // SubResource proxy should have been functional in v1.0.0, but SubResource

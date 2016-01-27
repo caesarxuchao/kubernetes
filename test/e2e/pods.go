@@ -344,7 +344,7 @@ var _ = Describe("Pods", func() {
 		}
 
 		By("deleting the pod gracefully")
-		if err := podClient.Delete(pod.Name, nil); err != nil {
+		if err := podClient.Delete(pod.Name, api.NewDeleteOptions(int64(podDeletionGracePeriod))); err != nil {
 			Failf("Failed to delete pod: %v", err)
 		}
 
@@ -352,7 +352,7 @@ var _ = Describe("Pods", func() {
 		deleted := false
 		timeout := false
 		var lastPod *api.Pod
-		timer := time.After(podStartTimeout)
+		timer := time.After(podDeletionGracePeriod)
 		for !deleted && !timeout {
 			select {
 			case event, _ := <-w.ResultChan():
