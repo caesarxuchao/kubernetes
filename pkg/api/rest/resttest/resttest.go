@@ -659,17 +659,13 @@ func (t *Tester) testDeleteGracefulImmediate(obj runtime.Object, setFn SetFunc, 
 	}
 
 	// second delete is immediate, resource is deleted
-	out, err := t.storage.(rest.GracefulDeleter).Delete(ctx, objectMeta.Name, api.NewDeleteOptions(0))
+	_, err = t.storage.(rest.GracefulDeleter).Delete(ctx, objectMeta.Name, api.NewDeleteOptions(0))
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	_, err = t.storage.(rest.Getter).Get(ctx, objectMeta.Name)
 	if !errors.IsNotFound(err) {
 		t.Errorf("unexpected error, object should be deleted immediately: %v", err)
-	}
-	objectMeta = t.getObjectMetaOrFail(out)
-	if objectMeta.DeletionTimestamp == nil || objectMeta.DeletionGracePeriodSeconds == nil || *objectMeta.DeletionGracePeriodSeconds != 0 {
-		t.Errorf("unexpected deleted meta: %#v", objectMeta)
 	}
 }
 

@@ -378,9 +378,8 @@ func (e *Etcd) Delete(ctx api.Context, name string, options *api.DeleteOptions) 
 	if pendingGraceful {
 		return e.finalizeDelete(obj, false)
 	}
-	if graceful {
+	if graceful && *options.GracePeriodSeconds > 0 {
 		out := e.NewFunc()
-		lastGraceful := int64(0)
 		err := e.Storage.GuaranteedUpdate(
 			ctx, key, out, false,
 			storage.SimpleUpdate(func(existing runtime.Object) (runtime.Object, error) {
@@ -394,15 +393,12 @@ func (e *Etcd) Delete(ctx api.Context, name string, options *api.DeleteOptions) 
 				if !graceful {
 					return nil, errDeleteNow
 				}
-				lastGraceful = *options.GracePeriodSeconds
 				return existing, nil
 			}),
 		)
 		switch err {
 		case nil:
-			if lastGraceful > 0 {
-				return out, nil
-			}
+			return out, nil
 			// fall through and delete immediately
 		case errDeleteNow:
 			// we've updated the object to have a zero grace period, or it's already at 0, so
