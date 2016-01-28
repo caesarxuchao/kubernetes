@@ -344,7 +344,9 @@ var _ = Describe("Pods", func() {
 		}
 
 		By("deleting the pod gracefully")
-		if err := podClient.Delete(pod.Name, api.NewDeleteOptions(int64(podDeletionGracePeriod))); err != nil {
+		opt := api.NewDeleteOptions(int64(podDeletionGracePeriod))
+		fmt.Println("CHAO: in e2e, opt=", *opt.GracePeriodSeconds)
+		if err := podClient.Delete(pod.Name, api.NewDeleteOptions(30)); err != nil {
 			Failf("Failed to delete pod: %v", err)
 		}
 
@@ -352,10 +354,14 @@ var _ = Describe("Pods", func() {
 		deleted := false
 		timeout := false
 		var lastPod *api.Pod
-		timer := time.After(podDeletionGracePeriod)
+		timer := time.After(30 * time.Second)
 		for !deleted && !timeout {
 			select {
 			case event, _ := <-w.ResultChan():
+				if event.Type == watch.Modified {
+					fmt.Println("CHAO: modified")
+					fmt.Printf("%#v\n", *event.Object.(*api.Pod))
+				}
 				if event.Type == watch.Deleted {
 					lastPod = event.Object.(*api.Pod)
 					deleted = true

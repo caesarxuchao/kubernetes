@@ -371,6 +371,12 @@ func (e *Etcd) Delete(ctx api.Context, name string, options *api.DeleteOptions) 
 	if options == nil {
 		options = api.NewDeleteOptions(0)
 	}
+	fmt.Println("CHAO: in Delete, name=", name)
+	if options.GracePeriodSeconds == nil {
+		fmt.Println("CHAO: in Delete, options.G=", nil)
+	} else {
+		fmt.Println("CHAO: in Delete, options.G=", *options.GracePeriodSeconds)
+	}
 	graceful, pendingGraceful, err := rest.BeforeDelete(e.DeleteStrategy, ctx, obj, options)
 	if err != nil {
 		return nil, err

@@ -17,9 +17,11 @@ limitations under the License.
 package kubectl
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/watch"
 )
 
@@ -35,9 +37,22 @@ func WatchLoop(w watch.Interface, fn func(watch.Event) error) {
 			if !ok {
 				return
 			}
-			if err := fn(event); err != nil {
-				w.Stop()
+			fmt.Println("CHAO: event:", event)
+			if event.Type == watch.Modified || event.Type == watch.Deleted {
+				fmt.Printf("%#v\n", event.Object)
+				if pod, ok := event.Object.(*api.Pod); ok {
+					if pod.Spec.TerminationGracePeriodSeconds != nil {
+						fmt.Println("TerminationGracePeriodSeconds=", *pod.Spec.TerminationGracePeriodSeconds)
+					}
+					if pod.DeletionTimestamp != nil {
+						fmt.Println("DeletionTimestamp=", pod.DeletionTimestamp)
+					}
+				}
 			}
+
+			// if err := fn(event); err != nil {
+			// 	w.Stop()
+			// }
 		case <-signals:
 			w.Stop()
 		}
