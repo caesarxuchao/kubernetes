@@ -381,11 +381,18 @@ func (e *Etcd) Delete(ctx api.Context, name string, options *api.DeleteOptions) 
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("CHAO: graceful=", graceful, "for name=", name)
+	if options.GracePeriodSeconds != nil {
+		fmt.Println("CHAO: options.GracePeriodSeconds=", *options.GracePeriodSeconds)
+	} else {
+		fmt.Println("CHAO: options.GracePeriodSeconds=nil")
+	}
 	if pendingGraceful {
 		return e.finalizeDelete(obj, false)
 	}
 	if graceful && *options.GracePeriodSeconds > 0 {
 		out := e.NewFunc()
+		fmt.Println("CHAO: before GuaranteedUpdate for", name)
 		err := e.Storage.GuaranteedUpdate(
 			ctx, key, out, false,
 			storage.SimpleUpdate(func(existing runtime.Object) (runtime.Object, error) {
@@ -402,22 +409,28 @@ func (e *Etcd) Delete(ctx api.Context, name string, options *api.DeleteOptions) 
 				return existing, nil
 			}),
 		)
+		fmt.Println("CHAO: after GuaranteedUpdate", name)
 		switch err {
 		case nil:
+			fmt.Println("CHAO: successfully update", name)
 			return out, nil
 			// fall through and delete immediately
 		case errDeleteNow:
+			fmt.Println("CHAO: errDeleteNow", name)
 			// we've updated the object to have a zero grace period, or it's already at 0, so
 			// we should fall through and truly delete the object.
 		case errAlreadyDeleting:
+			fmt.Println("CHAO: errAlreadyDeleting", name)
 			return e.finalizeDelete(obj, true)
 		default:
+			fmt.Println("CHAO: failed update", name)
 			return nil, etcderr.InterpretUpdateError(err, e.QualifiedResource, name)
 		}
 	}
 
 	// delete immediately, or no graceful deletion supported
 	out := e.NewFunc()
+	fmt.Println("CHAO: really going to delete", name)
 	if err := e.Storage.Delete(ctx, key, out); err != nil {
 		return nil, etcderr.InterpretDeleteError(err, e.QualifiedResource, name)
 	}

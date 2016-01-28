@@ -343,9 +343,11 @@ var _ = Describe("Pods", func() {
 			Fail("Timeout while waiting for pod creation")
 		}
 
+		// We need to wait for the pod to be scheduled, otherwise the deletion
+		// will be carried out immediately rather than gracefully.
+		expectNoError(framework.WaitForPodRunning(pod.Name))
+
 		By("deleting the pod gracefully")
-		opt := api.NewDeleteOptions(int64(podDeletionGracePeriod))
-		fmt.Println("CHAO: in e2e, opt=", *opt.GracePeriodSeconds)
 		if err := podClient.Delete(pod.Name, api.NewDeleteOptions(30)); err != nil {
 			Failf("Failed to delete pod: %v", err)
 		}
@@ -358,10 +360,6 @@ var _ = Describe("Pods", func() {
 		for !deleted && !timeout {
 			select {
 			case event, _ := <-w.ResultChan():
-				if event.Type == watch.Modified {
-					fmt.Println("CHAO: modified")
-					fmt.Printf("%#v\n", *event.Object.(*api.Pod))
-				}
 				if event.Type == watch.Deleted {
 					lastPod = event.Object.(*api.Pod)
 					deleted = true

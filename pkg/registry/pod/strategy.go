@@ -111,10 +111,12 @@ func (podStrategy) CheckGracefulDelete(obj runtime.Object, options *api.DeleteOp
 	}
 	// if the pod is not scheduled, delete immediately
 	if len(pod.Spec.NodeName) == 0 {
+		fmt.Println("CHAO: set period to 0 because 1 for", pod.Name)
 		period = 0
 	}
 	// if the pod is already terminated, delete immediately
 	if pod.Status.Phase == api.PodFailed || pod.Status.Phase == api.PodSucceeded {
+		fmt.Println("CHAO: set period to 0 because 2 for", pod.Name)
 		period = 0
 	}
 	// ensure the options and the pod are in sync
