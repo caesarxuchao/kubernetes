@@ -183,7 +183,7 @@ kube::log::status "Starting kube-apiserver"
 # Admission Controllers to invoke prior to persisting objects in cluster
 ADMISSION_CONTROL="NamespaceLifecycle,LimitRanger,ResourceQuota"
 
-KUBE_API_VERSIONS="v1,autoscaling/v1,batch/v1,extensions/v1beta1" "${KUBE_OUTPUT_HOSTBIN}/kube-apiserver" \
+KUBE_API_VERSIONS="v1,autoscaling/v1,batch/v1,extensions/v1beta1,authorization.k8s.io/v1beta1" "${KUBE_OUTPUT_HOSTBIN}/kube-apiserver" \
   --address="127.0.0.1" \
   --public-address-override="127.0.0.1" \
   --port="${API_PORT}" \
@@ -1789,9 +1789,24 @@ __EOF__
   # Post-condition: valid-pod doesn't exist
   kube::test::get_object_assert pods "{{range.items}}{{$id_field}}:{{end}}" ''
 
+
+  ########################
+  # authorization.k8s.io #
+  ########################
+
+  SAR_RESULT_FILE="${KUBE_TEMP}/sar-result.json"
+  curl -k -H "Content-Type:" http://localhost:8080/apis/authorization.k8s.io/v1beta1/subjectaccessreviews -XPOST -d @test/fixtures/pkg/kubectl/cmd/create/sar.json > ${SAR_RESULT_FILE}
+  if grep -q '"allowed": true' "${SAR_RESULT_FILE}"; then
+    kube::log::status "\"authorization.k8s.io/subjectaccessreviews\" returns as expected: $(cat ${SAR_RESULT_FILE})"
+  else
+    kube::log::status "\"authorization.k8s.io/subjectaccessreviews\" does not return as expected: $(cat ${SAR_RESULT_FILE})"
+    exit 1
+  fi
+  rm "${SAR_RESULT_FILE}"
+
   kube::test::clear_all
 }
 
-KUBE_API_VERSIONS="v1,autoscaling/v1,batch/v1,extensions/v1beta1" runTests "v1"
+KUBE_API_VERSIONS="v1,autoscaling/v1,batch/v1,extensions/v1beta1,authorization.k8s.io/v1beta1" runTests "v1"
 
 kube::log::status "TEST PASSED"
