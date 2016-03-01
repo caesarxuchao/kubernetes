@@ -145,7 +145,7 @@ $ kubectl delete replicationcontrollers/my-nginx services/my-nginx-svc
 For larger numbers of resources, one can use labels to filter resources. The selector is specified using `-l`:
 
 ```console
-$ kubectl delete all -lapp=nginx
+$ kubectl delete --all -lapp=nginx
 replicationcontrollers "my-nginx" deleted
 services "my-nginx-svc" deleted
 ```
