@@ -18,6 +18,7 @@ package internalclientset
 
 import (
 	"github.com/golang/glog"
+	unversionedauthorization "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/authorization.k8s.io/unversioned"
 	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
 	unversionedextensions "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/extensions/unversioned"
 	restclient "k8s.io/kubernetes/pkg/client/restclient"
@@ -28,6 +29,7 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	Core() unversionedcore.CoreInterface
 	Extensions() unversionedextensions.ExtensionsInterface
+	Authorization() unversionedauthorization.AuthorizationInterface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -36,6 +38,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	*unversionedcore.CoreClient
 	*unversionedextensions.ExtensionsClient
+	*unversionedauthorization.AuthorizationClient
 }
 
 // Core retrieves the CoreClient
@@ -46,6 +49,11 @@ func (c *Clientset) Core() unversionedcore.CoreInterface {
 // Extensions retrieves the ExtensionsClient
 func (c *Clientset) Extensions() unversionedextensions.ExtensionsInterface {
 	return c.ExtensionsClient
+}
+
+// Authorization retrieves the AuthorizationClient
+func (c *Clientset) Authorization() unversionedauthorization.AuthorizationInterface {
+	return c.AuthorizationClient
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,6 +73,10 @@ func NewForConfig(c *restclient.Config) (*Clientset, error) {
 	if err != nil {
 		return &clientset, err
 	}
+	clientset.AuthorizationClient, err = unversionedauthorization.NewForConfig(c)
+	if err != nil {
+		return &clientset, err
+	}
 
 	clientset.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(c)
 	if err != nil {
@@ -79,6 +91,7 @@ func NewForConfigOrDie(c *restclient.Config) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.NewForConfigOrDie(c)
 	clientset.ExtensionsClient = unversionedextensions.NewForConfigOrDie(c)
+	clientset.AuthorizationClient = unversionedauthorization.NewForConfigOrDie(c)
 
 	clientset.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &clientset
@@ -89,6 +102,7 @@ func New(c *restclient.RESTClient) *Clientset {
 	var clientset Clientset
 	clientset.CoreClient = unversionedcore.New(c)
 	clientset.ExtensionsClient = unversionedextensions.New(c)
+	clientset.AuthorizationClient = unversionedauthorization.New(c)
 
 	clientset.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &clientset
