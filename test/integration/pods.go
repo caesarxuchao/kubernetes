@@ -33,6 +33,7 @@ import (
 )
 
 func TestPodUpdateActiveDeadlineSeconds(t *testing.T) {
+	t.Fatalf("FAILFAILFAIL")
 	var m *master.Master
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		m.Handler.ServeHTTP(w, req)
