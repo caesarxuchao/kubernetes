@@ -200,14 +200,24 @@ func extractStackCreator() (string, int, bool) {
 // Run starts a goroutine and returns immediately.
 func (r *Reflector) Run() {
 	glog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedType, r.resyncPeriod, r.name)
-	go wait.Until(func() { r.ListAndWatch(wait.NeverStop) }, r.period, wait.NeverStop)
+	go wait.Until(func() {
+		err := r.ListAndWatch(wait.NeverStop)
+		if err != nil {
+			glog.Errorf("ListAndWatch fails with %v", err)
+		}
+	}, r.period, wait.NeverStop)
 }
 
 // RunUntil starts a watch and handles watch events. Will restart the watch if it is closed.
 // RunUntil starts a goroutine and returns immediately. It will exit when stopCh is closed.
 func (r *Reflector) RunUntil(stopCh <-chan struct{}) {
 	glog.V(3).Infof("Starting reflector %v (%s) from %s", r.expectedType, r.resyncPeriod, r.name)
-	go wait.Until(func() { r.ListAndWatch(stopCh) }, r.period, stopCh)
+	go wait.Until(func() {
+		err := r.ListAndWatch(stopCh)
+		if err != nil {
+			glog.Errorf("ListAndWatch fails with %v", err)
+		}
+	}, r.period, stopCh)
 }
 
 var (
@@ -284,11 +294,11 @@ func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
 	if err != nil {
 		return fmt.Errorf("%s: Failed to list %v: %v", r.name, r.expectedType, err)
 	}
-	metaInterface, err := meta.Accessor(list)
+	listMetaInterface, err := meta.ListAccessor(list)
 	if err != nil {
-		return fmt.Errorf("%s: Unable to understand list result %#v", r.name, list)
+		return fmt.Errorf("%s: Unable to understand list result %#v: %v", r.name, list, err)
 	}
-	resourceVersion = metaInterface.GetResourceVersion()
+	resourceVersion = listMetaInterface.GetResourceVersion()
 	items, err := meta.ExtractList(list)
 	if err != nil {
 		return fmt.Errorf("%s: Unable to understand list result %#v (%v)", r.name, list, err)
