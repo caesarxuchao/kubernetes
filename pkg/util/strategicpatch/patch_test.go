@@ -23,9 +23,75 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/kubernetes/pkg/api/unversioned"
+	"k8s.io/kubernetes/pkg/api/v1"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ghodss/yaml"
 )
+
+func getPod() *v1.Pod {
+	return &v1.Pod{
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "ToBeDeletedPod",
+			Namespace: "ns1",
+			OwnerReferences: []v1.OwnerReference{
+				{
+					Kind:       "ReplicationController",
+					Name:       "owner1",
+					UID:        "123",
+					APIVersion: "v1",
+				},
+				{
+					Kind:       "ReplicationController",
+					Name:       "owner2",
+					UID:        "124",
+					APIVersion: "v2",
+				},
+			},
+			Finalizers: []string{
+				"f1",
+				"f2",
+				"f3",
+			},
+		},
+	}
+}
+
+func TestChao2(t *testing.T) {
+	p1 := getPod()
+	b1, err := json.Marshal(p1)
+	//p2 := getPod()
+	//p2.ObjectMeta.Finalizers = []string{p2.ObjectMeta.Finalizers[0]}
+	//b2, err := json.Marshal(p2)
+	// patch, err := CreateStrategicMergePatch(b1, b2, v1.Pod{})
+	patch := `{"metadata":{"finalizers":["f1","f5"]}}`
+	patched, err := StrategicMergePatch(b1, []byte(patch), p1)
+	p2 := &v1.Pod{}
+	err = json.Unmarshal(patched, p2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Errorf("p2.Finalizers=%v", p2.ObjectMeta.Finalizers)
+	//t.Errorf("patch=%s", patch)
+}
+
+func TestChao(t *testing.T) {
+	p1 := getPod()
+	b1, err := json.Marshal(p1)
+	p2 := getPod()
+	p2.ObjectMeta.OwnerReferences = []v1.OwnerReference{p2.ObjectMeta.OwnerReferences[0]}
+	b2, err := json.Marshal(p2)
+	patch, err := CreateStrategicMergePatch(b1, b2, v1.Pod{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Errorf("patch=%s", patch)
+}
 
 type SortMergeListTestCases struct {
 	TestCases []SortMergeListTestCase

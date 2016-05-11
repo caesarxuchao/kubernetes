@@ -20,6 +20,7 @@ package integration
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -49,7 +50,9 @@ const remainingRCName = "test.rc.2"
 
 func newPod(podName string, ownerReferences []v1.OwnerReference) *v1.Pod {
 	for i := 0; i < len(ownerReferences); i++ {
-		ownerReferences[i].Kind = "ReplicationController"
+		if len(ownerReferences[i].Kind) == 0 {
+			ownerReferences[i].Kind = "ReplicationController"
+		}
 		ownerReferences[i].APIVersion = "v1"
 	}
 	return &v1.Pod{
@@ -368,5 +371,74 @@ func TestStressingCascadingDeletion(t *testing.T) {
 	}
 	if gc.GraphHasUID(uids) {
 		t.Errorf("Expect all nodes representing replication controllers are removed from the Propagator's graph")
+	}
+}
+
+func TestOrphaning(t *testing.T) {
+	gc, clientSet := setup(t)
+	podClient := clientSet.Core().Pods(framework.TestNS)
+	// we need to use pod in the test because we need to set the DeletionTimestamp.
+	// After we make the necessary changed to the API server to support finalizers,
+	// we can use any arbitrary resource here.
+	ownerPodName := "owner.pod"
+	ownerPod := newPod(ownerPodName, []v1.OwnerReference{})
+	ownerPod.Spec.NodeName = "somenode"
+	ownerPod.ObjectMeta.Finalizers = []string{garbagecollector.OrphanFinalizerID}
+	ownerPod, err := podClient.Create(ownerPod)
+	if err != nil {
+		t.Fatalf("Failed to create the owner pod: %v", err)
+	}
+	// these pods should be ophaned.
+	podsNum := 3
+	for i := 0; i < podsNum; i++ {
+		podName := garbageCollectedPodName + strconv.Itoa(i)
+		pod := newPod(podName, []v1.OwnerReference{{Kind: "Pod", UID: ownerPod.ObjectMeta.UID, Name: ownerPodName}})
+		_, err = podClient.Create(pod)
+		if err != nil {
+			t.Fatalf("Failed to create Pod: %v", err)
+		}
+	}
+	stopCh := make(chan struct{})
+	go gc.Run(5, stopCh)
+	defer close(stopCh)
+
+	ownerPod.Status.Phase = v1.PodRunning
+	updatedPod, err := podClient.UpdateStatus(ownerPod)
+	if err != nil {
+		t.Fatalf("Failed to update owner pod status: %v", err)
+	}
+	opt := api.NewDeleteOptions(int64(30))
+	err = podClient.Delete(ownerPodName, opt)
+	if err != nil {
+		t.Fatalf("Failed to gracefully delete the owner pod: %v", err)
+	}
+
+	// wait for the garbage collector to drain its queue
+	if err := wait.Poll(10*time.Second, 300*time.Second, func() (bool, error) {
+		return gc.QueuesDrained(), nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// verify pods don't have the ownerPod as an owner anymore
+	pods, err := podClient.List(api.ListOptions{})
+	if err != nil {
+		t.Fatalf("Failed to list pods: %v", err)
+	}
+	if len(pods.Items) != podsNum+1 {
+		t.Errorf("Expect %d pod(s), but got %#v", podsNum, pods)
+	}
+	for _, pod := range pods.Items {
+		if len(pod.ObjectMeta.OwnerReferences) != 0 {
+			t.Errorf("pod %s still has non-empty OwnerRefereces: %v", pod.ObjectMeta.Name, pod.ObjectMeta.OwnerReferences)
+		}
+	}
+	// verify the ownerPod's finalizers list is empty
+	ownerPod, err = podClient.Get(ownerPodName)
+	if err != nil {
+		t.Fatalf("Failed to get Replication Controller: %v", err)
+	}
+	if len(ownerPod.ObjectMeta.Finalizers) != 0 {
+		t.Errorf("ownerPod %s still has non-empty Finalizers: %v", ownerPod.ObjectMeta.Name, ownerPod.ObjectMeta.Finalizers)
 	}
 }

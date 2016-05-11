@@ -395,7 +395,7 @@ func ValidateObjectMetaUpdate(newMeta, oldMeta *api.ObjectMeta, fldPath *field.P
 	allErrs = append(allErrs, ValidateImmutableField(newMeta.Namespace, oldMeta.Namespace, fldPath.Child("namespace"))...)
 	allErrs = append(allErrs, ValidateImmutableField(newMeta.UID, oldMeta.UID, fldPath.Child("uid"))...)
 	allErrs = append(allErrs, ValidateImmutableField(newMeta.CreationTimestamp, oldMeta.CreationTimestamp, fldPath.Child("creationTimestamp"))...)
-	allErrs = append(allErrs, ValidateImmutableField(newMeta.Finalizers, oldMeta.Finalizers, fldPath.Child("finalizers"))...)
+	// allErrs = append(allErrs, ValidateImmutableField(newMeta.Finalizers, oldMeta.Finalizers, fldPath.Child("finalizers"))...)
 
 	allErrs = append(allErrs, unversionedvalidation.ValidateLabels(newMeta.Labels, fldPath.Child("labels"))...)
 	allErrs = append(allErrs, ValidateAnnotations(newMeta.Annotations, fldPath.Child("annotations"))...)

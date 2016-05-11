@@ -43,6 +43,8 @@ import (
 
 const ResourceResyncTime = 30 * time.Second
 
+const OrphanFinalizerID = "orphanFinalizer"
+
 type monitor struct {
 	store      cache.Store
 	controller *framework.Controller
@@ -62,6 +64,7 @@ func (s objectReference) String() string {
 // Propagator.processEvent() is the sole writer of the nodes. The multi-threaded
 // GarbageCollector.processItem() reads the nodes, but it only reads the fields
 // that never get changed by Propagator.processEvent().
+// TODO: now "dependents" will be read by the orphanFinalizer routine, we need to protect it with a lock.
 type node struct {
 	identity   objectReference
 	dependents map[*node]struct{}
@@ -171,6 +174,86 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	return added, removed
 }
 
+func shouldFinalize(e event, accessor meta.Object) bool {
+	// The delta_fifo may combine the creation and update of the object into one
+	// event, so we need to check AddEvent as well.
+	if e.oldObj == nil {
+		if accessor.GetDeletionTimestamp() == nil {
+			return false
+		}
+	} else {
+		oldAccessor, err := meta.Accessor(e.oldObj)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot access oldObj: %v", err))
+			return false
+		}
+		// ignore the event if it's not updating DeletionTimestamp from non-nil to nil.
+		if accessor.GetDeletionTimestamp() == nil || oldAccessor.GetDeletionTimestamp() != nil {
+			return false
+		}
+	}
+	return sets.NewString(accessor.GetFinalizers()...).Has(OrphanFinalizerID)
+}
+
+func orphan(gc *GarbageCollector, owner *node) {
+	// TODO: This requires lock
+	dependents := owner.dependents
+	for dependent := range dependents {
+		deleteOwnerRefPatch := fmt.Sprintf(`{"metadata":{"ownerReferences":[{"$patch":"delete","uid":"%s"}]}}`, owner.identity.UID)
+		_, err := gc.patchObject(dependent.identity, []byte(deleteOwnerRefPatch))
+		if err != nil {
+			glog.V(6).Infof("orphaning %s failed with %v", dependent.identity, err)
+		}
+	}
+	// update the owner, remove "orphaningFinalizer" from its finalizers list
+	// TODO: maybe we should retry infinitely?
+	// TODO: Using Patch when strategicmerge supports deleting an entry from a
+	// slice of a base type.
+	maxRetries := 10
+	count := 0
+	for {
+		ownerObject, err := gc.getObject(owner.identity)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot finalize owner %s, because cannot get it", owner.identity))
+		}
+		accessor, err := meta.Accessor(ownerObject)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot access the owner object: %v", err))
+			break
+		}
+		finalizers := accessor.GetFinalizers()
+		var newFinalizers []string
+		found := false
+		for _, f := range finalizers {
+			if f == OrphanFinalizerID {
+				found = true
+			} else {
+				newFinalizers = append(newFinalizers, f)
+			}
+		}
+		if !found {
+			glog.V(6).Infof("the orphan finalizer is already removed from object %s", owner.identity)
+			break
+		}
+		// remove the owner from dependent's OwnerReferences
+		ownerObject.SetFinalizers(newFinalizers)
+		_, err = gc.updateObject(owner.identity, ownerObject)
+		if err == nil {
+			break
+		}
+		if err != nil && !errors.IsConflict(err) {
+			utilruntime.HandleError(fmt.Errorf("cannot update the finalizers of owner %s, with error: %v", owner.identity, err))
+			return
+		}
+		// retry if it's a conflict
+		if count < maxRetries {
+			count++
+			glog.V(6).Infof("got conflict updating the owner object %s, retry the %d time", owner.identity, count)
+		}
+		utilruntime.HandleError(fmt.Errorf("maxRetries reached, giving up on finalizing the owner object %s", owner.identity))
+	}
+}
+
 // Dequeueing an event from eventQueue, updating graph, populating dirty_queue.
 func (p *Propagator) processEvent() {
 	key, quit := p.eventQueue.Get()
@@ -214,7 +297,11 @@ func (p *Propagator) processEvent() {
 		}
 		p.insertNode(newNode)
 	case (event.eventType == addEvent || event.eventType == updateEvent) && found:
-		// TODO: finalizer: Check if ObjectMeta.DeletionTimestamp is updated from nil to non-nil
+		// caveat: if GC observes the creation of the dependents later than the
+		// deletion of the owner, then the orphaning finalizer won't be effective.
+		if shouldFinalize(event, accessor) {
+			go orphan(p.gc, existingNode)
+		}
 		// We only need to add/remove owner refs for now
 		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
 		if len(added) == 0 && len(removed) == 0 {
@@ -394,6 +481,26 @@ func (gc *GarbageCollector) getObject(item objectReference) (*runtime.Unstructur
 		return nil, err
 	}
 	return client.Resource(resource, item.Namespace).Get(item.Name)
+}
+
+func (gc *GarbageCollector) updateObject(item objectReference, obj *runtime.Unstructured) (*runtime.Unstructured, error) {
+	fqKind := unversioned.FromAPIVersionAndKind(item.APIVersion, item.Kind)
+	client, err := gc.clientPool.ClientForGroupVersion(fqKind.GroupVersion())
+	resource, err := gc.apiResource(item.APIVersion, item.Kind, len(item.Namespace) != 0)
+	if err != nil {
+		return nil, err
+	}
+	return client.Resource(resource, item.Namespace).Update(obj)
+}
+
+func (gc *GarbageCollector) patchObject(item objectReference, patch []byte) (*runtime.Unstructured, error) {
+	fqKind := unversioned.FromAPIVersionAndKind(item.APIVersion, item.Kind)
+	client, err := gc.clientPool.ClientForGroupVersion(fqKind.GroupVersion())
+	resource, err := gc.apiResource(item.APIVersion, item.Kind, len(item.Namespace) != 0)
+	if err != nil {
+		return nil, err
+	}
+	return client.Resource(resource, item.Namespace).Patch(item.Name, api.StrategicMergePatchType, patch)
 }
 
 func objectReferenceToUnstructured(ref objectReference) *runtime.Unstructured {
