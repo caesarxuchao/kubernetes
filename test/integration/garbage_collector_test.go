@@ -135,6 +135,7 @@ func setup(t *testing.T) (*garbagecollector.GarbageCollector, clientset.Interfac
 	// defer s.Close()
 
 	masterConfig := framework.NewIntegrationTestMasterConfig()
+	masterConfig.EnableCoreControllers = false
 	m, err := master.New(masterConfig)
 	if err != nil {
 		t.Fatalf("Error in bringing up the master: %v", err)
@@ -284,85 +285,88 @@ func TestCreateWithNonExisitentOwner(t *testing.T) {
 	}
 }
 
-func createRCsPods(t *testing.T, clientSet clientset.Interface, id int, rcUIDs []types.UID, wg *sync.WaitGroup) {
+func createRemoveRCsPods(t *testing.T, clientSet clientset.Interface, id int, wg *sync.WaitGroup, rcUIDs chan types.UID) {
 	defer wg.Done()
 	rcClient := clientSet.Core().ReplicationControllers(framework.TestNS)
 	podClient := clientSet.Core().Pods(framework.TestNS)
+	// create rc.
 	rcName := toBeDeletedRCName + strconv.Itoa(id)
 	toBeDeletedRC, err := rcClient.Create(newOwnerRC(rcName))
 	if err != nil {
 		t.Fatalf("Failed to create replication controller: %v", err)
 	}
-	rcUIDs[id] = toBeDeletedRC.ObjectMeta.UID
-	// these pods should be cascadingly deleted.
+	rcUIDs <- toBeDeletedRC.ObjectMeta.UID
+	// create pods. These pods should be cascadingly deleted.
 	for j := 0; j < 3; j++ {
-		podName := garbageCollectedPodName + strconv.Itoa(id) + strconv.Itoa(j)
+		podName := garbageCollectedPodName + strconv.Itoa(id) + "-" + strconv.Itoa(j)
 		pod := newPod(podName, []v1.OwnerReference{{UID: toBeDeletedRC.ObjectMeta.UID, Name: rcName}})
 		_, err = podClient.Create(pod)
 		if err != nil {
 			t.Fatalf("Failed to create Pod: %v", err)
 		}
 	}
+	// delete the rc
+	if err := rcClient.Delete(rcName, nil); err != nil {
+		t.Fatalf("failed to delete replication controller: %v", err)
+	}
 }
 
-func verifyObjectsNumber(t *testing.T, clientSet clientset.Interface, rcNum, podNum int) {
+func allObjectsRemoved(clientSet clientset.Interface) (bool, error) {
 	rcClient := clientSet.Core().ReplicationControllers(framework.TestNS)
 	podClient := clientSet.Core().Pods(framework.TestNS)
 	pods, err := podClient.List(api.ListOptions{})
 	if err != nil {
-		t.Fatalf("Failed to list pods: %v", err)
+		return false, fmt.Errorf("Failed to list pods: %v", err)
 	}
-	if len(pods.Items) != podNum {
-		t.Errorf("Expect %d pod(s), but got %#v", podNum, pods)
+	if len(pods.Items) != 0 {
+		return false, nil
 	}
 	rcs, err := rcClient.List(api.ListOptions{})
 	if err != nil {
-		t.Fatalf("Failed to list replication controllers: %v", err)
+		return false, fmt.Errorf("Failed to list replication controllers: %v", err)
 	}
-	if len(rcs.Items) != rcNum {
-		t.Errorf("Expect %d replication controller(s), but got %#v", rcNum, rcs)
+	if len(rcs.Items) != 0 {
+		return false, nil
 	}
+	return true, nil
 }
 
 // This stress test the garbage collector
 func TestStressingCascadingDeletion(t *testing.T) {
 	gc, clientSet := setup(t)
-	var wg sync.WaitGroup
-	const collections = 10
-	rcUIDs := make([]types.UID, collections)
-	wg.Add(collections)
-	for i := 0; i < collections; i++ {
-		go createRCsPods(t, clientSet, i, rcUIDs, &wg)
-	}
-	wg.Wait()
-	verifyObjectsNumber(t, clientSet, collections, collections*3)
 	stopCh := make(chan struct{})
 	go gc.Run(5, stopCh)
 	defer close(stopCh)
-	// The exact duration doesn't matter. We want to delete some RCs before the
-	// garbage collector has built up the owner-dependent graph.
-	time.Sleep(10 * time.Second)
-	// delete the replication controllers
-	rcClient := clientSet.Core().ReplicationControllers(framework.TestNS)
-	for i := 0; i < collections; i++ {
-		rcName := toBeDeletedRCName + strconv.Itoa(i)
-		if err := rcClient.Delete(rcName, nil); err != nil {
-			t.Fatalf("failed to delete replication controller: %v", err)
-		}
-	}
 
+	const collections = 100
+	var wg sync.WaitGroup
+	wg.Add(collections)
+	rcUIDs := make(chan types.UID, collections)
+	for i := 0; i < collections; i++ {
+		go createRemoveRCsPods(t, clientSet, i, &wg, rcUIDs)
+	}
+	wg.Wait()
 	// wait for the garbage collector to drain its queue
 	if err := wait.Poll(10*time.Second, 300*time.Second, func() (bool, error) {
 		return gc.QueuesDrained(), nil
 	}); err != nil {
 		t.Fatal(err)
 	}
+	// wait for all replication controllers and pods to be deleted. This
+	// shouldn't take long, because the queues are already drained.
+	if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+		return allObjectsRemoved(clientSet)
+	}); err != nil {
+		t.Fatal(err)
+	}
 
-	// wait for some extra time to allow the garbage collector to process all
-	// the items.
-	time.Sleep(10 * time.Second)
-	verifyObjectsNumber(t, clientSet, 0, 0)
-	if gc.GraphHasUID(rcUIDs) {
+	// verify there is no node representing replication controllers in the gc's graph
+	uids := make([]types.UID, 0, collections)
+	for i := 0; i < collections; i++ {
+		uid := <-rcUIDs
+		uids = append(uids, uid)
+	}
+	if gc.GraphHasUID(uids) {
 		t.Errorf("Expect all nodes representing replication controllers are removed from the Propagator's graph")
 	}
 }

@@ -93,11 +93,11 @@ type Propagator struct {
 	gc        *GarbageCollector
 }
 
-// insertToOwners adds n to owners' dependents list. If the owner does not exist
-// in the p.uidToNode yet, a "virtual" node will be created to represent the
-// owner. The "virtual" node will be enqueued to the dirtyQueue, so that
+// addDependentToOwners adds n to owners' dependents list. If the owner does not
+// exist in the p.uidToNode yet, a "virtual" node will be created to represent
+// the owner. The "virtual" node will be enqueued to the dirtyQueue, so that
 // processItem() will verify if the owner exists according to the API server.
-func (p *Propagator) insertToOwners(n *node, owners []metatypes.OwnerReference) {
+func (p *Propagator) addDependentToOwners(n *node, owners []metatypes.OwnerReference) {
 	for _, owner := range owners {
 		ownerNode, ok := p.uidToNode[owner.UID]
 		if !ok {
@@ -124,11 +124,11 @@ func (p *Propagator) insertToOwners(n *node, owners []metatypes.OwnerReference) 
 // in n.owners, and adds the node to their dependents list.
 func (p *Propagator) insertNode(n *node) {
 	p.uidToNode[n.identity.UID] = n
-	p.insertToOwners(n, n.owners)
+	p.addDependentToOwners(n, n.owners)
 }
 
-// removeFromOwners remove n from owners' dependents list.
-func (p *Propagator) removeFromOwners(n *node, owners []metatypes.OwnerReference) {
+// removeDependentFromOwners remove n from owners' dependents list.
+func (p *Propagator) removeDependentFromOwners(n *node, owners []metatypes.OwnerReference) {
 	for _, owner := range owners {
 		ownerNode, ok := p.uidToNode[owner.UID]
 		if !ok {
@@ -138,11 +138,11 @@ func (p *Propagator) removeFromOwners(n *node, owners []metatypes.OwnerReference
 	}
 }
 
-// removeFromOwners removes the node from p.uidToNode, then finds all owners as
-// listed in n.owners, and removes n from their dependents list.
+// removeDependentFromOwners removes the node from p.uidToNode, then finds all
+// owners as listed in n.owners, and removes n from their dependents list.
 func (p *Propagator) removeNode(n *node) {
 	delete(p.uidToNode, n.identity.UID)
-	p.removeFromOwners(n, n.owners)
+	p.removeDependentFromOwners(n, n.owners)
 }
 
 // TODO: profile this function to see if a naive N^2 algorithm performs better
@@ -224,10 +224,10 @@ func (p *Propagator) processEvent() {
 		// update the node itself
 		existingNode.owners = accessor.GetOwnerReferences()
 		// Add the node to its new owners' dependent lists.
-		p.insertToOwners(existingNode, added)
+		p.addDependentToOwners(existingNode, added)
 		// remove the node from the dependent list of node that are no long in
 		// the node's owners list.
-		p.removeFromOwners(existingNode, removed)
+		p.removeDependentFromOwners(existingNode, removed)
 	case event.eventType == deleteEvent:
 		if !found {
 			glog.V(6).Infof("%v doesn't exist in the graph, this shouldn't happen", accessor.GetUID())
@@ -296,6 +296,10 @@ func monitorFor(p *Propagator, clientPool dynamic.ClientPool, resource unversion
 				p.eventQueue.Add(event)
 			},
 			DeleteFunc: func(obj interface{}) {
+				// delta fifo may wrap the object in a cache.DeletedFinalStateUnknown, unwrap it
+				if deletedFinalStateUnknown, ok := obj.(cache.DeletedFinalStateUnknown); ok {
+					obj = deletedFinalStateUnknown.Obj
+				}
 				event := event{
 					eventType: deleteEvent,
 					obj:       obj,
@@ -482,10 +486,14 @@ func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
 	gc.propagator.eventQueue.ShutDown()
 }
 
+// QueueDrained returns if the dirtyQueue and eventQueue are drained. It's
+// useful for debugging.
 func (gc *GarbageCollector) QueuesDrained() bool {
 	return gc.dirtyQueue.Len() == 0 && gc.propagator.eventQueue.Len() == 0
 }
 
+// GraphHasUID returns if the Propagator has a particular UID store in its
+// uidToNode graph. It's useful for debugging.
 func (gc *GarbageCollector) GraphHasUID(UIDs []types.UID) bool {
 	for _, u := range UIDs {
 		if _, ok := gc.propagator.uidToNode[u]; ok {
