@@ -403,7 +403,7 @@ func TestOrphaning(t *testing.T) {
 	defer close(stopCh)
 
 	ownerPod.Status.Phase = v1.PodRunning
-	updatedPod, err := podClient.UpdateStatus(ownerPod)
+	_, err = podClient.UpdateStatus(ownerPod)
 	if err != nil {
 		t.Fatalf("Failed to update owner pod status: %v", err)
 	}
@@ -426,7 +426,7 @@ func TestOrphaning(t *testing.T) {
 		t.Fatalf("Failed to list pods: %v", err)
 	}
 	if len(pods.Items) != podsNum+1 {
-		t.Errorf("Expect %d pod(s), but got %#v", podsNum, pods)
+		t.Errorf("Expect %d pod(s), but got %#v", podsNum+1, pods)
 	}
 	for _, pod := range pods.Items {
 		if len(pod.ObjectMeta.OwnerReferences) != 0 {
@@ -440,5 +440,67 @@ func TestOrphaning(t *testing.T) {
 	}
 	if len(ownerPod.ObjectMeta.Finalizers) != 0 {
 		t.Errorf("ownerPod %s still has non-empty Finalizers: %v", ownerPod.ObjectMeta.Name, ownerPod.ObjectMeta.Finalizers)
+	}
+}
+
+func TestOrphaningWithServerSettingDeletionTimestamp(t *testing.T) {
+	for yy := 0; yy < 10; yy++ {
+		fmt.Printf("===========================test %d==================\n", yy)
+		gc, clientSet := setup(t)
+		podClient := clientSet.Core().Pods(framework.TestNS)
+		rcClient := clientSet.Core().ReplicationControllers(framework.TestNS)
+		// create the RC with the orphan finalizer set
+		toBeDeletedRC := newOwnerRC(toBeDeletedRCName)
+		toBeDeletedRC.ObjectMeta.Finalizers = []string{garbagecollector.OrphanFinalizerID}
+		toBeDeletedRC, err := rcClient.Create(toBeDeletedRC)
+		if err != nil {
+			t.Fatalf("Failed to create replication controller: %v", err)
+		}
+
+		// these pods should be ophaned.
+		podsNum := 3
+		for i := 0; i < podsNum; i++ {
+			podName := garbageCollectedPodName + strconv.Itoa(i)
+			pod := newPod(podName, []v1.OwnerReference{{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRCName}})
+			_, err = podClient.Create(pod)
+			if err != nil {
+				t.Fatalf("Failed to create Pod: %v", err)
+			}
+		}
+		stopCh := make(chan struct{})
+		go gc.Run(5, stopCh)
+		defer close(stopCh)
+
+		opt := api.NewDeleteOptions(int64(0))
+		err = rcClient.Delete(toBeDeletedRCName, opt)
+		if err != nil {
+			t.Fatalf("Failed to gracefully delete the rc: %v", err)
+		}
+
+		// wait for the garbage collector to drain its queue
+		if err := wait.Poll(10*time.Second, 300*time.Second, func() (bool, error) {
+			return gc.QueuesDrained(), nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		// verify pods don't have the ownerPod as an owner anymore
+		pods, err := podClient.List(api.ListOptions{})
+		if err != nil {
+			t.Fatalf("Failed to list pods: %v", err)
+		}
+		if len(pods.Items) != podsNum {
+			t.Errorf("Expect %d pod(s), but got %#v", podsNum, pods)
+		}
+		for _, pod := range pods.Items {
+			if len(pod.ObjectMeta.OwnerReferences) != 0 {
+				t.Errorf("pod %s still has non-empty OwnerRefereces: %v", pod.ObjectMeta.Name, pod.ObjectMeta.OwnerReferences)
+			}
+		}
+		// verify the toBeDeleteRC is deleted
+		rcs, err := rcClient.List(api.ListOptions{})
+		if len(rcs.Items) != 0 {
+			t.Errorf("Expect RCs to be deleted, but got %#v", rcs.Items)
+		}
 	}
 }

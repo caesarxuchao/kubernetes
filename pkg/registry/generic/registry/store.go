@@ -234,6 +234,36 @@ func (e *Store) Create(ctx api.Context, obj runtime.Object) (runtime.Object, err
 	return out, nil
 }
 
+// shouldDelete checks if a Update is removing all the object's finalizers. If so,
+// it further checks if the object's DeletionGracePeriodSeconds is 0. If so, it
+// returns true.
+func (e *Store) shouldDelete(ctx api.Context, key string, obj, existing runtime.Object) bool {
+	if err := e.Storage.Get(ctx, key, existing, false); err != nil {
+		utilruntime.HandleError(err)
+		return false
+	}
+	// Note: we do not check doUnconditionalUpdate in this routine, because we
+	// expect in most cases the update of finalizers will be made by non-human,
+	// and we expect the resourceVersion will be properly set.
+
+	// validate the update.
+	if err := rest.BeforeUpdate(e.UpdateStrategy, ctx, obj, existing); err != nil {
+		utilruntime.HandleError(err)
+		return false
+	}
+	newMeta, err := api.ObjectMetaFor(obj)
+	if err != nil {
+		utilruntime.HandleError(err)
+		return false
+	}
+	oldMeta, err := api.ObjectMetaFor(existing)
+	if err != nil {
+		utilruntime.HandleError(err)
+		return false
+	}
+	return len(oldMeta.Finalizers) != 0 && len(newMeta.Finalizers) == 0 && newMeta.DeletionGracePeriodSeconds != nil && *newMeta.DeletionGracePeriodSeconds == 0
+}
+
 // Update performs an atomic update and set of the object. Returns the result of the update
 // or an error. If the registry allows create-on-update, the create flow will be executed.
 // A bool is returned along with the object and any errors, to indicate object creation.
@@ -267,6 +297,27 @@ func (e *Store) Update(ctx api.Context, obj runtime.Object) (runtime.Object, boo
 		UIDCopy := meta.UID
 		preconditions = &storage.Preconditions{UID: &UIDCopy}
 	}
+	// check if the update is removing all the object's finalizers. If so,
+	// further checks if the object's DeletionGracePeriodSeconds is 0. If so,
+	// delete the object.
+	existing := e.NewFunc()
+	delete := e.shouldDelete(ctx, key, obj, existing)
+	if delete {
+		out := e.NewFunc()
+		if err := e.Storage.Delete(ctx, key, out, preconditions); err != nil {
+			// Deletion is racy, i.e., there could be multiple update
+			// requests to remove all finalizers from the object, so we
+			// ignore the NotFound error.
+			if storage.IsNotFound(err) {
+				ret, err := e.finalizeDelete(existing, true)
+				return ret, false, err
+			}
+			return nil, false, storeerr.InterpretDeleteError(err, e.QualifiedResource, name)
+		}
+		ret, err := e.finalizeDelete(out, true)
+		return ret, false, err
+	}
+
 	err = e.Storage.GuaranteedUpdate(ctx, key, out, true, preconditions, func(existing runtime.Object, res storage.ResponseMeta) (runtime.Object, *uint64, error) {
 		// Since we return 'obj' from this function and it can be modified outside this
 		// function, we are resetting resourceVersion to the initial value here.
@@ -399,6 +450,14 @@ func (e *Store) Delete(ctx api.Context, name string, options *api.DeleteOptions)
 		return nil, storeerr.InterpretDeleteError(err, e.QualifiedResource, name)
 	}
 
+	// check if obj has pending finalizers
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return nil, kubeerr.NewInternalError(err)
+	}
+	pendingFinalizers := len(accessor.GetFinalizers()) != 0
+	fmt.Println("CHAO: name=", name, "pendingFinalizers=", pendingFinalizers)
+
 	// support older consumers of delete by treating "nil" as delete immediately
 	if options == nil {
 		options = api.NewDeleteOptions(0)
@@ -416,7 +475,8 @@ func (e *Store) Delete(ctx api.Context, name string, options *api.DeleteOptions)
 	}
 	var ignoreNotFound bool = false
 	var lastExisting runtime.Object = nil
-	if graceful {
+	// update the object if it's a graceful deletion or the object has pending finalizers
+	if graceful || pendingFinalizers {
 		out := e.NewFunc()
 		lastGraceful := int64(0)
 		err := e.Storage.GuaranteedUpdate(
@@ -430,6 +490,15 @@ func (e *Store) Delete(ctx api.Context, name string, options *api.DeleteOptions)
 					return nil, errAlreadyDeleting
 				}
 				if !graceful {
+					// set the DeleteGracePeriods to 0 if the object has pendingFinalizers but not supporting graceful deletion
+					if pendingFinalizers {
+						fmt.Println("CHAO: name:", name, "before mark MarkImmediateDeletion")
+						err = rest.MarkImmediateDeletion(e.DeleteStrategy, existing)
+						if err != nil {
+							return nil, err
+						}
+						return existing, nil
+					}
 					return nil, errDeleteNow
 				}
 				lastGraceful = *options.GracePeriodSeconds
@@ -439,6 +508,10 @@ func (e *Store) Delete(ctx api.Context, name string, options *api.DeleteOptions)
 		)
 		switch err {
 		case nil:
+			// if the object has pending finalizers, don't delete it, no matter whether the deletion is graceful.
+			if pendingFinalizers {
+				return out, nil
+			}
 			if lastGraceful > 0 {
 				return out, nil
 			}

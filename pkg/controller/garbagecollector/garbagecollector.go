@@ -177,6 +177,11 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 func shouldFinalize(e event, accessor meta.Object) bool {
 	// The delta_fifo may combine the creation and update of the object into one
 	// event, so we need to check AddEvent as well.
+	if accessor.GetName() == "test.rc.1" {
+		fmt.Printf("CHAO: test.rc.1, e.obj=%#v\n", e.obj)
+		fmt.Println("CHAO: test.rc.1, accessor.GetDeletionTimestamp()=", accessor.GetDeletionTimestamp())
+		fmt.Println("CHAO: e.oldObj=e.oldObj")
+	}
 	if e.oldObj == nil {
 		if accessor.GetDeletionTimestamp() == nil {
 			return false
@@ -186,6 +191,9 @@ func shouldFinalize(e event, accessor meta.Object) bool {
 		if err != nil {
 			utilruntime.HandleError(fmt.Errorf("cannot access oldObj: %v", err))
 			return false
+		}
+		if accessor.GetName() == "test.rc.1" {
+			fmt.Println("CHAO: oldAccessor.GetDeletionTimestamp()=", oldAccessor.GetDeletionTimestamp())
 		}
 		// ignore the event if it's not updating DeletionTimestamp from non-nil to nil.
 		if accessor.GetDeletionTimestamp() == nil || oldAccessor.GetDeletionTimestamp() != nil {
@@ -300,6 +308,7 @@ func (p *Propagator) processEvent() {
 		// caveat: if GC observes the creation of the dependents later than the
 		// deletion of the owner, then the orphaning finalizer won't be effective.
 		if shouldFinalize(event, accessor) {
+			fmt.Println("CHAO: going to ophan:", existingNode.identity)
 			go orphan(p.gc, existingNode)
 		}
 		// We only need to add/remove owner refs for now

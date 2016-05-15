@@ -546,6 +546,78 @@ func TestStoreDelete(t *testing.T) {
 	}
 }
 
+func TestStoreHandleFinalizers(t *testing.T) {
+	podWithFinalizer := &api.Pod{
+		ObjectMeta: api.ObjectMeta{Name: "foo", Finalizers: []string{"x"}},
+		Spec:       api.PodSpec{NodeName: "machine"},
+	}
+
+	testContext := api.WithNamespace(api.NewContext(), "test")
+	server, registry := NewTestGenericStoreRegistry(t)
+	defer server.Terminate(t)
+
+	// create pod
+	_, err := registry.Create(testContext, podWithFinalizer)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	// delete object with nil delete options doesn't delete the object
+	_, err = registry.Delete(testContext, podWithFinalizer.Name, nil)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	// the object should still exist
+	obj, err := registry.Get(testContext, podWithFinalizer.Name)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	podWithFinalizer, ok := obj.(*api.Pod)
+	if !ok {
+		t.Errorf("Unexpected object: %#v", obj)
+	}
+	if podWithFinalizer.ObjectMeta.DeletionTimestamp == nil {
+		t.Errorf("Expect the object to have DeletionTimestamp set, but got %#v", podWithFinalizer.ObjectMeta)
+	}
+	if podWithFinalizer.ObjectMeta.DeletionGracePeriodSeconds == nil || *podWithFinalizer.ObjectMeta.DeletionGracePeriodSeconds != 0 {
+		t.Errorf("Expect the object to have 0 DeletionGracePeriodSecond, but got %#v", podWithFinalizer.ObjectMeta)
+	}
+
+	updatedPodWithFinalizer := &api.Pod{
+		ObjectMeta: api.ObjectMeta{Name: "foo", Finalizers: []string{"x"}, ResourceVersion: podWithFinalizer.ObjectMeta.ResourceVersion},
+		Spec:       api.PodSpec{NodeName: "machine"},
+	}
+	_, _, err = registry.Update(testContext, updatedPodWithFinalizer)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	// the object should still exist, because it still has a finalizer
+	obj, err = registry.Get(testContext, podWithFinalizer.Name)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	podWithFinalizer, ok = obj.(*api.Pod)
+	if !ok {
+		t.Errorf("Unexpected object: %#v", obj)
+	}
+
+	podWithNoFinalizer := &api.Pod{
+		ObjectMeta: api.ObjectMeta{Name: "foo", ResourceVersion: podWithFinalizer.ObjectMeta.ResourceVersion},
+		Spec:       api.PodSpec{NodeName: "anothermachine"},
+	}
+	_, _, err = registry.Update(testContext, podWithNoFinalizer)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	// the pod should be removed, because it's finalizer is removed
+	_, err = registry.Get(testContext, podWithFinalizer.Name)
+	if !errors.IsNotFound(err) {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
 func TestStoreDeleteCollection(t *testing.T) {
 	podA := &api.Pod{ObjectMeta: api.ObjectMeta{Name: "foo"}}
 	podB := &api.Pod{ObjectMeta: api.ObjectMeta{Name: "bar"}}

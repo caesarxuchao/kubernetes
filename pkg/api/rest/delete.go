@@ -91,3 +91,16 @@ func BeforeDelete(strategy RESTDeleteStrategy, ctx api.Context, obj runtime.Obje
 	objectMeta.DeletionGracePeriodSeconds = options.GracePeriodSeconds
 	return true, false, nil
 }
+
+// MarkImmediateDeletion set the obj's DeletionGracePeriodSeconds to 0, and set the DeletionTimestamp to now.
+func MarkImmediateDeletion(strategy RESTDeleteStrategy, obj runtime.Object) (err error) {
+	objectMeta, _, kerr := objectMetaAndKind(strategy, obj)
+	if kerr != nil {
+		return kerr
+	}
+	now := unversioned.NewTime(time.Now())
+	objectMeta.DeletionTimestamp = &now
+	var zero int64 = 0
+	objectMeta.DeletionGracePeriodSeconds = &zero
+	return nil
+}
