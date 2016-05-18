@@ -18,6 +18,7 @@ package garbagecollector
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -43,6 +44,8 @@ import (
 
 const ResourceResyncTime = 60 * time.Second
 
+const OrphanFinalizerID = "orphanFinalizer"
+
 type monitor struct {
 	store      cache.Store
 	controller *framework.Controller
@@ -63,8 +66,10 @@ func (s objectReference) String() string {
 // GarbageCollector.processItem() reads the nodes, but it only reads the fields
 // that never get changed by Propagator.processEvent().
 type node struct {
-	identity   objectReference
-	dependents map[*node]struct{}
+	identity objectReference
+	// dependents will be read by the orphan() routine, we need to protect it with a lock.
+	dependentsLock *sync.RWMutex
+	dependents     map[*node]struct{}
 	// When processing an Update event, we need to compare the updated
 	// ownerReferences with the owners recorded in the graph.
 	owners []metatypes.OwnerReference
@@ -85,11 +90,35 @@ type event struct {
 	oldObj interface{}
 }
 
+type concurrentUIDToNode struct {
+	*sync.RWMutex
+	uidToNode map[types.UID]*node
+}
+
+func (m *concurrentUIDToNode) Write(uid types.UID, node *node) {
+	m.Lock()
+	defer m.Unlock()
+	m.uidToNode[uid] = node
+}
+
+func (m *concurrentUIDToNode) Read(uid types.UID) (*node, bool) {
+	m.RLock()
+	defer m.RUnlock()
+	n, ok := m.uidToNode[uid]
+	return n, ok
+}
+
+func (m *concurrentUIDToNode) Delete(uid types.UID) {
+	m.Lock()
+	defer m.Unlock()
+	delete(m.uidToNode, uid)
+}
+
 type Propagator struct {
 	eventQueue *workqueue.Type
 	// uidToNode doesn't require a lock to protect, because only the
 	// single-threaded Propagator.processEvent() reads/writes it.
-	uidToNode map[types.UID]*node
+	uidToNode *concurrentUIDToNode
 	gc        *GarbageCollector
 }
 
@@ -99,7 +128,7 @@ type Propagator struct {
 // processItem() will verify if the owner exists according to the API server.
 func (p *Propagator) addDependentToOwners(n *node, owners []metatypes.OwnerReference) {
 	for _, owner := range owners {
-		ownerNode, ok := p.uidToNode[owner.UID]
+		ownerNode, ok := p.uidToNode.Read(owner.UID)
 		if !ok {
 			// Create a "virtual" node in the graph for the owner if it doesn't
 			// exist in the graph yet. Then enqueue the virtual node into the
@@ -111,11 +140,14 @@ func (p *Propagator) addDependentToOwners(n *node, owners []metatypes.OwnerRefer
 					OwnerReference: owner,
 					Namespace:      n.identity.Namespace,
 				},
-				dependents: make(map[*node]struct{}),
+				dependentsLock: &sync.RWMutex{},
+				dependents:     make(map[*node]struct{}),
 			}
-			p.uidToNode[ownerNode.identity.UID] = ownerNode
+			p.uidToNode.Write(ownerNode.identity.UID, ownerNode)
 			p.gc.dirtyQueue.Add(ownerNode)
 		}
+		ownerNode.dependentsLock.Lock()
+		defer ownerNode.dependentsLock.Unlock()
 		ownerNode.dependents[n] = struct{}{}
 	}
 }
@@ -123,17 +155,19 @@ func (p *Propagator) addDependentToOwners(n *node, owners []metatypes.OwnerRefer
 // insertNode insert the node to p.uidToNode; then it finds all owners as listed
 // in n.owners, and adds the node to their dependents list.
 func (p *Propagator) insertNode(n *node) {
-	p.uidToNode[n.identity.UID] = n
+	p.uidToNode.Write(n.identity.UID, n)
 	p.addDependentToOwners(n, n.owners)
 }
 
 // removeDependentFromOwners remove n from owners' dependents list.
 func (p *Propagator) removeDependentFromOwners(n *node, owners []metatypes.OwnerReference) {
 	for _, owner := range owners {
-		ownerNode, ok := p.uidToNode[owner.UID]
+		ownerNode, ok := p.uidToNode.Read(owner.UID)
 		if !ok {
 			continue
 		}
+		ownerNode.dependentsLock.Lock()
+		defer ownerNode.dependentsLock.Unlock()
 		delete(ownerNode.dependents, n)
 	}
 }
@@ -141,7 +175,7 @@ func (p *Propagator) removeDependentFromOwners(n *node, owners []metatypes.Owner
 // removeNode removes the node from p.uidToNode, then finds all
 // owners as listed in n.owners, and removes n from their dependents list.
 func (p *Propagator) removeNode(n *node) {
-	delete(p.uidToNode, n.identity.UID)
+	p.uidToNode.Delete(n.identity.UID)
 	p.removeDependentFromOwners(n, n.owners)
 }
 
@@ -171,6 +205,109 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	return added, removed
 }
 
+func shouldFinalize(e event, accessor meta.Object) bool {
+	// The delta_fifo may combine the creation and update of the object into one
+	// event, so we need to check AddEvent as well.
+	if e.oldObj == nil {
+		if accessor.GetDeletionTimestamp() == nil {
+			return false
+		}
+	} else {
+		oldAccessor, err := meta.Accessor(e.oldObj)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot access oldObj: %v", err))
+			return false
+		}
+		// ignore the event if it's not updating DeletionTimestamp from non-nil to nil.
+		if accessor.GetDeletionTimestamp() == nil || oldAccessor.GetDeletionTimestamp() != nil {
+			return false
+		}
+	}
+	return sets.NewString(accessor.GetFinalizers()...).Has(OrphanFinalizerID)
+}
+
+func (gc *GarbageCollector) orphan(owner *node) {
+	// we don't need to lock each element, because they never get updated
+	owner.dependentsLock.RLock()
+	dependents := make([]*node, 0, len(owner.dependents))
+	for dependent := range owner.dependents {
+		dependents = append(dependents, dependent)
+	}
+	owner.dependentsLock.RUnlock()
+
+	// patch operation has less conflicts, so make its max retries lower
+	patchMaxRetries := 3
+	var failedDependents []objectReference
+	for _, dependent := range dependents {
+		deleteOwnerRefPatch := fmt.Sprintf(`{"metadata":{"ownerReferences":[{"$patch":"delete","uid":"%s"}]}}`, owner.identity.UID)
+		patched := false
+		for count := 0; count < patchMaxRetries; count++ {
+			_, err := gc.patchObject(dependent.identity, []byte(deleteOwnerRefPatch))
+			if err == nil {
+				patched = true
+				break
+			} else {
+				utilruntime.HandleError(fmt.Errorf("orphaning %s failed with %v", dependent.identity, err))
+			}
+		}
+		if !patched {
+			failedDependents = append(failedDependents, dependent.identity)
+		}
+	}
+	if len(failedDependents) != 0 {
+		utilruntime.HandleError(fmt.Errorf("failed to orphan dependents %v, please manually orphan them and finalize the owner %s", failedDependents, owner.identity))
+		return
+	}
+	// update the owner, remove "orphaningFinalizer" from its finalizers list
+	// TODO: Using Patch when strategicmerge supports deleting an entry from a
+	// slice of a base type.
+	updateMaxRetries := 5
+	updated := false
+	for count := 0; count < updateMaxRetries; count++ {
+		ownerObject, err := gc.getObject(owner.identity)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot finalize owner %s, because cannot get it, tried %d times", owner.identity, count+1))
+			continue
+		}
+		accessor, err := meta.Accessor(ownerObject)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot access the owner object: %v, tried %d times", err, count+1))
+			continue
+		}
+		finalizers := accessor.GetFinalizers()
+		var newFinalizers []string
+		found := false
+		for _, f := range finalizers {
+			if f == OrphanFinalizerID {
+				found = true
+			} else {
+				newFinalizers = append(newFinalizers, f)
+			}
+		}
+		if !found {
+			glog.V(6).Infof("the orphan finalizer is already removed from object %s", owner.identity)
+			updated = true
+			break
+		}
+		// remove the owner from dependent's OwnerReferences
+		ownerObject.SetFinalizers(newFinalizers)
+		_, err = gc.updateObject(owner.identity, ownerObject)
+		if err == nil {
+			updated = true
+			break
+		}
+		if err != nil && !errors.IsConflict(err) {
+			utilruntime.HandleError(fmt.Errorf("cannot update the finalizers of owner %s, with error: %v, tried %d times", owner.identity, err, count+1))
+			continue
+		}
+		// retry without reporting an error if it's a conflict
+		glog.V(6).Infof("got conflict updating the owner object %s, tried %d times", owner.identity, count+1)
+	}
+	if !updated {
+		utilruntime.HandleError(fmt.Errorf("updateMaxRetries(%d) has reached, giving up on finalizing the owner object %s. Please manually finalize it", updateMaxRetries, owner.identity))
+	}
+}
+
 // Dequeueing an event from eventQueue, updating graph, populating dirty_queue.
 func (p *Propagator) processEvent() {
 	key, quit := p.eventQueue.Get()
@@ -196,7 +333,7 @@ func (p *Propagator) processEvent() {
 	}
 	glog.V(6).Infof("Propagator process object: %s/%s, namespace %s, name %s, event type %s", typeAccessor.GetAPIVersion(), typeAccessor.GetKind(), accessor.GetNamespace(), accessor.GetName(), event.eventType)
 	// Check if the node already exsits
-	existingNode, found := p.uidToNode[accessor.GetUID()]
+	existingNode, found := p.uidToNode.Read(accessor.GetUID())
 	switch {
 	case (event.eventType == addEvent || event.eventType == updateEvent) && !found:
 		newNode := &node{
@@ -209,13 +346,23 @@ func (p *Propagator) processEvent() {
 				},
 				Namespace: accessor.GetNamespace(),
 			},
-			dependents: make(map[*node]struct{}),
-			owners:     accessor.GetOwnerReferences(),
+			dependentsLock: &sync.RWMutex{},
+			dependents:     make(map[*node]struct{}),
+			owners:         accessor.GetOwnerReferences(),
 		}
 		p.insertNode(newNode)
+		if shouldFinalize(event, accessor) {
+			glog.V(6).Infof("going to orphan dependents of %s", existingNode.identity)
+			go p.gc.orphan(newNode)
+		}
 	case (event.eventType == addEvent || event.eventType == updateEvent) && found:
-		// TODO: finalizer: Check if ObjectMeta.DeletionTimestamp is updated from nil to non-nil
-		// We only need to add/remove owner refs for now
+		// caveat: if GC observes the creation of the dependents later than the
+		// deletion of the owner, then the orphaning finalizer won't be effective.
+		if shouldFinalize(event, accessor) {
+			glog.V(6).Infof("going to orphan dependents of %s", existingNode.identity)
+			go p.gc.orphan(existingNode)
+		}
+		// add/remove owner refs
 		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
 		if len(added) == 0 && len(removed) == 0 {
 			glog.V(6).Infof("The updateEvent %#v doesn't change node references, ignore", event)
@@ -234,6 +381,7 @@ func (p *Propagator) processEvent() {
 			return
 		}
 		p.removeNode(existingNode)
+		// this doesn't require a RLock, because it's in the same thread that updates the dependents.
 		for dep := range existingNode.dependents {
 			p.gc.dirtyQueue.Add(dep)
 		}
@@ -327,8 +475,11 @@ func NewGarbageCollector(clientPool dynamic.ClientPool, resources []unversioned.
 	}
 	gc.propagator = &Propagator{
 		eventQueue: workqueue.New(),
-		uidToNode:  make(map[types.UID]*node),
-		gc:         gc,
+		uidToNode: &concurrentUIDToNode{
+			RWMutex:   &sync.RWMutex{},
+			uidToNode: make(map[types.UID]*node),
+		},
+		gc: gc,
 	}
 	for _, resource := range resources {
 		if _, ok := ignoredResources[resource]; ok {
@@ -394,6 +545,26 @@ func (gc *GarbageCollector) getObject(item objectReference) (*runtime.Unstructur
 		return nil, err
 	}
 	return client.Resource(resource, item.Namespace).Get(item.Name)
+}
+
+func (gc *GarbageCollector) updateObject(item objectReference, obj *runtime.Unstructured) (*runtime.Unstructured, error) {
+	fqKind := unversioned.FromAPIVersionAndKind(item.APIVersion, item.Kind)
+	client, err := gc.clientPool.ClientForGroupVersion(fqKind.GroupVersion())
+	resource, err := gc.apiResource(item.APIVersion, item.Kind, len(item.Namespace) != 0)
+	if err != nil {
+		return nil, err
+	}
+	return client.Resource(resource, item.Namespace).Update(obj)
+}
+
+func (gc *GarbageCollector) patchObject(item objectReference, patch []byte) (*runtime.Unstructured, error) {
+	fqKind := unversioned.FromAPIVersionAndKind(item.APIVersion, item.Kind)
+	client, err := gc.clientPool.ClientForGroupVersion(fqKind.GroupVersion())
+	resource, err := gc.apiResource(item.APIVersion, item.Kind, len(item.Namespace) != 0)
+	if err != nil {
+		return nil, err
+	}
+	return client.Resource(resource, item.Namespace).Patch(item.Name, api.StrategicMergePatchType, patch)
 }
 
 func objectReferenceToUnstructured(ref objectReference) *runtime.Unstructured {
@@ -498,7 +669,7 @@ func (gc *GarbageCollector) QueuesDrained() bool {
 // uidToNode graph. It's useful for debugging.
 func (gc *GarbageCollector) GraphHasUID(UIDs []types.UID) bool {
 	for _, u := range UIDs {
-		if _, ok := gc.propagator.uidToNode[u]; ok {
+		if _, ok := gc.propagator.uidToNode.Read(u); ok {
 			return true
 		}
 	}
