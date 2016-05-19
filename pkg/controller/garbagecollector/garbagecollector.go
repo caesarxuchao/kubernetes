@@ -75,6 +75,18 @@ type node struct {
 	owners []metatypes.OwnerReference
 }
 
+func (ownerNode *node) addDependent(dependent *node) {
+	ownerNode.dependentsLock.Lock()
+	defer ownerNode.dependentsLock.Unlock()
+	ownerNode.dependents[dependent] = struct{}{}
+}
+
+func (ownerNode *node) deleteDependent(dependent *node) {
+	ownerNode.dependentsLock.Lock()
+	defer ownerNode.dependentsLock.Unlock()
+	delete(ownerNode.dependents, dependent)
+}
+
 type eventType int
 
 const (
@@ -146,9 +158,7 @@ func (p *Propagator) addDependentToOwners(n *node, owners []metatypes.OwnerRefer
 			p.uidToNode.Write(ownerNode.identity.UID, ownerNode)
 			p.gc.dirtyQueue.Add(ownerNode)
 		}
-		ownerNode.dependentsLock.Lock()
-		defer ownerNode.dependentsLock.Unlock()
-		ownerNode.dependents[n] = struct{}{}
+		ownerNode.addDependent(n)
 	}
 }
 
@@ -166,9 +176,7 @@ func (p *Propagator) removeDependentFromOwners(n *node, owners []metatypes.Owner
 		if !ok {
 			continue
 		}
-		ownerNode.dependentsLock.Lock()
-		defer ownerNode.dependentsLock.Unlock()
-		delete(ownerNode.dependents, n)
+		ownerNode.deleteDependent(n)
 	}
 }
 
@@ -205,7 +213,7 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	return added, removed
 }
 
-func shouldFinalize(e event, accessor meta.Object) bool {
+func shouldOrphanDependents(e event, accessor meta.Object) bool {
 	// The delta_fifo may combine the creation and update of the object into one
 	// event, so we need to check AddEvent as well.
 	if e.oldObj == nil {
@@ -226,23 +234,15 @@ func shouldFinalize(e event, accessor meta.Object) bool {
 	return sets.NewString(accessor.GetFinalizers()...).Has(OrphanFinalizerID)
 }
 
-func (gc *GarbageCollector) orphan(owner *node) {
-	// we don't need to lock each element, because they never get updated
-	owner.dependentsLock.RLock()
-	dependents := make([]*node, 0, len(owner.dependents))
-	for dependent := range owner.dependents {
-		dependents = append(dependents, dependent)
-	}
-	owner.dependentsLock.RUnlock()
-
-	// patch operation has less conflicts, so make its max retries lower
-	patchMaxRetries := 3
+func (gc *GarbageCollector) orhpanDependents(owner *node, dependents []*node, retries int) error {
 	var failedDependents []objectReference
 	for _, dependent := range dependents {
 		deleteOwnerRefPatch := fmt.Sprintf(`{"metadata":{"ownerReferences":[{"$patch":"delete","uid":"%s"}]}}`, owner.identity.UID)
 		patched := false
-		for count := 0; count < patchMaxRetries; count++ {
+		for count := 0; count < retries; count++ {
 			_, err := gc.patchObject(dependent.identity, []byte(deleteOwnerRefPatch))
+			// note that if the target ownerReference doesn't exist in the
+			// dependent, strategic merge patch will NOT return an error.
 			if err == nil {
 				patched = true
 				break
@@ -255,15 +255,16 @@ func (gc *GarbageCollector) orphan(owner *node) {
 		}
 	}
 	if len(failedDependents) != 0 {
-		utilruntime.HandleError(fmt.Errorf("failed to orphan dependents %v, please manually orphan them and finalize the owner %s", failedDependents, owner.identity))
-		return
+		return fmt.Errorf("failed to orphan dependents %v, please manually orphan them and finalize the owner %s", failedDependents, owner.identity)
 	}
-	// update the owner, remove "orphaningFinalizer" from its finalizers list
-	// TODO: Using Patch when strategicmerge supports deleting an entry from a
-	// slice of a base type.
-	updateMaxRetries := 5
+	return nil
+}
+
+// TODO: Using Patch when strategicmerge supports deleting an entry from a
+// slice of a base type.
+func (gc *GarbageCollector) removeOrphanFinalizer(owner *node, retries int) error {
 	updated := false
-	for count := 0; count < updateMaxRetries; count++ {
+	for count := 0; count < retries; count++ {
 		ownerObject, err := gc.getObject(owner.identity)
 		if err != nil {
 			utilruntime.HandleError(fmt.Errorf("cannot finalize owner %s, because cannot get it, tried %d times", owner.identity, count+1))
@@ -304,7 +305,45 @@ func (gc *GarbageCollector) orphan(owner *node) {
 		glog.V(6).Infof("got conflict updating the owner object %s, tried %d times", owner.identity, count+1)
 	}
 	if !updated {
-		utilruntime.HandleError(fmt.Errorf("updateMaxRetries(%d) has reached, giving up on finalizing the owner object %s. Please manually finalize it", updateMaxRetries, owner.identity))
+		return fmt.Errorf("updateMaxRetries(%d) has reached, giving up on finalizing the owner object %s. Please manually finalize it", retries, owner.identity)
+	}
+	return nil
+}
+
+// orphanFinalizer dequeues a node from the orphanQueue, then finds its dependents
+// based on the graph maintained by the GC, then removes it from the
+// OwnerReferences of its dependents, and finally updates the owner to remove
+// the "Orphan" finalizer. The node is add back into the orphanQueue if any of
+// these steps fail.
+func (gc *GarbageCollector) orphanFinalizer() {
+	key, quit := gc.orphanQueue.Get()
+	if quit {
+		return
+	}
+	defer gc.orphanQueue.Done(key)
+	owner, ok := key.(*node)
+	if !ok {
+		utilruntime.HandleError(fmt.Errorf("expect *node, got %#v", key))
+	}
+	// we don't need to lock each element, because they never get updated
+	owner.dependentsLock.RLock()
+	dependents := make([]*node, 0, len(owner.dependents))
+	for dependent := range owner.dependents {
+		dependents = append(dependents, dependent)
+	}
+	owner.dependentsLock.RUnlock()
+
+	// patch operation has less conflicts, so make its max retries lower
+	const patchMaxRetries = 3
+	err := gc.orhpanDependents(owner, dependents, patchMaxRetries)
+	if err != nil {
+		gc.orphanQueue.Add(owner)
+	}
+	// update the owner, remove "orphaningFinalizer" from its finalizers list
+	const updateMaxRetries = 5
+	gc.removeOrphanFinalizer(owner, updateMaxRetries)
+	if err != nil {
+		gc.orphanQueue.Add(owner)
 	}
 }
 
@@ -351,16 +390,17 @@ func (p *Propagator) processEvent() {
 			owners:         accessor.GetOwnerReferences(),
 		}
 		p.insertNode(newNode)
-		if shouldFinalize(event, accessor) {
-			glog.V(6).Infof("going to orphan dependents of %s", existingNode.identity)
-			go p.gc.orphan(newNode)
+		// the underlying delta_fifo may combine a creation and deletion into one event
+		if shouldOrphanDependents(event, accessor) {
+			glog.V(6).Infof("add %s to the orphanQueue", newNode.identity)
+			p.gc.orphanQueue.Add(newNode)
 		}
 	case (event.eventType == addEvent || event.eventType == updateEvent) && found:
 		// caveat: if GC observes the creation of the dependents later than the
 		// deletion of the owner, then the orphaning finalizer won't be effective.
-		if shouldFinalize(event, accessor) {
-			glog.V(6).Infof("going to orphan dependents of %s", existingNode.identity)
-			go p.gc.orphan(existingNode)
+		if shouldOrphanDependents(event, accessor) {
+			glog.V(6).Infof("add %s to the orphanQueue", existingNode.identity)
+			p.gc.orphanQueue.Add(existingNode)
 		}
 		// add/remove owner refs
 		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
@@ -381,7 +421,7 @@ func (p *Propagator) processEvent() {
 			return
 		}
 		p.removeNode(existingNode)
-		// this doesn't require a RLock, because it's in the same thread that updates the dependents.
+		// this read of "dependents" doesn't require a RLock, because it's in processEvent(), which is single-threaded and is the only writer of "dependents".
 		for dep := range existingNode.dependents {
 			p.gc.dirtyQueue.Add(dep)
 		}
@@ -392,11 +432,12 @@ func (p *Propagator) processEvent() {
 // removing ownerReferences from the dependents if the owner is deleted with
 // DeleteOptions.OrphanDependents=true.
 type GarbageCollector struct {
-	restMapper meta.RESTMapper
-	clientPool dynamic.ClientPool
-	dirtyQueue *workqueue.Type
-	monitors   []monitor
-	propagator *Propagator
+	restMapper  meta.RESTMapper
+	clientPool  dynamic.ClientPool
+	dirtyQueue  *workqueue.Type
+	orphanQueue *workqueue.Type
+	monitors    []monitor
+	propagator  *Propagator
 }
 
 func monitorFor(p *Propagator, clientPool dynamic.ClientPool, resource unversioned.GroupVersionResource) (monitor, error) {
@@ -468,8 +509,9 @@ var ignoredResources = map[unversioned.GroupVersionResource]struct{}{
 
 func NewGarbageCollector(clientPool dynamic.ClientPool, resources []unversioned.GroupVersionResource) (*GarbageCollector, error) {
 	gc := &GarbageCollector{
-		clientPool: clientPool,
-		dirtyQueue: workqueue.New(),
+		clientPool:  clientPool,
+		dirtyQueue:  workqueue.New(),
+		orphanQueue: workqueue.New(),
 		// TODO: should use a dynamic RESTMapper built from the discovery results.
 		restMapper: registered.RESTMapper(),
 	}
@@ -651,16 +693,21 @@ func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
 	for i := 0; i < workers; i++ {
 		go wait.Until(gc.worker, 0, stopCh)
 	}
+	const orphanWorker = 1
+	for i := 0; i < orphanWorker; i++ {
+		go wait.Until(gc.orphanFinalizer, 0, stopCh)
+	}
 	<-stopCh
 	glog.Infof("Shutting down garbage collector")
 	gc.dirtyQueue.ShutDown()
+	gc.orphanQueue.ShutDown()
 	gc.propagator.eventQueue.ShutDown()
 }
 
 // QueueDrained returns if the dirtyQueue and eventQueue are drained. It's
 // useful for debugging.
 func (gc *GarbageCollector) QueuesDrained() bool {
-	return gc.dirtyQueue.Len() == 0 && gc.propagator.eventQueue.Len() == 0
+	return gc.dirtyQueue.Len() == 0 && gc.propagator.eventQueue.Len() == 0 && gc.orphanQueue.Len() == 0
 }
 
 // *FOR TEST USE ONLY* It's not safe to call this function when the GC is still

@@ -262,7 +262,7 @@ func (e *Store) shouldDelete(ctx api.Context, key string, obj, existing runtime.
 		utilruntime.HandleError(err)
 		return false
 	}
-	return len(oldMeta.Finalizers) != 0 && len(newMeta.Finalizers) == 0 && newMeta.DeletionGracePeriodSeconds != nil && *newMeta.DeletionGracePeriodSeconds == 0
+	return len(newMeta.Finalizers) == 0 && oldMeta.DeletionGracePeriodSeconds != nil && *oldMeta.DeletionGracePeriodSeconds == 0
 }
 
 // Update performs an atomic update and set of the object. Returns the result of the update
@@ -311,13 +311,19 @@ func (e *Store) Update(ctx api.Context, obj runtime.Object) (runtime.Object, boo
 			// requests to remove all finalizers from the object, so we
 			// ignore the NotFound error.
 			if storage.IsNotFound(err) {
-				ret, err := e.finalizeDelete(existing, true)
-				return ret, false, err
+				_, err := e.finalizeDelete(existing, true)
+				// clients are expecting an updated object if a PUT succeeded,
+				// but finalizeDelete returns a unversioned.Status, so return
+				// the object in the request instead.
+				return obj, false, err
 			}
 			return nil, false, storeerr.InterpretDeleteError(err, e.QualifiedResource, name)
 		}
-		ret, err := e.finalizeDelete(out, true)
-		return ret, false, err
+		_, err := e.finalizeDelete(out, true)
+		// clients are expecting an updated object if a PUT succeeded, but
+		// finalizeDelete returns a unversioned.Status, so return the object in
+		// the request instead.
+		return obj, false, err
 	}
 
 	err = e.Storage.GuaranteedUpdate(ctx, key, out, true, preconditions, func(existing runtime.Object, res storage.ResponseMeta) (runtime.Object, *uint64, error) {
