@@ -69,6 +69,7 @@ type ServerRunOptions struct {
 	EtcdServersOverrides      []string
 	StorageConfig             storagebackend.Config
 	ExternalHost              string
+	EnableGarbageCollector    bool
 	InsecureBindAddress       net.IP
 	InsecurePort              int
 	KeystoneURL               string
@@ -251,6 +252,8 @@ func (s *ServerRunOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&s.EtcdServersOverrides, "etcd-servers-overrides", s.EtcdServersOverrides, "Per-resource etcd servers overrides, comma separated. The individual override format: group/resource#servers, where servers are http://ip:port, semicolon separated.")
 
 	fs.StringVar(&s.ExternalHost, "external-hostname", s.ExternalHost, "The hostname to use when generating externalized URLs for this master (e.g. Swagger API Docs.)")
+
+	fs.BoolVar(&s.EnableGarbageCollector, "enable-garbage-collector", s.EnableGarbageCollector, "Enables the generic garbage collector. MUST be synced with the corresponding flag of the kube-controller-manager.")
 
 	fs.IPVar(&s.InsecureBindAddress, "insecure-bind-address", s.InsecureBindAddress, ""+
 		"The IP address on which to serve the --insecure-port (set to 0.0.0.0 for all interfaces). "+

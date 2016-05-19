@@ -39,10 +39,11 @@ import (
 )
 
 type APIInstaller struct {
-	group             *APIGroupVersion
-	info              *RequestInfoResolver
-	prefix            string // Path prefix where API resources are to be registered.
-	minRequestTimeout time.Duration
+	group                  *APIGroupVersion
+	info                   *RequestInfoResolver
+	prefix                 string // Path prefix where API resources are to be registered.
+	minRequestTimeout      time.Duration
+	enableGarbageCollector bool // whether the garbage collector is enable. This affects the handling of Update and Delete requests.
 }
 
 // Struct capturing information about an action ("GET", "POST", "WATCH", PROXY", etc).
@@ -543,7 +544,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			if hasSubresource {
 				doc = "replace " + subresource + " of the specified " + kind
 			}
-			handler := metrics.InstrumentRouteFunc(action.Verb, resource, UpdateResource(updater, reqScope, a.group.Typer, admit))
+			handler := metrics.InstrumentRouteFunc(action.Verb, resource, UpdateResource(updater, reqScope, a.group.Typer, admit, a.EnableGarbageCollector))
 			route := ws.PUT(action.Path).To(handler).
 				Doc(doc).
 				Param(ws.QueryParameter("pretty", "If 'true', then the output is pretty printed.")).
@@ -598,7 +599,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 			if hasSubresource {
 				doc = "delete " + subresource + " of a " + kind
 			}
-			handler := metrics.InstrumentRouteFunc(action.Verb, resource, DeleteResource(gracefulDeleter, isGracefulDeleter, reqScope, admit))
+			handler := metrics.InstrumentRouteFunc(action.Verb, resource, DeleteResource(gracefulDeleter, isGracefulDeleter, reqScope, admit, a.enableGarbageCollector))
 			route := ws.DELETE(action.Path).To(handler).
 				Doc(doc).
 				Param(ws.QueryParameter("pretty", "If 'true', then the output is pretty printed.")).

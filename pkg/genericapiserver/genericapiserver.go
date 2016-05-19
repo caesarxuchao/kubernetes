@@ -183,6 +183,10 @@ type Config struct {
 	ExtraEndpointPorts []api.EndpointPort
 
 	KubernetesServiceNodePort int
+
+	// Enables the generic garbage collector. MUST be synced with the
+	// corresponding flag of the kube-controller-manager.
+	EnableGarbageCollector bool
 }
 
 // GenericAPIServer contains state for a Kubernetes cluster api server.
@@ -193,24 +197,25 @@ type GenericAPIServer struct {
 	cacheTimeout          time.Duration
 	MinRequestTimeout     time.Duration
 
-	mux                   apiserver.Mux
-	MuxHelper             *apiserver.MuxHelper
-	HandlerContainer      *restful.Container
-	RootWebService        *restful.WebService
-	enableLogsSupport     bool
-	enableUISupport       bool
-	enableSwaggerSupport  bool
-	enableSwaggerUI       bool
-	enableProfiling       bool
-	enableWatchCache      bool
-	APIPrefix             string
-	APIGroupPrefix        string
-	corsAllowedOriginList []string
-	authenticator         authenticator.Request
-	authorizer            authorizer.Authorizer
-	AdmissionControl      admission.Interface
-	MasterCount           int
-	RequestContextMapper  api.RequestContextMapper
+	mux                    apiserver.Mux
+	MuxHelper              *apiserver.MuxHelper
+	HandlerContainer       *restful.Container
+	RootWebService         *restful.WebService
+	enableLogsSupport      bool
+	enableUISupport        bool
+	enableSwaggerSupport   bool
+	enableSwaggerUI        bool
+	enableProfiling        bool
+	enableWatchCache       bool
+	EnableGarbageCollector bool
+	APIPrefix              string
+	APIGroupPrefix         string
+	corsAllowedOriginList  []string
+	authenticator          authenticator.Request
+	authorizer             authorizer.Authorizer
+	AdmissionControl       admission.Interface
+	MasterCount            int
+	RequestContextMapper   api.RequestContextMapper
 
 	// ExternalAddress is the address (hostname or IP and port) that should be used in
 	// external (public internet) URLs for this GenericAPIServer.
@@ -338,23 +343,24 @@ func New(c *Config) (*GenericAPIServer, error) {
 	setDefaults(c)
 
 	s := &GenericAPIServer{
-		ServiceClusterIPRange: c.ServiceClusterIPRange,
-		ServiceNodePortRange:  c.ServiceNodePortRange,
-		RootWebService:        new(restful.WebService),
-		enableLogsSupport:     c.EnableLogsSupport,
-		enableUISupport:       c.EnableUISupport,
-		enableSwaggerSupport:  c.EnableSwaggerSupport,
-		enableSwaggerUI:       c.EnableSwaggerUI,
-		enableProfiling:       c.EnableProfiling,
-		enableWatchCache:      c.EnableWatchCache,
-		APIPrefix:             c.APIPrefix,
-		APIGroupPrefix:        c.APIGroupPrefix,
-		corsAllowedOriginList: c.CorsAllowedOriginList,
-		authenticator:         c.Authenticator,
-		authorizer:            c.Authorizer,
-		AdmissionControl:      c.AdmissionControl,
-		RequestContextMapper:  c.RequestContextMapper,
-		Serializer:            c.Serializer,
+		ServiceClusterIPRange:  c.ServiceClusterIPRange,
+		ServiceNodePortRange:   c.ServiceNodePortRange,
+		RootWebService:         new(restful.WebService),
+		enableLogsSupport:      c.EnableLogsSupport,
+		enableUISupport:        c.EnableUISupport,
+		enableSwaggerSupport:   c.EnableSwaggerSupport,
+		enableSwaggerUI:        c.EnableSwaggerUI,
+		enableProfiling:        c.EnableProfiling,
+		enableWatchCache:       c.EnableWatchCache,
+		EnableGarbageCollector: c.EnableGarbageCollector,
+		APIPrefix:              c.APIPrefix,
+		APIGroupPrefix:         c.APIGroupPrefix,
+		corsAllowedOriginList:  c.CorsAllowedOriginList,
+		authenticator:          c.Authenticator,
+		authorizer:             c.Authorizer,
+		AdmissionControl:       c.AdmissionControl,
+		RequestContextMapper:   c.RequestContextMapper,
+		Serializer:             c.Serializer,
 
 		cacheTimeout:      c.CacheTimeout,
 		MinRequestTimeout: time.Duration(c.MinRequestTimeout) * time.Second,
@@ -880,7 +886,8 @@ func (s *GenericAPIServer) newAPIGroupVersion(groupMeta apimachinery.GroupMeta, 
 		Admit:   s.AdmissionControl,
 		Context: s.RequestContextMapper,
 
-		MinRequestTimeout: s.MinRequestTimeout,
+		MinRequestTimeout:      s.MinRequestTimeout,
+		EnableGarbageCollector: s.EnableGarbageCollector,
 	}, nil
 }
 

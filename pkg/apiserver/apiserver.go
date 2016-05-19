@@ -102,6 +102,9 @@ type APIGroupVersion struct {
 	// the subresource. The key of this map should be the path of the subresource. The keys here should
 	// match the keys in the Storage map above for subresources.
 	SubresourceGroupVersionKind map[string]unversioned.GroupVersionKind
+
+	// whether the garbage collector is enable. This affects the handling of Update and Delete requests.
+	EnableGarbageCollector bool
 }
 
 type ProxyDialerFunc func(network, addr string) (net.Conn, error)
@@ -153,10 +156,11 @@ func (g *APIGroupVersion) UpdateREST(container *restful.Container) error {
 func (g *APIGroupVersion) newInstaller() *APIInstaller {
 	prefix := path.Join(g.Root, g.GroupVersion.Group, g.GroupVersion.Version)
 	installer := &APIInstaller{
-		group:             g,
-		info:              g.RequestInfoResolver,
-		prefix:            prefix,
-		minRequestTimeout: g.MinRequestTimeout,
+		group:                  g,
+		info:                   g.RequestInfoResolver,
+		prefix:                 prefix,
+		minRequestTimeout:      g.MinRequestTimeout,
+		enableGarbageCollector: g.EnableGarbageCollector,
 	}
 	return installer
 }
