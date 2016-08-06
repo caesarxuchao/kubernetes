@@ -19,7 +19,10 @@ set -o nounset
 set -o pipefail
 
 KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
+source "${KUBE_ROOT}/hack/lib/init.sh"
+export GOPATH=${GOPATH}:${KUBE_ROOT}/staging
 GODEP="${GODEP:-godep}"
+
 
 # Some things we want in godeps aren't code dependencies, so ./...
 # won't pick them up.
@@ -31,4 +34,7 @@ REQUIRED_BINS=(
 
 pushd "${KUBE_ROOT}" > /dev/null
   GO15VENDOREXPERIMENT=1 ${GODEP} save "${REQUIRED_BINS[@]}"
+  if [ ! -e "vendor/k8s.io/client-go" ]; then
+    ln -s ../../staging/src/k8s.io/client-go vendor/k8s.io/client-go
+  fi
 popd > /dev/null
