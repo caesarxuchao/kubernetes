@@ -231,7 +231,8 @@ func GetMasterHost() string {
 // Convenient wrapper around cache.Store that returns list of api.Pod instead of interface{}.
 type PodStore struct {
 	cache.Store
-	stopCh chan struct{}
+	stopCh    chan struct{}
+	reflector *cache.Reflector
 }
 
 func NewPodStore(c *client.Client, namespace string, label labels.Selector, field fields.Selector) *PodStore {
@@ -249,8 +250,9 @@ func NewPodStore(c *client.Client, namespace string, label labels.Selector, fiel
 	}
 	store := cache.NewStore(cache.MetaNamespaceKeyFunc)
 	stopCh := make(chan struct{})
-	cache.NewReflector(lw, &api.Pod{}, store, 0).RunUntil(stopCh)
-	return &PodStore{store, stopCh}
+	reflector := cache.NewReflector(lw, &api.Pod{}, store, 0)
+	reflector.RunUntil(stopCh)
+	return &PodStore{store, stopCh, reflector}
 }
 
 func (s *PodStore) List() []*api.Pod {
@@ -3099,6 +3101,10 @@ func DeleteRCAndWaitForGC(c *client.Client, ns, name string) error {
 		}
 		return err
 	}
+	ps, err := podStoreForRC(c, rc)
+	if err != nil {
+		return err
+	}
 	startTime := time.Now()
 	falseVar := false
 	deleteOption := &api.DeleteOptions{OrphanDependents: &falseVar}
@@ -3112,14 +3118,36 @@ func DeleteRCAndWaitForGC(c *client.Client, ns, name string) error {
 	}
 	deleteRCTime := time.Now().Sub(startTime)
 	Logf("Deleting RC %s took: %v", name, deleteRCTime)
-	timeout := 10 * time.Minute
-	err = waitForRCPodsGone(c, rc, &timeout)
+	err = waitForPodsGone(ps, 1*time.Second, 10*time.Minute)
 	if err != nil {
 		return fmt.Errorf("error while deleting RC %s: %v", name, err)
 	}
 	terminatePodTime := time.Now().Sub(startTime) - deleteRCTime
 	Logf("Terminating RC %s pods took: %v", name, terminatePodTime)
 	return nil
+}
+
+func podStoreForRC(c *client.Client, rc *api.ReplicationController) (*PodStore, error) {
+	labels := labels.SelectorFromSet(rc.Spec.Selector)
+	ps := NewPodStore(c, rc.Namespace, labels, fields.Everything())
+	err := wait.Poll(1*time.Second, 1*time.Minute, func() (bool, error) {
+		if len(ps.reflector.LastSyncResourceVersion()) != 0 {
+			return true, nil
+		}
+		return false, nil
+	})
+	return ps, err
+}
+
+// waitForPodsGone waits until there are no pods left in the PodStore.
+func waitForPodsGone(ps *PodStore, interval, timeout time.Duration) error {
+	defer ps.Stop()
+	return wait.PollImmediate(interval, timeout, func() (bool, error) {
+		if pods := ps.List(); len(pods) == 0 {
+			return true, nil
+		}
+		return false, nil
+	})
 }
 
 // waitForRCPodsGone waits until there are no pods reported under an RC's selector (because the pods
