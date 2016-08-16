@@ -3070,6 +3070,10 @@ func DeleteRCAndPods(c *client.Client, ns, name string) error {
 		}
 		return err
 	}
+	ps, err := podStoreForRC(c, rc)
+	if err != nil {
+		return err
+	}
 	startTime := time.Now()
 	err = reaper.Stop(ns, name, 0, api.NewDeleteOptions(0))
 	if apierrs.IsNotFound(err) {
@@ -3081,7 +3085,7 @@ func DeleteRCAndPods(c *client.Client, ns, name string) error {
 	if err != nil {
 		return fmt.Errorf("error while stopping RC: %s: %v", name, err)
 	}
-	err = waitForRCPodsGone(c, rc, nil)
+	err = waitForPodsGone(ps, 1*time.Second, 10*time.Minute)
 	if err != nil {
 		return fmt.Errorf("error while deleting RC %s: %v", name, err)
 	}
