@@ -52,6 +52,7 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 	clientcmdapi "k8s.io/kubernetes/pkg/client/unversioned/clientcmd/api"
 	gcecloud "k8s.io/kubernetes/pkg/cloudprovider/providers/gce"
+	"k8s.io/kubernetes/pkg/controller"
 	deploymentutil "k8s.io/kubernetes/pkg/controller/deployment/util"
 	"k8s.io/kubernetes/pkg/fields"
 	"k8s.io/kubernetes/pkg/kubectl"
@@ -3053,7 +3054,7 @@ func WaitForPodsWithLabel(c *client.Client, ns string, label labels.Selector) (p
 
 // DeleteRCAndPods a Replication Controller and all pods it spawned
 func DeleteRCAndPods(c *client.Client, ns, name string) error {
-	By(fmt.Sprintf("deleting replication controller %s in namespace %s", name, ns))
+	By(fmt.Sprintf("chao deleting replication controller %s in namespace %s", name, ns))
 	rc, err := c.ReplicationControllers(ns).Get(name)
 	if err != nil {
 		if apierrs.IsNotFound(err) {
@@ -3122,7 +3123,7 @@ func DeleteRCAndWaitForGC(c *client.Client, ns, name string) error {
 	}
 	deleteRCTime := time.Now().Sub(startTime)
 	Logf("Deleting RC %s took: %v", name, deleteRCTime)
-	err = waitForPodsGone(ps, 1*time.Second, 10*time.Minute)
+	err = waitForPodsInactive(ps, 10*time.Millisecond, 10*time.Minute)
 	if err != nil {
 		return fmt.Errorf("error while deleting RC %s: %v", name, err)
 	}
@@ -3141,6 +3142,20 @@ func podStoreForRC(c *client.Client, rc *api.ReplicationController) (*PodStore, 
 		return false, nil
 	})
 	return ps, err
+}
+
+// waitForPodsInactive waits until there are no pods left in the PodStore.
+func waitForPodsInactive(ps *PodStore, interval, timeout time.Duration) error {
+	defer ps.Stop()
+	return wait.PollImmediate(interval, timeout, func() (bool, error) {
+		pods := ps.List()
+		for _, pod := range pods {
+			if controller.IsPodActive(*pod) {
+				return false, nil
+			}
+		}
+		return true, nil
+	})
 }
 
 // waitForPodsGone waits until there are no pods left in the PodStore.
