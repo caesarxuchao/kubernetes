@@ -25,12 +25,20 @@ source "${KUBE_ROOT}/test/kubemark/common.sh"
 rm -rf "${RESOURCE_DIRECTORY}/addons"
 
 GCLOUD_COMMON_ARGS="--project ${PROJECT} --zone ${ZONE} --quiet"
+GCLOUD_COMMON_ARGS_2="--project ${PROJECT} --zone us-central1-f --quiet"
 
 gcloud compute instances delete "${MASTER_NAME}" \
     ${GCLOUD_COMMON_ARGS} || true
 
 gcloud compute disks delete "${MASTER_NAME}-pd" \
     ${GCLOUD_COMMON_ARGS} || true
+
+gcloud compute instances delete "${MASTER_NAME}" \
+    ${GCLOUD_COMMON_ARGS_2} || true
+
+gcloud compute disks delete "${MASTER_NAME}-pd" \
+    ${GCLOUD_COMMON_ARGS_2} || true
+
 
 gcloud compute addresses delete "${MASTER_NAME}-ip" \
     --project "${PROJECT}" \
