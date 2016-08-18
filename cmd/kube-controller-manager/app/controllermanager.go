@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -117,6 +118,18 @@ func ResyncPeriod(s *options.CMServer) func() time.Duration {
 	}
 }
 
+func performGC(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "running GC...")
+	runtime.GC()
+	fmt.Fprintln(w, "done!")
+}
+
 // Run runs the CMServer.  This should never exit.
 func Run(s *options.CMServer) error {
 	if c, err := configz.New("componentconfig"); err == nil {
@@ -146,6 +159,7 @@ func Run(s *options.CMServer) error {
 			mux.HandleFunc("/debug/pprof/", pprof.Index)
 			mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 			mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+			mux.HandleFunc("/debug/gc", performGC)
 		}
 		configz.InstallHandler(mux)
 		mux.Handle("/metrics", prometheus.Handler())
