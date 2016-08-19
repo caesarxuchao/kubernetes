@@ -770,6 +770,7 @@ func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
 	// worker
 	go wait.Until(gc.propagator.processEvent, 0, stopCh)
 
+	glog.Infof("Garbage Collector: running with %d workers", workers)
 	for i := 0; i < workers; i++ {
 		go wait.Until(gc.worker, 0, stopCh)
 		go wait.Until(gc.orphanFinalizer, 0, stopCh)
