@@ -18,6 +18,7 @@ package garbagecollector
 
 import (
 	"fmt"
+	goruntime "runtime"
 	"sync"
 	"time"
 
@@ -468,6 +469,14 @@ func gcListWatcher(client *dynamic.Client, resource unversioned.GroupVersionReso
 				Watch(&options)
 		},
 	}
+}
+
+func trace(id string) {
+	pc := make([]uintptr, 10) // at least 1 entry needed
+	goruntime.Callers(2, pc)
+	f := goruntime.FuncForPC(pc[0])
+	file, line := f.FileLine(pc[0])
+	fmt.Printf("%s::%s:%d %s\n", id, file, line, f.Name())
 }
 
 func (gc *GarbageCollector) monitorFor(resource unversioned.GroupVersionResource, kind unversioned.GroupVersionKind) (monitor, error) {
