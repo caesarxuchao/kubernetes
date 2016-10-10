@@ -119,8 +119,6 @@ func RegisterConversions(scheme *runtime.Scheme) error {
 		Convert_unversioned_LabelSelector_To_v1beta1_LabelSelector,
 		Convert_v1beta1_LabelSelectorRequirement_To_unversioned_LabelSelectorRequirement,
 		Convert_unversioned_LabelSelectorRequirement_To_v1beta1_LabelSelectorRequirement,
-		Convert_v1beta1_ListOptions_To_api_ListOptions,
-		Convert_api_ListOptions_To_v1beta1_ListOptions,
 		Convert_v1beta1_NetworkPolicy_To_extensions_NetworkPolicy,
 		Convert_extensions_NetworkPolicy_To_v1beta1_NetworkPolicy,
 		Convert_v1beta1_NetworkPolicyIngressRule_To_extensions_NetworkPolicyIngressRule,
@@ -1598,46 +1596,6 @@ func Convert_unversioned_LabelSelectorRequirement_To_v1beta1_LabelSelectorRequir
 	return autoConvert_unversioned_LabelSelectorRequirement_To_v1beta1_LabelSelectorRequirement(in, out, s)
 }
 
-func autoConvert_v1beta1_ListOptions_To_api_ListOptions(in *ListOptions, out *api.ListOptions, s conversion.Scope) error {
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
-	if err := api.Convert_string_To_labels_Selector(&in.LabelSelector, &out.LabelSelector, s); err != nil {
-		return err
-	}
-	if err := api.Convert_string_To_fields_Selector(&in.FieldSelector, &out.FieldSelector, s); err != nil {
-		return err
-	}
-	out.Watch = in.Watch
-	out.ResourceVersion = in.ResourceVersion
-	out.TimeoutSeconds = in.TimeoutSeconds
-	return nil
-}
-
-func Convert_v1beta1_ListOptions_To_api_ListOptions(in *ListOptions, out *api.ListOptions, s conversion.Scope) error {
-	return autoConvert_v1beta1_ListOptions_To_api_ListOptions(in, out, s)
-}
-
-func autoConvert_api_ListOptions_To_v1beta1_ListOptions(in *api.ListOptions, out *ListOptions, s conversion.Scope) error {
-	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
-		return err
-	}
-	if err := api.Convert_labels_Selector_To_string(&in.LabelSelector, &out.LabelSelector, s); err != nil {
-		return err
-	}
-	if err := api.Convert_fields_Selector_To_string(&in.FieldSelector, &out.FieldSelector, s); err != nil {
-		return err
-	}
-	out.Watch = in.Watch
-	out.ResourceVersion = in.ResourceVersion
-	out.TimeoutSeconds = in.TimeoutSeconds
-	return nil
-}
-
-func Convert_api_ListOptions_To_v1beta1_ListOptions(in *api.ListOptions, out *ListOptions, s conversion.Scope) error {
-	return autoConvert_api_ListOptions_To_v1beta1_ListOptions(in, out, s)
-}
-
 func autoConvert_v1beta1_NetworkPolicy_To_extensions_NetworkPolicy(in *NetworkPolicy, out *extensions.NetworkPolicy, s conversion.Scope) error {
 	SetDefaults_NetworkPolicy(in)
 	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
@@ -2240,6 +2198,7 @@ func autoConvert_v1beta1_ReplicaSetSpec_To_extensions_ReplicaSetSpec(in *Replica
 	if err := api.Convert_Pointer_int32_To_int32(&in.Replicas, &out.Replicas, s); err != nil {
 		return err
 	}
+	out.MinReadySeconds = in.MinReadySeconds
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
 		*out = new(unversioned.LabelSelector)
@@ -2259,6 +2218,7 @@ func autoConvert_extensions_ReplicaSetSpec_To_v1beta1_ReplicaSetSpec(in *extensi
 	if err := api.Convert_int32_To_Pointer_int32(&in.Replicas, &out.Replicas, s); err != nil {
 		return err
 	}
+	out.MinReadySeconds = in.MinReadySeconds
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
 		*out = new(LabelSelector)
@@ -2278,6 +2238,7 @@ func autoConvert_v1beta1_ReplicaSetStatus_To_extensions_ReplicaSetStatus(in *Rep
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
@@ -2290,6 +2251,7 @@ func autoConvert_extensions_ReplicaSetStatus_To_v1beta1_ReplicaSetStatus(in *ext
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }

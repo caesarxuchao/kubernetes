@@ -2196,6 +2196,7 @@ func Convert_api_FlexVolumeSource_To_v1_FlexVolumeSource(in *api.FlexVolumeSourc
 
 func autoConvert_v1_FlockerVolumeSource_To_api_FlockerVolumeSource(in *FlockerVolumeSource, out *api.FlockerVolumeSource, s conversion.Scope) error {
 	out.DatasetName = in.DatasetName
+	out.DatasetUUID = in.DatasetUUID
 	return nil
 }
 
@@ -2205,6 +2206,7 @@ func Convert_v1_FlockerVolumeSource_To_api_FlockerVolumeSource(in *FlockerVolume
 
 func autoConvert_api_FlockerVolumeSource_To_v1_FlockerVolumeSource(in *api.FlockerVolumeSource, out *FlockerVolumeSource, s conversion.Scope) error {
 	out.DatasetName = in.DatasetName
+	out.DatasetUUID = in.DatasetUUID
 	return nil
 }
 
@@ -5653,6 +5655,7 @@ func autoConvert_v1_ReplicationControllerSpec_To_api_ReplicationControllerSpec(i
 	if err := api.Convert_Pointer_int32_To_int32(&in.Replicas, &out.Replicas, s); err != nil {
 		return err
 	}
+	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if in.Template != nil {
 		in, out := &in.Template, &out.Template
@@ -5670,6 +5673,7 @@ func autoConvert_api_ReplicationControllerSpec_To_v1_ReplicationControllerSpec(i
 	if err := api.Convert_int32_To_Pointer_int32(&in.Replicas, &out.Replicas, s); err != nil {
 		return err
 	}
+	out.MinReadySeconds = in.MinReadySeconds
 	out.Selector = in.Selector
 	if in.Template != nil {
 		in, out := &in.Template, &out.Template
@@ -5687,6 +5691,7 @@ func autoConvert_v1_ReplicationControllerStatus_To_api_ReplicationControllerStat
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
@@ -5699,6 +5704,7 @@ func autoConvert_api_ReplicationControllerStatus_To_v1_ReplicationControllerStat
 	out.Replicas = in.Replicas
 	out.FullyLabeledReplicas = in.FullyLabeledReplicas
 	out.ReadyReplicas = in.ReadyReplicas
+	out.AvailableReplicas = in.AvailableReplicas
 	out.ObservedGeneration = in.ObservedGeneration
 	return nil
 }
