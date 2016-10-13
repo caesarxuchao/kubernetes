@@ -1,0 +1,54 @@
+#!/bin/bash
+# convert pkg/controller/ to use client-go
+
+
+# PART I: convert client imports
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset" "k8s.io/client-go/1.5/kubernetes"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/client/cache" "k8s.io/client-go/1.5/tools/cache"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/client/record" "k8s.io/client-go/1.5/tools/record"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/client/typed/dynamic" "k8s.io/client-go/1.5/dynamic"
+# TODO
+$K1/grep-sed.sh "\"k8s.io/kubernetes/pkg/client/testing/core\"" "core \"k8s.io/client-go/1.5/testing\""
+$K1/grep-sed.sh "\"k8s.io/kubernetes/pkg/client/restclient\"" "restclient \"k8s.io/client-go/1.5/rest\""
+
+# PART I.1: corner cases
+$K1/grep-sed.sh "k8s.io/client-go/1.5/kubernetes/typed/core/unversioned" "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+$K1/grep-sed.sh "unversionedcore" "v1core"
+#TODO:
+$K1/grep-sed.sh "k8s.io/client-go/1.5/kubernetes/typed/extensions/unversioned" "k8s.io/client-go/1.5/kubernetes/typed/extensions/v1beta1"
+$K1/grep-sed.sh "k8s.io/client-go/1.5/kubernetes/typed/policy/unversioned" "k8s.io/client-go/1.5/kubernetes/typed/policy/v1alpha1"
+$K1/grep-sed.sh "k8s.io/client-go/1.5/kubernetes/typed/apps/unversioned" "k8s.io/client-go/1.5/kubernetes/typed/apps/v1alpha1"
+$K1/grep-sed.sh "k8s.io/client-go/1.5/kubernetes/typed/autoscaling/unversioned" "k8s.io/client-go/1.5/kubernetes/typed/autoscaling/v1"
+
+# PART II: convert type imports
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/api\"" "k8s.io/client-go/1.5/pkg/api\"\n\"k8s.io/client-go/1.5/pkg/api/v1\""
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/api" "k8s.io/client-go/1.5/pkg/api"
+# don't convert "k8s.io/kubernetes/pkg/api/validation"
+$K1/grep-sed.sh "k8s.io/client-go/1.5/pkg/api/validation" "k8s.io/kubernetes/pkg/api/validation" 
+# don't convert "k8s.io/kubernetes/pkg/api/annotations"
+$K1/grep-sed.sh "k8s.io/client-go/1.5/pkg/api/annotations" "k8s.io/kubernetes/pkg/api/annotations"
+# don't convert "k8s.io/kubernetes/pkg/api/endpoints", need a copy of it that deals with client-go types.
+$K1/grep-sed.sh "k8s.io/client-go/1.5/pkg/api/endpoints" "k8s.io/kubernetes/pkg/api/endpoints" 
+# don't convert "k8s.io/kubernetes/pkg/api/pod", need a copy of it that deals with client-go types.
+$K1/grep-sed.sh "k8s.io/client-go/1.5/pkg/api/pod" "k8s.io/kubernetes/pkg/api/pod"
+
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/apis" "k8s.io/client-go/1.5/pkg/apis"
+
+# PART III: rewrite api. to v1.
+$K1/grep-sed.sh "api\." "v1."
+
+# PART IV: dependencies of client-go/kubernetes,
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/watch" "k8s.io/client-go/1.5/pkg/watch"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/runtime" "k8s.io/client-go/1.5/pkg/runtime"
+
+#pkg/watch
+#pkg/runtime
+
+# Use the pkg/api/field_constants.go, or copy it to somewhere in client-go?
+
+# api.CreatedByAnnotation, not v1
+# api.StrategicMergePatchType, not v1
+
+
+# NOTES
+find ./ -name "*.go" | xargs gofmt -w
