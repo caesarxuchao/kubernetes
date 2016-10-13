@@ -1,0 +1,11 @@
+{
+  "Rules": [
+    {
+      "SelectorRegexp": "k8s[.]io/kubernetes/pkg/client/unversioned$",
+      "ForbiddenPrefixes": [
+        "k8s.io/kubernetes/pkg/client/unversioned"
+      ]
+    }
+  ]
+}
+
