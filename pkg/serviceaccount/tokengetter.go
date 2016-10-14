@@ -17,15 +17,13 @@ limitations under the License.
 package serviceaccount
 
 import (
-	clientset "k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/kubernetes/pkg/api"
+	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	"k8s.io/kubernetes/pkg/registry/core/secret"
 	secretetcd "k8s.io/kubernetes/pkg/registry/core/secret/etcd"
 	serviceaccountregistry "k8s.io/kubernetes/pkg/registry/core/serviceaccount"
 	serviceaccountetcd "k8s.io/kubernetes/pkg/registry/core/serviceaccount/etcd"
 	"k8s.io/kubernetes/pkg/registry/generic"
-	"k8s.io/kubernetes/pkg/serviceaccount"
 	"k8s.io/kubernetes/pkg/storage/storagebackend"
 )
 
@@ -38,13 +36,13 @@ type clientGetter struct {
 // uses the specified client to retrieve service accounts and secrets.
 // The client should NOT authenticate using a service account token
 // the returned getter will be used to retrieve, or recursion will result.
-func NewGetterFromClient(c clientset.Interface) serviceaccount.ServiceAccountTokenGetter {
+func NewGetterFromClient(c clientset.Interface) ServiceAccountTokenGetter {
 	return clientGetter{c}
 }
-func (c clientGetter) GetServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
+func (c clientGetter) GetServiceAccount(namespace, name string) (*api.ServiceAccount, error) {
 	return c.client.Core().ServiceAccounts(namespace).Get(name)
 }
-func (c clientGetter) GetSecret(namespace, name string) (*v1.Secret, error) {
+func (c clientGetter) GetSecret(namespace, name string) (*api.Secret, error) {
 	return c.client.Core().Secrets(namespace).Get(name)
 }
 
@@ -56,21 +54,21 @@ type registryGetter struct {
 
 // NewGetterFromRegistries returns a ServiceAccountTokenGetter that
 // uses the specified registries to retrieve service accounts and secrets.
-func NewGetterFromRegistries(serviceAccounts serviceaccountregistry.Registry, secrets secret.Registry) serviceaccount.ServiceAccountTokenGetter {
+func NewGetterFromRegistries(serviceAccounts serviceaccountregistry.Registry, secrets secret.Registry) ServiceAccountTokenGetter {
 	return &registryGetter{serviceAccounts, secrets}
 }
-func (r *registryGetter) GetServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
-	ctx := v1.WithNamespace(v1.NewContext(), namespace)
+func (r *registryGetter) GetServiceAccount(namespace, name string) (*api.ServiceAccount, error) {
+	ctx := api.WithNamespace(api.NewContext(), namespace)
 	return r.serviceAccounts.GetServiceAccount(ctx, name)
 }
-func (r *registryGetter) GetSecret(namespace, name string) (*v1.Secret, error) {
-	ctx := v1.WithNamespace(v1.NewContext(), namespace)
+func (r *registryGetter) GetSecret(namespace, name string) (*api.Secret, error) {
+	ctx := api.WithNamespace(api.NewContext(), namespace)
 	return r.secrets.GetSecret(ctx, name)
 }
 
 // NewGetterFromStorageInterface returns a ServiceAccountTokenGetter that
 // uses the specified storage to retrieve service accounts and secrets.
-func NewGetterFromStorageInterface(config *storagebackend.Config, saPrefix, secretPrefix string) serviceaccount.ServiceAccountTokenGetter {
+func NewGetterFromStorageInterface(config *storagebackend.Config, saPrefix, secretPrefix string) ServiceAccountTokenGetter {
 	return NewGetterFromRegistries(
 		serviceaccountregistry.NewRegistry(serviceaccountetcd.NewREST(generic.RESTOptions{StorageConfig: config, Decorator: generic.UndecoratedStorage, ResourcePrefix: saPrefix})),
 		secret.NewRegistry(secretetcd.NewREST(generic.RESTOptions{StorageConfig: config, Decorator: generic.UndecoratedStorage, ResourcePrefix: secretPrefix})),
