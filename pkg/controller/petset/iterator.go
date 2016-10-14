@@ -21,8 +21,9 @@ import (
 	"sort"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/apps"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/apps"
 	"k8s.io/kubernetes/pkg/controller"
 )
 
@@ -35,7 +36,7 @@ func newPCB(id string, ps *apps.PetSet) (*pcb, error) {
 	for _, im := range newIdentityMappers(ps) {
 		im.SetIdentity(id, petPod)
 	}
-	petPVCs := []api.PersistentVolumeClaim{}
+	petPVCs := []v1.PersistentVolumeClaim{}
 	vMapper := &VolumeIdentityMapper{ps}
 	for _, c := range vMapper.GetClaims(id) {
 		petPVCs = append(petPVCs, c)
@@ -87,7 +88,7 @@ func (pt *petQueue) empty() bool {
 }
 
 // NewPetQueue returns a queue for tracking pets
-func NewPetQueue(ps *apps.PetSet, podList []*api.Pod) *petQueue {
+func NewPetQueue(ps *apps.PetSet, podList []*v1.Pod) *petQueue {
 	pt := petQueue{pets: []*pcb{}, idMapper: &NameIdentityMapper{ps}}
 	// Seed the queue with existing pets. Assume all pets are scheduled for
 	// deletion, enqueuing a pet will "undelete" it. We always want to delete
@@ -139,7 +140,7 @@ func (pi *petSetIterator) Value() *pcb {
 
 // NewPetSetIterator returns a new iterator. All pods in the given podList
 // are used to seed the queue of the iterator.
-func NewPetSetIterator(ps *apps.PetSet, podList []*api.Pod) *petSetIterator {
+func NewPetSetIterator(ps *apps.PetSet, podList []*v1.Pod) *petSetIterator {
 	pi := &petSetIterator{
 		ps:       ps,
 		queue:    NewPetQueue(ps, podList),
@@ -150,7 +151,7 @@ func NewPetSetIterator(ps *apps.PetSet, podList []*api.Pod) *petSetIterator {
 }
 
 // PodsByCreationTimestamp sorts a list of Pods by creation timestamp, using their names as a tie breaker.
-type PodsByCreationTimestamp []*api.Pod
+type PodsByCreationTimestamp []*v1.Pod
 
 func (o PodsByCreationTimestamp) Len() int      { return len(o) }
 func (o PodsByCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }

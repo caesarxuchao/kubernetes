@@ -23,10 +23,11 @@ import (
 	"strconv"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/controller"
 	deploymentutil "k8s.io/kubernetes/pkg/controller/deployment/util"
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
@@ -92,9 +93,9 @@ func (dc *DeploymentController) getAllReplicaSetsAndSyncRevision(deployment *ext
 }
 
 // rsAndPodsWithHashKeySynced returns the RSes and pods the given deployment targets, with pod-template-hash information synced.
-func (dc *DeploymentController) rsAndPodsWithHashKeySynced(deployment *extensions.Deployment) ([]*extensions.ReplicaSet, *api.PodList, error) {
+func (dc *DeploymentController) rsAndPodsWithHashKeySynced(deployment *extensions.Deployment) ([]*extensions.ReplicaSet, *v1.PodList, error) {
 	rsList, err := deploymentutil.ListReplicaSets(deployment,
-		func(namespace string, options api.ListOptions) ([]*extensions.ReplicaSet, error) {
+		func(namespace string, options v1.ListOptions) ([]*extensions.ReplicaSet, error) {
 			return dc.rsLister.ReplicaSets(namespace).List(options.LabelSelector)
 		})
 	if err != nil {
@@ -123,7 +124,7 @@ func (dc *DeploymentController) rsAndPodsWithHashKeySynced(deployment *extension
 // 2. Add hash label to all pods this rs owns, wait until replicaset controller reports rs.Status.FullyLabeledReplicas equal to the desired number of replicas
 // 3. Add hash label to the rs's label and selector
 func (dc *DeploymentController) addHashKeyToRSAndPods(rs *extensions.ReplicaSet) (updatedRS *extensions.ReplicaSet, err error) {
-	objCopy, err := api.Scheme.Copy(rs)
+	objCopy, err := v1.Scheme.Copy(rs)
 	if err != nil {
 		return nil, err
 	}
@@ -167,12 +168,12 @@ func (dc *DeploymentController) addHashKeyToRSAndPods(rs *extensions.ReplicaSet)
 	if err != nil {
 		return nil, fmt.Errorf("error in converting selector to label selector for replica set %s: %s", updatedRS.Name, err)
 	}
-	options := api.ListOptions{LabelSelector: selector}
+	options := v1.ListOptions{LabelSelector: selector}
 	pods, err := dc.podLister.Pods(namespace).List(options.LabelSelector)
 	if err != nil {
 		return nil, fmt.Errorf("error in getting pod list for namespace %s and list options %+v: %s", namespace, options, err)
 	}
-	podList := api.PodList{Items: make([]api.Pod, 0, len(pods))}
+	podList := v1.PodList{Items: make([]v1.Pod, 0, len(pods))}
 	for i := range pods {
 		podList.Items = append(podList.Items, *pods[i])
 	}
@@ -219,11 +220,11 @@ func (dc *DeploymentController) addHashKeyToRSAndPods(rs *extensions.ReplicaSet)
 	return updatedRS, nil
 }
 
-func (dc *DeploymentController) listPods(deployment *extensions.Deployment) (*api.PodList, error) {
+func (dc *DeploymentController) listPods(deployment *extensions.Deployment) (*v1.PodList, error) {
 	return deploymentutil.ListPods(deployment,
-		func(namespace string, options api.ListOptions) (*api.PodList, error) {
+		func(namespace string, options v1.ListOptions) (*v1.PodList, error) {
 			pods, err := dc.podLister.Pods(namespace).List(options.LabelSelector)
-			result := api.PodList{Items: make([]api.Pod, 0, len(pods))}
+			result := v1.PodList{Items: make([]v1.Pod, 0, len(pods))}
 			for i := range pods {
 				result.Items = append(result.Items, *pods[i])
 			}
@@ -252,7 +253,7 @@ func (dc *DeploymentController) getNewReplicaSet(deployment *extensions.Deployme
 	// and maxReplicas) and also update the revision annotation in the deployment with the
 	// latest revision.
 	if existingNewRS != nil {
-		objCopy, err := api.Scheme.Copy(existingNewRS)
+		objCopy, err := v1.Scheme.Copy(existingNewRS)
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +289,7 @@ func (dc *DeploymentController) getNewReplicaSet(deployment *extensions.Deployme
 
 	// Create new ReplicaSet
 	newRS := extensions.ReplicaSet{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			// Make the name deterministic, to ensure idempotence
 			Name:      deployment.Name + "-" + fmt.Sprintf("%d", podTemplateSpecHash),
 			Namespace: namespace,
@@ -313,7 +314,7 @@ func (dc *DeploymentController) getNewReplicaSet(deployment *extensions.Deployme
 		return nil, fmt.Errorf("error creating replica set %v: %v", deployment.Name, err)
 	}
 	if newReplicasCount > 0 {
-		dc.eventRecorder.Eventf(deployment, api.EventTypeNormal, "ScalingReplicaSet", "Scaled %s replica set %s to %d", "up", createdRS.Name, newReplicasCount)
+		dc.eventRecorder.Eventf(deployment, v1.EventTypeNormal, "ScalingReplicaSet", "Scaled %s replica set %s to %d", "up", createdRS.Name, newReplicasCount)
 	}
 
 	deploymentutil.SetDeploymentRevision(deployment, newRevision)
@@ -440,7 +441,7 @@ func (dc *DeploymentController) scaleReplicaSet(rs *extensions.ReplicaSet, newSc
 	deploymentutil.SetReplicasAnnotations(rs, deployment.Spec.Replicas, deployment.Spec.Replicas+deploymentutil.MaxSurge(*deployment))
 	rs, err := dc.client.Extensions().ReplicaSets(rs.Namespace).Update(rs)
 	if err == nil {
-		dc.eventRecorder.Eventf(deployment, api.EventTypeNormal, "ScalingReplicaSet", "Scaled %s replica set %s to %d", scalingOperation, rs.Name, newScale)
+		dc.eventRecorder.Eventf(deployment, v1.EventTypeNormal, "ScalingReplicaSet", "Scaled %s replica set %s to %d", scalingOperation, rs.Name, newScale)
 	}
 	return rs, err
 }

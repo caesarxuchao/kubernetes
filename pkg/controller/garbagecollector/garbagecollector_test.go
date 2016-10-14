@@ -25,17 +25,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	_ "k8s.io/kubernetes/pkg/api/install"
+	_ "k8s.io/client-go/1.5/pkg/api/install"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/meta/metatypes"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
+	"k8s.io/client-go/1.5/dynamic"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/meta/metatypes"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apimachinery/registered"
+	"k8s.io/client-go/1.5/pkg/runtime/serializer"
+	restclient "k8s.io/client-go/1.5/rest"
 	"k8s.io/kubernetes/pkg/controller/garbagecollector/metaonly"
-	"k8s.io/kubernetes/pkg/runtime/serializer"
 	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/clock"
 	"k8s.io/kubernetes/pkg/util/json"
@@ -230,14 +230,14 @@ func verifyGraphInvariants(scenario string, uidToNode map[types.UID]*node, t *te
 }
 
 func createEvent(eventType eventType, selfUID string, owners []string) event {
-	var ownerReferences []api.OwnerReference
+	var ownerReferences []v1.OwnerReference
 	for i := 0; i < len(owners); i++ {
-		ownerReferences = append(ownerReferences, api.OwnerReference{UID: types.UID(owners[i])})
+		ownerReferences = append(ownerReferences, v1.OwnerReference{UID: types.UID(owners[i])})
 	}
 	return event{
 		eventType: eventType,
-		obj: &api.Pod{
-			ObjectMeta: api.ObjectMeta{
+		obj: &v1.Pod{
+			ObjectMeta: v1.ObjectMeta{
 				UID:             types.UID(selfUID),
 				OwnerReferences: ownerReferences,
 			},
@@ -349,8 +349,8 @@ func TestGCListWatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 	lw := gcListWatcher(client, podResource)
-	lw.Watch(api.ListOptions{ResourceVersion: "1"})
-	lw.List(api.ListOptions{ResourceVersion: "1"})
+	lw.Watch(v1.ListOptions{ResourceVersion: "1"})
+	lw.List(v1.ListOptions{ResourceVersion: "1"})
 	if e, a := 2, len(testHandler.actions); e != a {
 		t.Errorf("expect %d requests, got %d", e, a)
 	}

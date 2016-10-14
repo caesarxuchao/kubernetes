@@ -27,13 +27,14 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
-	"k8s.io/kubernetes/pkg/client/record"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	v1core "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/client-go/1.5/tools/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/deployment/util"
 	"k8s.io/kubernetes/pkg/controller/informers"
@@ -91,14 +92,14 @@ func NewDeploymentController(dInformer informers.DeploymentInformer, rsInformer 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	// TODO: remove the wrapper when every clients have moved to use the clientset.
-	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{Interface: client.Core().Events("")})
+	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: client.Core().Events("")})
 
 	if client != nil && client.Core().GetRESTClient().GetRateLimiter() != nil {
 		metrics.RegisterMetricAndTrackRateLimiterUsage("deployment_controller", client.Core().GetRESTClient().GetRateLimiter())
 	}
 	dc := &DeploymentController{
 		client:        client,
-		eventRecorder: eventBroadcaster.NewRecorder(api.EventSource{Component: "deployment-controller"}),
+		eventRecorder: eventBroadcaster.NewRecorder(v1.EventSource{Component: "deployment-controller"}),
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "deployment"),
 	}
 
@@ -225,7 +226,7 @@ func (dc *DeploymentController) updateReplicaSet(old, cur interface{}) {
 	}
 	// A number of things could affect the old deployment: labels changing,
 	// pod template changing, etc.
-	if !api.Semantic.DeepEqual(oldRS, curRS) {
+	if !v1.Semantic.DeepEqual(oldRS, curRS) {
 		if oldD := dc.getDeploymentForReplicaSet(oldRS); oldD != nil {
 			dc.enqueueDeployment(oldD)
 		}
@@ -262,7 +263,7 @@ func (dc *DeploymentController) deleteReplicaSet(obj interface{}) {
 
 // getDeploymentForPod returns the deployment that manages the given Pod.
 // If there are multiple deployments for a given Pod, only return the oldest one.
-func (dc *DeploymentController) getDeploymentForPod(pod *api.Pod) *extensions.Deployment {
+func (dc *DeploymentController) getDeploymentForPod(pod *v1.Pod) *extensions.Deployment {
 	deployments, err := dc.dLister.GetDeploymentsForPod(pod)
 	if err != nil || len(deployments) == 0 {
 		glog.V(4).Infof("Error: %v. No deployment found for Pod %v, deployment controller will avoid syncing.", err, pod.Name)
@@ -278,7 +279,7 @@ func (dc *DeploymentController) getDeploymentForPod(pod *api.Pod) *extensions.De
 
 // When a pod is created, ensure its controller syncs
 func (dc *DeploymentController) addPod(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
+	pod, ok := obj.(*v1.Pod)
 	if !ok {
 		return
 	}
@@ -290,10 +291,10 @@ func (dc *DeploymentController) addPod(obj interface{}) {
 
 // updatePod figures out what deployment(s) manage the ReplicaSet that manages the Pod when the Pod
 // is updated and wake them up. If anything of the Pods have changed, we need to awaken both
-// the old and new deployments. old and cur must be *api.Pod types.
+// the old and new deployments. old and cur must be *v1.Pod types.
 func (dc *DeploymentController) updatePod(old, cur interface{}) {
-	curPod := cur.(*api.Pod)
-	oldPod := old.(*api.Pod)
+	curPod := cur.(*v1.Pod)
+	oldPod := old.(*v1.Pod)
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
@@ -303,7 +304,7 @@ func (dc *DeploymentController) updatePod(old, cur interface{}) {
 	if d := dc.getDeploymentForPod(curPod); d != nil {
 		dc.enqueueDeployment(d)
 	}
-	if !api.Semantic.DeepEqual(oldPod, curPod) {
+	if !v1.Semantic.DeepEqual(oldPod, curPod) {
 		if oldD := dc.getDeploymentForPod(oldPod); oldD != nil {
 			dc.enqueueDeployment(oldD)
 		}
@@ -311,9 +312,9 @@ func (dc *DeploymentController) updatePod(old, cur interface{}) {
 }
 
 // When a pod is deleted, ensure its controller syncs.
-// obj could be an *api.Pod, or a DeletionFinalStateUnknown marker item.
+// obj could be an *v1.Pod, or a DeletionFinalStateUnknown marker item.
 func (dc *DeploymentController) deletePod(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
+	pod, ok := obj.(*v1.Pod)
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
 	// the deleted key/value. Note that this value might be stale. If the pod
@@ -325,7 +326,7 @@ func (dc *DeploymentController) deletePod(obj interface{}) {
 			glog.Errorf("Couldn't get object from tombstone %#v", obj)
 			return
 		}
-		pod, ok = tombstone.Obj.(*api.Pod)
+		pod, ok = tombstone.Obj.(*v1.Pod)
 		if !ok {
 			glog.Errorf("Tombstone contained object that is not a pod %#v", obj)
 			return
@@ -426,7 +427,7 @@ func (dc *DeploymentController) syncDeployment(key string) error {
 	deployment := obj.(*extensions.Deployment)
 	everything := unversioned.LabelSelector{}
 	if reflect.DeepEqual(deployment.Spec.Selector, &everything) {
-		dc.eventRecorder.Eventf(deployment, api.EventTypeWarning, "SelectingAll", "This deployment is selecting all pods. A non-empty selector is required.")
+		dc.eventRecorder.Eventf(deployment, v1.EventTypeWarning, "SelectingAll", "This deployment is selecting all pods. A non-empty selector is required.")
 		return nil
 	}
 
@@ -443,7 +444,7 @@ func (dc *DeploymentController) syncDeployment(key string) error {
 
 	// Handle overlapping deployments by deterministically avoid syncing deployments that fight over ReplicaSets.
 	if err = dc.handleOverlap(d); err != nil {
-		dc.eventRecorder.Eventf(deployment, api.EventTypeWarning, "SelectorOverlap", err.Error())
+		dc.eventRecorder.Eventf(deployment, v1.EventTypeWarning, "SelectorOverlap", err.Error())
 		return nil
 	}
 

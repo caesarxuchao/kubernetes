@@ -21,17 +21,18 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/util/sets"
 )
 
 func TestGCTerminated(t *testing.T) {
 	type nameToPhase struct {
 		name  string
-		phase api.PodPhase
+		phase v1.PodPhase
 	}
 
 	testCases := []struct {
@@ -41,8 +42,8 @@ func TestGCTerminated(t *testing.T) {
 	}{
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodFailed},
-				{name: "b", phase: api.PodSucceeded},
+				{name: "a", phase: v1.PodFailed},
+				{name: "b", phase: v1.PodSucceeded},
 			},
 			threshold: 0,
 			// threshold = 0 disables terminated pod deletion
@@ -50,34 +51,34 @@ func TestGCTerminated(t *testing.T) {
 		},
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodFailed},
-				{name: "b", phase: api.PodSucceeded},
-				{name: "c", phase: api.PodFailed},
+				{name: "a", phase: v1.PodFailed},
+				{name: "b", phase: v1.PodSucceeded},
+				{name: "c", phase: v1.PodFailed},
 			},
 			threshold:       1,
 			deletedPodNames: sets.NewString("a", "b"),
 		},
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodRunning},
-				{name: "b", phase: api.PodSucceeded},
-				{name: "c", phase: api.PodFailed},
+				{name: "a", phase: v1.PodRunning},
+				{name: "b", phase: v1.PodSucceeded},
+				{name: "c", phase: v1.PodFailed},
 			},
 			threshold:       1,
 			deletedPodNames: sets.NewString("b"),
 		},
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodFailed},
-				{name: "b", phase: api.PodSucceeded},
+				{name: "a", phase: v1.PodFailed},
+				{name: "b", phase: v1.PodSucceeded},
 			},
 			threshold:       1,
 			deletedPodNames: sets.NewString("a"),
 		},
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodFailed},
-				{name: "b", phase: api.PodSucceeded},
+				{name: "a", phase: v1.PodFailed},
+				{name: "b", phase: v1.PodSucceeded},
 			},
 			threshold:       5,
 			deletedPodNames: sets.NewString(),
@@ -99,16 +100,16 @@ func TestGCTerminated(t *testing.T) {
 		creationTime := time.Unix(0, 0)
 		for _, pod := range test.pods {
 			creationTime = creationTime.Add(1 * time.Hour)
-			gcc.podStore.Indexer.Add(&api.Pod{
-				ObjectMeta: api.ObjectMeta{Name: pod.name, CreationTimestamp: unversioned.Time{Time: creationTime}},
-				Status:     api.PodStatus{Phase: pod.phase},
-				Spec:       api.PodSpec{NodeName: "node"},
+			gcc.podStore.Indexer.Add(&v1.Pod{
+				ObjectMeta: v1.ObjectMeta{Name: pod.name, CreationTimestamp: unversioned.Time{Time: creationTime}},
+				Status:     v1.PodStatus{Phase: pod.phase},
+				Spec:       v1.PodSpec{NodeName: "node"},
 			})
 		}
 
 		store := cache.NewStore(cache.MetaNamespaceKeyFunc)
-		store.Add(&api.Node{
-			ObjectMeta: api.ObjectMeta{Name: "node"},
+		store.Add(&v1.Node{
+			ObjectMeta: v1.ObjectMeta{Name: "node"},
 		})
 		gcc.nodeStore = cache.StoreToNodeLister{Store: store}
 
@@ -132,7 +133,7 @@ func TestGCTerminated(t *testing.T) {
 func TestGCOrphaned(t *testing.T) {
 	type nameToPhase struct {
 		name  string
-		phase api.PodPhase
+		phase v1.PodPhase
 	}
 
 	testCases := []struct {
@@ -142,15 +143,15 @@ func TestGCOrphaned(t *testing.T) {
 	}{
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodFailed},
-				{name: "b", phase: api.PodSucceeded},
+				{name: "a", phase: v1.PodFailed},
+				{name: "b", phase: v1.PodSucceeded},
 			},
 			threshold:       0,
 			deletedPodNames: sets.NewString("a", "b"),
 		},
 		{
 			pods: []nameToPhase{
-				{name: "a", phase: api.PodRunning},
+				{name: "a", phase: v1.PodRunning},
 			},
 			threshold:       1,
 			deletedPodNames: sets.NewString("a"),
@@ -172,10 +173,10 @@ func TestGCOrphaned(t *testing.T) {
 		creationTime := time.Unix(0, 0)
 		for _, pod := range test.pods {
 			creationTime = creationTime.Add(1 * time.Hour)
-			gcc.podStore.Indexer.Add(&api.Pod{
-				ObjectMeta: api.ObjectMeta{Name: pod.name, CreationTimestamp: unversioned.Time{Time: creationTime}},
-				Status:     api.PodStatus{Phase: pod.phase},
-				Spec:       api.PodSpec{NodeName: "node"},
+			gcc.podStore.Indexer.Add(&v1.Pod{
+				ObjectMeta: v1.ObjectMeta{Name: pod.name, CreationTimestamp: unversioned.Time{Time: creationTime}},
+				Status:     v1.PodStatus{Phase: pod.phase},
+				Spec:       v1.PodSpec{NodeName: "node"},
 			})
 		}
 

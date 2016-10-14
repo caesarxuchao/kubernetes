@@ -21,8 +21,9 @@ import (
 	"reflect"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
 	deploymentutil "k8s.io/kubernetes/pkg/controller/deployment/util"
 )
 
@@ -91,11 +92,11 @@ func (dc *DeploymentController) rollbackToTemplate(deployment *extensions.Deploy
 }
 
 func (dc *DeploymentController) emitRollbackWarningEvent(deployment *extensions.Deployment, reason, message string) {
-	dc.eventRecorder.Eventf(deployment, api.EventTypeWarning, reason, message)
+	dc.eventRecorder.Eventf(deployment, v1.EventTypeWarning, reason, message)
 }
 
 func (dc *DeploymentController) emitRollbackNormalEvent(deployment *extensions.Deployment, message string) {
-	dc.eventRecorder.Eventf(deployment, api.EventTypeNormal, deploymentutil.RollbackDone, message)
+	dc.eventRecorder.Eventf(deployment, v1.EventTypeNormal, deploymentutil.RollbackDone, message)
 }
 
 // updateDeploymentAndClearRollbackTo sets .spec.rollbackTo to nil and update the input deployment

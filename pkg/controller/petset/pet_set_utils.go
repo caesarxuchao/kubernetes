@@ -20,10 +20,11 @@ import (
 	"fmt"
 	"sync"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/apps"
-	"k8s.io/kubernetes/pkg/client/cache"
-	appsclientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/apps/unversioned"
+	appsclientset "k8s.io/client-go/1.5/kubernetes/typed/apps/v1alpha1"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/apps"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
 
 	"github.com/golang/glog"
@@ -72,7 +73,7 @@ type unhealthyPetTracker struct {
 }
 
 // Get returns a previously recorded blocking pet for the given petset.
-func (u *unhealthyPetTracker) Get(ps *apps.PetSet, knownPets []*api.Pod) (*pcb, error) {
+func (u *unhealthyPetTracker) Get(ps *apps.PetSet, knownPets []*v1.Pod) (*pcb, error) {
 	u.storeLock.Lock()
 	defer u.storeLock.Unlock()
 

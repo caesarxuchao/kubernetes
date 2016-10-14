@@ -21,8 +21,9 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/util/wait"
 )
 
@@ -52,9 +53,9 @@ func TestAllocateOrOccupyCIDRSuccess(t *testing.T) {
 		{
 			description: "When there's no ServiceCIDR return first CIDR in range",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -72,9 +73,9 @@ func TestAllocateOrOccupyCIDRSuccess(t *testing.T) {
 		{
 			description: "Correctly filter out ServiceCIDR",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -96,9 +97,9 @@ func TestAllocateOrOccupyCIDRSuccess(t *testing.T) {
 		{
 			description: "Correctly ignore already allocated CIDRs",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -182,9 +183,9 @@ func TestAllocateOrOccupyCIDRFailure(t *testing.T) {
 		{
 			description: "When there's no ServiceCIDR return first CIDR in range",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -265,9 +266,9 @@ func TestReleaseCIDRSuccess(t *testing.T) {
 		{
 			description: "Correctly release preallocated CIDR",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -288,9 +289,9 @@ func TestReleaseCIDRSuccess(t *testing.T) {
 		{
 			description: "Correctly recycle CIDR",
 			fakeNodeHandler: &FakeNodeHandler{
-				Existing: []*api.Node{
+				Existing: []*v1.Node{
 					{
-						ObjectMeta: api.ObjectMeta{
+						ObjectMeta: v1.ObjectMeta{
 							Name: "node0",
 						},
 					},
@@ -357,8 +358,8 @@ func TestReleaseCIDRSuccess(t *testing.T) {
 		}
 
 		for _, cidrToRelease := range tc.cidrsToRelease {
-			nodeToRelease := api.Node{
-				ObjectMeta: api.ObjectMeta{
+			nodeToRelease := v1.Node{
+				ObjectMeta: v1.ObjectMeta{
 					Name: "node0",
 				},
 			}

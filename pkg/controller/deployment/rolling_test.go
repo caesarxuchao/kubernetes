@@ -20,12 +20,13 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	exp "k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/client/record"
-	"k8s.io/kubernetes/pkg/client/testing/core"
-	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	exp "k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	core "k8s.io/client-go/1.5/testing"
+	"k8s.io/client-go/1.5/tools/record"
 	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
@@ -196,66 +197,66 @@ func TestDeploymentController_reconcileOldReplicaSets(t *testing.T) {
 		fakeClientset.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 			switch action.(type) {
 			case core.ListAction:
-				podList := &api.PodList{}
+				podList := &v1.PodList{}
 				for podIndex := 0; podIndex < test.readyPodsFromOldRS; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name:   fmt.Sprintf("%s-oldReadyPod-%d", oldRS.Name, podIndex),
 							Labels: oldSelector,
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionTrue,
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
 								},
 							},
 						},
 					})
 				}
 				for podIndex := 0; podIndex < test.oldReplicas-test.readyPodsFromOldRS; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name:   fmt.Sprintf("%s-oldUnhealthyPod-%d", oldRS.Name, podIndex),
 							Labels: oldSelector,
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionFalse,
+									Type:   v1.PodReady,
+									Status: v1.ConditionFalse,
 								},
 							},
 						},
 					})
 				}
 				for podIndex := 0; podIndex < test.readyPodsFromNewRS; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name:   fmt.Sprintf("%s-newReadyPod-%d", oldRS.Name, podIndex),
 							Labels: newSelector,
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionTrue,
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
 								},
 							},
 						},
 					})
 				}
 				for podIndex := 0; podIndex < test.oldReplicas-test.readyPodsFromOldRS; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name:   fmt.Sprintf("%s-newUnhealthyPod-%d", oldRS.Name, podIndex),
 							Labels: newSelector,
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionFalse,
+									Type:   v1.PodReady,
+									Status: v1.ConditionFalse,
 								},
 							},
 						},
@@ -335,32 +336,32 @@ func TestDeploymentController_cleanupUnhealthyReplicas(t *testing.T) {
 		fakeClientset.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 			switch action.(type) {
 			case core.ListAction:
-				podList := &api.PodList{}
+				podList := &v1.PodList{}
 				for podIndex := 0; podIndex < test.readyPods; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name: fmt.Sprintf("%s-readyPod-%d", oldRS.Name, podIndex),
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionTrue,
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
 								},
 							},
 						},
 					})
 				}
 				for podIndex := 0; podIndex < test.unHealthyPods; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name: fmt.Sprintf("%s-unHealthyPod-%d", oldRS.Name, podIndex),
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionFalse,
+									Type:   v1.PodReady,
+									Status: v1.ConditionFalse,
 								},
 							},
 						},
@@ -453,18 +454,18 @@ func TestDeploymentController_scaleDownOldReplicaSetsForRollingUpdate(t *testing
 		fakeClientset.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 			switch action.(type) {
 			case core.ListAction:
-				podList := &api.PodList{}
+				podList := &v1.PodList{}
 				for podIndex := 0; podIndex < test.readyPods; podIndex++ {
-					podList.Items = append(podList.Items, api.Pod{
-						ObjectMeta: api.ObjectMeta{
+					podList.Items = append(podList.Items, v1.Pod{
+						ObjectMeta: v1.ObjectMeta{
 							Name:   fmt.Sprintf("%s-pod-%d", oldRS.Name, podIndex),
 							Labels: map[string]string{"foo": "bar"},
 						},
-						Status: api.PodStatus{
-							Conditions: []api.PodCondition{
+						Status: v1.PodStatus{
+							Conditions: []v1.PodCondition{
 								{
-									Type:   api.PodReady,
-									Status: api.ConditionTrue,
+									Type:   v1.PodReady,
+									Status: v1.ConditionTrue,
 								},
 							},
 						},

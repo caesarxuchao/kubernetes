@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/v1"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/labels"
 	"k8s.io/kubernetes/pkg/util/sets"
 
@@ -114,7 +114,7 @@ func (h *HeapsterMetricsClient) GetCpuConsumptionAndRequestInMillis(namespace st
 	avgRequest int64, timestamp time.Time, err error) {
 
 	podList, err := h.client.Core().Pods(namespace).
-		List(api.ListOptions{LabelSelector: selector})
+		List(v1.ListOptions{LabelSelector: selector})
 
 	if err != nil {
 		return 0, 0, time.Time{}, fmt.Errorf("failed to get pod list: %v", err)
@@ -123,14 +123,14 @@ func (h *HeapsterMetricsClient) GetCpuConsumptionAndRequestInMillis(namespace st
 	requestSum := int64(0)
 	missing := false
 	for _, pod := range podList.Items {
-		if pod.Status.Phase != api.PodRunning {
+		if pod.Status.Phase != v1.PodRunning {
 			// Count only running pods.
 			continue
 		}
 
 		podNames[pod.Name] = struct{}{}
 		for _, container := range pod.Spec.Containers {
-			if containerRequest, ok := container.Resources.Requests[api.ResourceCPU]; ok {
+			if containerRequest, ok := container.Resources.Requests[v1.ResourceCPU]; ok {
 				requestSum += containerRequest.MilliValue()
 			} else {
 				missing = true
@@ -166,7 +166,7 @@ func (h *HeapsterMetricsClient) getCpuUtilizationForPods(namespace string, selec
 
 	glog.V(4).Infof("Heapster metrics result: %s", string(resultRaw))
 
-	metrics := metrics_api.PodMetricsList{}
+	metrics := metrics_v1.PodMetricsList{}
 	err = json.Unmarshal(resultRaw, &metrics)
 	if err != nil {
 		return 0, time.Time{}, fmt.Errorf("failed to unmarshall heapster response: %v", err)
@@ -213,14 +213,14 @@ func (h *HeapsterMetricsClient) getCpuUtilizationForPods(namespace string, selec
 func (h *HeapsterMetricsClient) GetCustomMetric(customMetricName string, namespace string, selector labels.Selector) (*float64, time.Time, error) {
 	metricSpec := getHeapsterCustomMetricDefinition(customMetricName)
 
-	podList, err := h.client.Core().Pods(namespace).List(api.ListOptions{LabelSelector: selector})
+	podList, err := h.client.Core().Pods(namespace).List(v1.ListOptions{LabelSelector: selector})
 
 	if err != nil {
 		return nil, time.Time{}, fmt.Errorf("failed to get pod list: %v", err)
 	}
 	podNames := []string{}
 	for _, pod := range podList.Items {
-		if pod.Status.Phase == api.PodPending {
+		if pod.Status.Phase == v1.PodPending {
 			// Skip pending pods.
 			continue
 		}

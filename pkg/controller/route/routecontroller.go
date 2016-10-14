@@ -23,19 +23,20 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/metrics"
 	nodeutil "k8s.io/kubernetes/pkg/util/node"
 	"k8s.io/kubernetes/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/watch"
 )
 
 const (
@@ -71,14 +72,14 @@ func New(routes cloudprovider.Routes, kubeClient clientset.Interface, clusterNam
 
 	rc.nodeStore.Store, rc.nodeController = cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return rc.kubeClient.Core().Nodes().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return rc.kubeClient.Core().Nodes().Watch(options)
 			},
 		},
-		&api.Node{},
+		&v1.Node{},
 		controller.NoResyncPeriodFunc(),
 		cache.ResourceEventHandlerFuncs{},
 	)
@@ -116,7 +117,7 @@ func (rc *RouteController) reconcileNodeRoutes() error {
 	return rc.reconcile(nodeList.Items, routeList)
 }
 
-func (rc *RouteController) reconcile(nodes []api.Node, routes []*cloudprovider.Route) error {
+func (rc *RouteController) reconcile(nodes []v1.Node, routes []*cloudprovider.Route) error {
 	// nodeCIDRs maps nodeName->nodeCIDR
 	nodeCIDRs := make(map[types.NodeName]string)
 	// routeMap maps routeTargetNode->route
@@ -166,8 +167,8 @@ func (rc *RouteController) reconcile(nodes []api.Node, routes []*cloudprovider.R
 			}(nodeName, nameHint, route)
 		} else {
 			// Update condition only if it doesn't reflect the current state.
-			_, condition := api.GetNodeCondition(&node.Status, api.NodeNetworkUnavailable)
-			if condition == nil || condition.Status != api.ConditionFalse {
+			_, condition := v1.GetNodeCondition(&node.Status, v1.NodeNetworkUnavailable)
+			if condition == nil || condition.Status != v1.ConditionFalse {
 				rc.updateNetworkingCondition(types.NodeName(node.Name), true)
 			}
 		}
@@ -203,17 +204,17 @@ func (rc *RouteController) updateNetworkingCondition(nodeName types.NodeName, ro
 		// patch in the retry loop.
 		currentTime := unversioned.Now()
 		if routeCreated {
-			err = nodeutil.SetNodeCondition(rc.kubeClient, nodeName, api.NodeCondition{
-				Type:               api.NodeNetworkUnavailable,
-				Status:             api.ConditionFalse,
+			err = nodeutil.SetNodeCondition(rc.kubeClient, nodeName, v1.NodeCondition{
+				Type:               v1.NodeNetworkUnavailable,
+				Status:             v1.ConditionFalse,
 				Reason:             "RouteCreated",
 				Message:            "RouteController created a route",
 				LastTransitionTime: currentTime,
 			})
 		} else {
-			err = nodeutil.SetNodeCondition(rc.kubeClient, nodeName, api.NodeCondition{
-				Type:               api.NodeNetworkUnavailable,
-				Status:             api.ConditionTrue,
+			err = nodeutil.SetNodeCondition(rc.kubeClient, nodeName, v1.NodeCondition{
+				Type:               v1.NodeNetworkUnavailable,
+				Status:             v1.ConditionTrue,
 				Reason:             "NoRouteCreated",
 				Message:            "RouteController failed to create a route",
 				LastTransitionTime: currentTime,

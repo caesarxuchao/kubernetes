@@ -19,18 +19,19 @@ package namespace
 import (
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
+	"k8s.io/client-go/1.5/dynamic"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/metrics"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
-	"k8s.io/kubernetes/pkg/watch"
 
 	"github.com/golang/glog"
 )
@@ -52,7 +53,7 @@ type NamespaceController struct {
 	// opCache is a cache to remember if a particular operation is not supported to aid dynamic client.
 	opCache operationNotSupportedCache
 	// finalizerToken is the finalizer token managed by this controller
-	finalizerToken api.FinalizerName
+	finalizerToken v1.FinalizerName
 }
 
 // NewNamespaceController creates a new NamespaceController
@@ -61,7 +62,7 @@ func NewNamespaceController(
 	clientPool dynamic.ClientPool,
 	groupVersionResources []unversioned.GroupVersionResource,
 	resyncPeriod time.Duration,
-	finalizerToken api.FinalizerName) *NamespaceController {
+	finalizerToken v1.FinalizerName) *NamespaceController {
 
 	// the namespace deletion code looks at the discovery document to enumerate the set of resources on the server.
 	// it then finds all namespaced resources, and in response to namespace deletion, will call delete on all of them.
@@ -96,22 +97,22 @@ func NewNamespaceController(
 	// configure the backing store/controller
 	store, controller := cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return kubeClient.Core().Namespaces().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return kubeClient.Core().Namespaces().Watch(options)
 			},
 		},
-		&api.Namespace{},
+		&v1.Namespace{},
 		resyncPeriod,
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
-				namespace := obj.(*api.Namespace)
+				namespace := obj.(*v1.Namespace)
 				namespaceController.enqueueNamespace(namespace)
 			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				namespace := newObj.(*api.Namespace)
+				namespace := newObj.(*v1.Namespace)
 				namespaceController.enqueueNamespace(namespace)
 			},
 		},
@@ -123,7 +124,7 @@ func NewNamespaceController(
 }
 
 // enqueueNamespace adds an object to the controller work queue
-// obj could be an *api.Namespace, or a DeletionFinalStateUnknown item.
+// obj could be an *v1.Namespace, or a DeletionFinalStateUnknown item.
 func (nm *NamespaceController) enqueueNamespace(obj interface{}) {
 	key, err := controller.KeyFunc(obj)
 	if err != nil {
@@ -188,7 +189,7 @@ func (nm *NamespaceController) syncNamespaceFromKey(key string) (err error) {
 		nm.queue.Add(key)
 		return err
 	}
-	namespace := obj.(*api.Namespace)
+	namespace := obj.(*v1.Namespace)
 	return syncNamespace(nm.kubeClient, nm.clientPool, nm.opCache, nm.groupVersionResources, namespace, nm.finalizerToken)
 }
 

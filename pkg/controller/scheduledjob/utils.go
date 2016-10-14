@@ -25,10 +25,11 @@ import (
 	"github.com/golang/glog"
 	"github.com/robfig/cron"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/batch"
-	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/batch"
+	"k8s.io/client-go/1.5/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
 	hashutil "k8s.io/kubernetes/pkg/util/hash"
 )
@@ -48,7 +49,7 @@ func deleteFromActiveList(sj *batch.ScheduledJob, uid types.UID) {
 	if sj == nil {
 		return
 	}
-	newActive := []api.ObjectReference{}
+	newActive := []v1.ObjectReference{}
 	for _, j := range sj.Status.Active {
 		if j.UID != uid {
 			newActive = append(newActive, j)
@@ -59,12 +60,12 @@ func deleteFromActiveList(sj *batch.ScheduledJob, uid types.UID) {
 
 // getParentUIDFromJob extracts UID of job's parent and whether it was found
 func getParentUIDFromJob(j batch.Job) (types.UID, bool) {
-	creatorRefJson, found := j.ObjectMeta.Annotations[api.CreatedByAnnotation]
+	creatorRefJson, found := j.ObjectMeta.Annotations[v1.CreatedByAnnotation]
 	if !found {
 		glog.V(4).Infof("Job with no created-by annotation, name %s namespace %s", j.Name, j.Namespace)
 		return types.UID(""), false
 	}
-	var sr api.SerializedReference
+	var sr v1.SerializedReference
 	err := json.Unmarshal([]byte(creatorRefJson), &sr)
 	if err != nil {
 		glog.V(4).Infof("Job with unparsable created-by annotation, name %s namespace %s: %v", j.Name, j.Namespace, err)
@@ -183,18 +184,18 @@ func getJobFromTemplate(sj *batch.ScheduledJob, scheduledTime time.Time) (*batch
 	if err != nil {
 		return nil, err
 	}
-	annotations[api.CreatedByAnnotation] = string(createdByRefJson)
+	annotations[v1.CreatedByAnnotation] = string(createdByRefJson)
 	// We want job names for a given nominal start time to have a deterministic name to avoid the same job being created twice
 	name := fmt.Sprintf("%s-%d", sj.Name, getTimeHash(scheduledTime))
 
 	job := &batch.Job{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Labels:      labels,
 			Annotations: annotations,
 			Name:        name,
 		},
 	}
-	if err := api.Scheme.Convert(&sj.Spec.JobTemplate.Spec, &job.Spec, nil); err != nil {
+	if err := v1.Scheme.Convert(&sj.Spec.JobTemplate.Spec, &job.Spec, nil); err != nil {
 		return nil, fmt.Errorf("unable to convert job template: %v", err)
 	}
 	return job, nil
@@ -208,7 +209,7 @@ func getTimeHash(scheduledTime time.Time) uint32 {
 
 // makeCreatedByRefJson makes a json string with an object reference for use in "created-by" annotation value
 func makeCreatedByRefJson(object runtime.Object) (string, error) {
-	createdByRef, err := api.GetReference(object)
+	createdByRef, err := v1.GetReference(object)
 	if err != nil {
 		return "", fmt.Errorf("unable to get controller reference: %v", err)
 	}
@@ -216,9 +217,9 @@ func makeCreatedByRefJson(object runtime.Object) (string, error) {
 	// TODO: this code was not safe previously - as soon as new code came along that switched to v2, old clients
 	//   would be broken upon reading it. This is explicitly hardcoded to v1 to guarantee predictable deployment.
 	//   We need to consistently handle this case of annotation versioning.
-	codec := api.Codecs.LegacyCodec(unversioned.GroupVersion{Group: api.GroupName, Version: "v1"})
+	codec := v1.Codecs.LegacyCodec(unversioned.GroupVersion{Group: v1.GroupName, Version: "v1"})
 
-	createdByRefJson, err := runtime.Encode(codec, &api.SerializedReference{
+	createdByRefJson, err := runtime.Encode(codec, &v1.SerializedReference{
 		Reference: *createdByRef,
 	})
 	if err != nil {

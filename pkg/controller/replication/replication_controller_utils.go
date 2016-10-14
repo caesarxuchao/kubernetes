@@ -22,12 +22,13 @@ import (
 	"fmt"
 
 	"github.com/golang/glog"
-	"k8s.io/kubernetes/pkg/api"
-	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
+	v1core "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
 )
 
 // updateReplicaCount attempts to update the Status.Replicas of the given controller, with a single GET/PUT retry.
-func updateReplicaCount(rcClient unversionedcore.ReplicationControllerInterface, controller api.ReplicationController, numReplicas, numFullyLabeledReplicas, numReadyReplicas, numAvailableReplicas int) (updateErr error) {
+func updateReplicaCount(rcClient v1core.ReplicationControllerInterface, controller v1.ReplicationController, numReplicas, numFullyLabeledReplicas, numReadyReplicas, numAvailableReplicas int) (updateErr error) {
 	// This is the steady state. It happens when the rc doesn't have any expectations, since
 	// we do a periodic relist every 30s. If the generations differ but the replicas are
 	// the same, a caller might've resized to the same replica count.
@@ -53,7 +54,7 @@ func updateReplicaCount(rcClient unversionedcore.ReplicationControllerInterface,
 			fmt.Sprintf("availableReplicas %d->%d, ", controller.Status.AvailableReplicas, numAvailableReplicas) +
 			fmt.Sprintf("sequence No: %v->%v", controller.Status.ObservedGeneration, generation))
 
-		rc.Status = api.ReplicationControllerStatus{
+		rc.Status = v1.ReplicationControllerStatus{
 			Replicas:             int32(numReplicas),
 			FullyLabeledReplicas: int32(numFullyLabeledReplicas),
 			ReadyReplicas:        int32(numReadyReplicas),
@@ -74,7 +75,7 @@ func updateReplicaCount(rcClient unversionedcore.ReplicationControllerInterface,
 }
 
 // OverlappingControllers sorts a list of controllers by creation timestamp, using their names as a tie breaker.
-type OverlappingControllers []*api.ReplicationController
+type OverlappingControllers []*v1.ReplicationController
 
 func (o OverlappingControllers) Len() int      { return len(o) }
 func (o OverlappingControllers) Swap(i, j int) { o[i], o[j] = o[j], o[i] }

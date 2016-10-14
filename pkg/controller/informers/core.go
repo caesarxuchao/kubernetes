@@ -20,11 +20,12 @@ import (
 	"reflect"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/watch"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
 )
 
 // PodInformer is type of SharedIndexInformer which watches and lists all pods.
@@ -44,7 +45,7 @@ func (f *podInformer) Informer() cache.SharedIndexInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	informerType := reflect.TypeOf(&api.Pod{})
+	informerType := reflect.TypeOf(&v1.Pod{})
 	informer, exists := f.informers[informerType]
 	if exists {
 		return informer
@@ -80,7 +81,7 @@ func (f *namespaceInformer) Informer() cache.SharedIndexInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	informerType := reflect.TypeOf(&api.Namespace{})
+	informerType := reflect.TypeOf(&v1.Namespace{})
 	informer, exists := f.informers[informerType]
 	if exists {
 		return informer
@@ -116,7 +117,7 @@ func (f *nodeInformer) Informer() cache.SharedIndexInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	informerType := reflect.TypeOf(&api.Node{})
+	informerType := reflect.TypeOf(&v1.Node{})
 	informer, exists := f.informers[informerType]
 	if exists {
 		return informer
@@ -152,7 +153,7 @@ func (f *pvcInformer) Informer() cache.SharedIndexInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	informerType := reflect.TypeOf(&api.PersistentVolumeClaim{})
+	informerType := reflect.TypeOf(&v1.PersistentVolumeClaim{})
 	informer, exists := f.informers[informerType]
 	if exists {
 		return informer
@@ -188,7 +189,7 @@ func (f *pvInformer) Informer() cache.SharedIndexInformer {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	informerType := reflect.TypeOf(&api.PersistentVolume{})
+	informerType := reflect.TypeOf(&v1.PersistentVolume{})
 	informer, exists := f.informers[informerType]
 	if exists {
 		return informer
@@ -209,14 +210,14 @@ func (f *pvInformer) Lister() *cache.StoreToPVFetcher {
 func NewPodInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	sharedIndexInformer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return client.Core().Pods(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return client.Core().Pods(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return client.Core().Pods(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return client.Core().Pods(v1.NamespaceAll).Watch(options)
 			},
 		},
-		&api.Pod{},
+		&v1.Pod{},
 		resyncPeriod,
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
 	)
@@ -228,14 +229,14 @@ func NewPodInformer(client clientset.Interface, resyncPeriod time.Duration) cach
 func NewNodeInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	sharedIndexInformer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return client.Core().Nodes().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return client.Core().Nodes().Watch(options)
 			},
 		},
-		&api.Node{},
+		&v1.Node{},
 		resyncPeriod,
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc})
 
@@ -246,14 +247,14 @@ func NewNodeInformer(client clientset.Interface, resyncPeriod time.Duration) cac
 func NewPVCInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	sharedIndexInformer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return client.Core().PersistentVolumeClaims(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return client.Core().PersistentVolumeClaims(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return client.Core().PersistentVolumeClaims(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return client.Core().PersistentVolumeClaims(v1.NamespaceAll).Watch(options)
 			},
 		},
-		&api.PersistentVolumeClaim{},
+		&v1.PersistentVolumeClaim{},
 		resyncPeriod,
 		cache.Indexers{})
 
@@ -264,14 +265,14 @@ func NewPVCInformer(client clientset.Interface, resyncPeriod time.Duration) cach
 func NewPVInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	sharedIndexInformer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return client.Core().PersistentVolumes().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return client.Core().PersistentVolumes().Watch(options)
 			},
 		},
-		&api.PersistentVolume{},
+		&v1.PersistentVolume{},
 		resyncPeriod,
 		cache.Indexers{})
 
@@ -282,14 +283,14 @@ func NewPVInformer(client clientset.Interface, resyncPeriod time.Duration) cache
 func NewNamespaceInformer(client clientset.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
 	sharedIndexInformer := cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return client.Core().Namespaces().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return client.Core().Namespaces().Watch(options)
 			},
 		},
-		&api.Namespace{},
+		&v1.Namespace{},
 		resyncPeriod,
 		cache.Indexers{})
 

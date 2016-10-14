@@ -21,17 +21,18 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/client/cache"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/informers"
 	"k8s.io/kubernetes/pkg/labels"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/metrics"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/watch"
 
 	"github.com/golang/glog"
 )
@@ -68,7 +69,7 @@ func NewPodGC(kubeClient clientset.Interface, podInformer cache.SharedIndexInfor
 		kubeClient:             kubeClient,
 		terminatedPodThreshold: terminatedPodThreshold,
 		deletePod: func(namespace, name string) error {
-			return kubeClient.Core().Pods(namespace).Delete(name, api.NewDeleteOptions(0))
+			return kubeClient.Core().Pods(namespace).Delete(name, v1.NewDeleteOptions(0))
 		},
 	}
 
@@ -77,14 +78,14 @@ func NewPodGC(kubeClient clientset.Interface, podInformer cache.SharedIndexInfor
 
 	gcc.nodeStore.Store, gcc.nodeController = cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				return gcc.kubeClient.Core().Nodes().List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				return gcc.kubeClient.Core().Nodes().Watch(options)
 			},
 		},
-		&api.Node{},
+		&v1.Node{},
 		controller.NoResyncPeriodFunc(),
 		cache.ResourceEventHandlerFuncs{},
 	)
@@ -123,15 +124,15 @@ func (gcc *PodGCController) gc() {
 	gcc.gcOrphaned(pods)
 }
 
-func isPodTerminated(pod *api.Pod) bool {
-	if phase := pod.Status.Phase; phase != api.PodPending && phase != api.PodRunning && phase != api.PodUnknown {
+func isPodTerminated(pod *v1.Pod) bool {
+	if phase := pod.Status.Phase; phase != v1.PodPending && phase != v1.PodRunning && phase != v1.PodUnknown {
 		return true
 	}
 	return false
 }
 
-func (gcc *PodGCController) gcTerminated(pods []*api.Pod) {
-	terminatedPods := []*api.Pod{}
+func (gcc *PodGCController) gcTerminated(pods []*v1.Pod) {
+	terminatedPods := []*v1.Pod{}
 	for _, pod := range pods {
 		if isPodTerminated(pod) {
 			terminatedPods = append(terminatedPods, pod)
@@ -165,7 +166,7 @@ func (gcc *PodGCController) gcTerminated(pods []*api.Pod) {
 }
 
 // cleanupOrphanedPods deletes pods that are bound to nodes that don't exist.
-func (gcc *PodGCController) gcOrphaned(pods []*api.Pod) {
+func (gcc *PodGCController) gcOrphaned(pods []*v1.Pod) {
 	glog.V(4).Infof("GC'ing orphaned")
 
 	for _, pod := range pods {
@@ -185,7 +186,7 @@ func (gcc *PodGCController) gcOrphaned(pods []*api.Pod) {
 }
 
 // byCreationTimestamp sorts a list by creation timestamp, using their names as a tie breaker.
-type byCreationTimestamp []*api.Pod
+type byCreationTimestamp []*v1.Pod
 
 func (o byCreationTimestamp) Len() int      { return len(o) }
 func (o byCreationTimestamp) Swap(i, j int) { o[i], o[j] = o[j], o[i] }

@@ -19,7 +19,7 @@ package deployment
 import (
 	"fmt"
 
-	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/retry"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/util/wait"

@@ -24,12 +24,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/client/testing/core"
-	"k8s.io/kubernetes/pkg/runtime"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	core "k8s.io/client-go/1.5/testing"
 	"k8s.io/kubernetes/pkg/util/intstr"
 )
 
@@ -74,22 +75,22 @@ func addUpdateRSReactor(fakeClient *fake.Clientset) *fake.Clientset {
 
 func addUpdatePodsReactor(fakeClient *fake.Clientset) *fake.Clientset {
 	fakeClient.AddReactor("update", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
-		obj := action.(core.UpdateAction).GetObject().(*api.Pod)
+		obj := action.(core.UpdateAction).GetObject().(*v1.Pod)
 		return true, obj, nil
 	})
 	return fakeClient
 }
 
-func newPod(now time.Time, ready bool, beforeSec int) api.Pod {
-	conditionStatus := api.ConditionFalse
+func newPod(now time.Time, ready bool, beforeSec int) v1.Pod {
+	conditionStatus := v1.ConditionFalse
 	if ready {
-		conditionStatus = api.ConditionTrue
+		conditionStatus = v1.ConditionTrue
 	}
-	return api.Pod{
-		Status: api.PodStatus{
-			Conditions: []api.PodCondition{
+	return v1.Pod{
+		Status: v1.PodStatus{
+			Conditions: []v1.PodCondition{
 				{
-					Type:               api.PodReady,
+					Type:               v1.PodReady,
 					LastTransitionTime: unversioned.NewTime(now.Add(-1 * time.Duration(beforeSec) * time.Second)),
 					Status:             conditionStatus,
 				},
@@ -101,12 +102,12 @@ func newPod(now time.Time, ready bool, beforeSec int) api.Pod {
 func TestCountAvailablePods(t *testing.T) {
 	now := time.Now()
 	tests := []struct {
-		pods            []api.Pod
+		pods            []v1.Pod
 		minReadySeconds int
 		expected        int
 	}{
 		{
-			[]api.Pod{
+			[]v1.Pod{
 				newPod(now, true, 0),
 				newPod(now, true, 2),
 				newPod(now, false, 1),
@@ -115,7 +116,7 @@ func TestCountAvailablePods(t *testing.T) {
 			1,
 		},
 		{
-			[]api.Pod{
+			[]v1.Pod{
 				newPod(now, true, 2),
 				newPod(now, true, 11),
 				newPod(now, true, 5),
@@ -133,27 +134,27 @@ func TestCountAvailablePods(t *testing.T) {
 }
 
 // generatePodFromRS creates a pod, with the input ReplicaSet's selector and its template
-func generatePodFromRS(rs extensions.ReplicaSet) api.Pod {
-	return api.Pod{
-		ObjectMeta: api.ObjectMeta{
+func generatePodFromRS(rs extensions.ReplicaSet) v1.Pod {
+	return v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
 			Labels: rs.Labels,
 		},
 		Spec: rs.Spec.Template.Spec,
 	}
 }
 
-func generatePod(labels map[string]string, image string) api.Pod {
-	return api.Pod{
-		ObjectMeta: api.ObjectMeta{
+func generatePod(labels map[string]string, image string) v1.Pod {
+	return v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
 			Labels: labels,
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
 				{
 					Name:                   image,
 					Image:                  image,
-					ImagePullPolicy:        api.PullAlways,
-					TerminationMessagePath: api.TerminationMessagePathDefault,
+					ImagePullPolicy:        v1.PullAlways,
+					TerminationMessagePath: v1.TerminationMessagePathDefault,
 				},
 			},
 		},
@@ -162,24 +163,24 @@ func generatePod(labels map[string]string, image string) api.Pod {
 
 func generateRSWithLabel(labels map[string]string, image string) extensions.ReplicaSet {
 	return extensions.ReplicaSet{
-		ObjectMeta: api.ObjectMeta{
-			Name:   api.SimpleNameGenerator.GenerateName("replicaset"),
+		ObjectMeta: v1.ObjectMeta{
+			Name:   v1.SimpleNameGenerator.GenerateName("replicaset"),
 			Labels: labels,
 		},
 		Spec: extensions.ReplicaSetSpec{
 			Replicas: 1,
 			Selector: &unversioned.LabelSelector{MatchLabels: labels},
-			Template: api.PodTemplateSpec{
-				ObjectMeta: api.ObjectMeta{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
 					Labels: labels,
 				},
-				Spec: api.PodSpec{
-					Containers: []api.Container{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
 						{
 							Name:                   image,
 							Image:                  image,
-							ImagePullPolicy:        api.PullAlways,
-							TerminationMessagePath: api.TerminationMessagePathDefault,
+							ImagePullPolicy:        v1.PullAlways,
+							TerminationMessagePath: v1.TerminationMessagePathDefault,
 						},
 					},
 				},
@@ -192,8 +193,8 @@ func generateRSWithLabel(labels map[string]string, image string) extensions.Repl
 func generateRS(deployment extensions.Deployment) extensions.ReplicaSet {
 	template := GetNewReplicaSetTemplate(&deployment)
 	return extensions.ReplicaSet{
-		ObjectMeta: api.ObjectMeta{
-			Name:   api.SimpleNameGenerator.GenerateName("replicaset"),
+		ObjectMeta: v1.ObjectMeta{
+			Name:   v1.SimpleNameGenerator.GenerateName("replicaset"),
 			Labels: template.Labels,
 		},
 		Spec: extensions.ReplicaSetSpec{
@@ -208,29 +209,29 @@ func generateDeployment(image string) extensions.Deployment {
 	podLabels := map[string]string{"name": image}
 	terminationSec := int64(30)
 	return extensions.Deployment{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name: image,
 		},
 		Spec: extensions.DeploymentSpec{
 			Replicas: 1,
 			Selector: &unversioned.LabelSelector{MatchLabels: podLabels},
-			Template: api.PodTemplateSpec{
-				ObjectMeta: api.ObjectMeta{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
 					Labels: podLabels,
 				},
-				Spec: api.PodSpec{
-					Containers: []api.Container{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
 						{
 							Name:                   image,
 							Image:                  image,
-							ImagePullPolicy:        api.PullAlways,
-							TerminationMessagePath: api.TerminationMessagePathDefault,
+							ImagePullPolicy:        v1.PullAlways,
+							TerminationMessagePath: v1.TerminationMessagePathDefault,
 						},
 					},
-					DNSPolicy:                     api.DNSClusterFirst,
+					DNSPolicy:                     v1.DNSClusterFirst,
 					TerminationGracePeriodSeconds: &terminationSec,
-					RestartPolicy:                 api.RestartPolicyAlways,
-					SecurityContext:               &api.PodSecurityContext{},
+					RestartPolicy:                 v1.RestartPolicyAlways,
+					SecurityContext:               &v1.PodSecurityContext{},
 				},
 			},
 		},
@@ -249,7 +250,7 @@ func TestGetNewRC(t *testing.T) {
 		{
 			"No new ReplicaSet",
 			[]runtime.Object{
-				&api.PodList{},
+				&v1.PodList{},
 				&extensions.ReplicaSetList{
 					Items: []extensions.ReplicaSet{
 						generateRS(generateDeployment("foo")),
@@ -262,7 +263,7 @@ func TestGetNewRC(t *testing.T) {
 		{
 			"Has new ReplicaSet",
 			[]runtime.Object{
-				&api.PodList{},
+				&v1.PodList{},
 				&extensions.ReplicaSetList{
 					Items: []extensions.ReplicaSet{
 						generateRS(generateDeployment("foo")),
@@ -287,7 +288,7 @@ func TestGetNewRC(t *testing.T) {
 		if err != nil {
 			t.Errorf("In test case %s, got unexpected error %v", test.test, err)
 		}
-		if !api.Semantic.DeepEqual(rs, test.expected) {
+		if !v1.Semantic.DeepEqual(rs, test.expected) {
 			t.Errorf("In test case %s, expected %#v, got %#v", test.test, test.expected, rs)
 		}
 	}
@@ -324,8 +325,8 @@ func TestGetOldRCs(t *testing.T) {
 		{
 			"No old ReplicaSets",
 			[]runtime.Object{
-				&api.PodList{
-					Items: []api.Pod{
+				&v1.PodList{
+					Items: []v1.Pod{
 						generatePod(newDeployment.Spec.Template.Labels, "foo"),
 						generatePod(newDeployment.Spec.Template.Labels, "bar"),
 						newPod,
@@ -344,8 +345,8 @@ func TestGetOldRCs(t *testing.T) {
 		{
 			"Has old ReplicaSet",
 			[]runtime.Object{
-				&api.PodList{
-					Items: []api.Pod{
+				&v1.PodList{
+					Items: []v1.Pod{
 						oldPod,
 						oldPod2,
 						generatePod(map[string]string{"name": "bar"}, "bar"),
@@ -393,14 +394,14 @@ func TestGetOldRCs(t *testing.T) {
 	}
 }
 
-func generatePodTemplateSpec(name, nodeName string, annotations, labels map[string]string) api.PodTemplateSpec {
-	return api.PodTemplateSpec{
-		ObjectMeta: api.ObjectMeta{
+func generatePodTemplateSpec(name, nodeName string, annotations, labels map[string]string) v1.PodTemplateSpec {
+	return v1.PodTemplateSpec{
+		ObjectMeta: v1.ObjectMeta{
 			Name:        name,
 			Annotations: annotations,
 			Labels:      labels,
 		},
-		Spec: api.PodSpec{
+		Spec: v1.PodSpec{
 			NodeName: nodeName,
 		},
 	}
@@ -409,7 +410,7 @@ func generatePodTemplateSpec(name, nodeName string, annotations, labels map[stri
 func TestEqualIgnoreHash(t *testing.T) {
 	tests := []struct {
 		test           string
-		former, latter api.PodTemplateSpec
+		former, latter v1.PodTemplateSpec
 		expected       bool
 	}{
 		{
@@ -463,13 +464,13 @@ func TestEqualIgnoreHash(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		runTest := func(t1, t2 api.PodTemplateSpec, reversed bool) {
+		runTest := func(t1, t2 v1.PodTemplateSpec, reversed bool) {
 			// Set up
-			t1Copy, err := api.Scheme.DeepCopy(t1)
+			t1Copy, err := v1.Scheme.DeepCopy(t1)
 			if err != nil {
 				t.Errorf("Failed setting up the test: %v", err)
 			}
-			t2Copy, err := api.Scheme.DeepCopy(t2)
+			t2Copy, err := v1.Scheme.DeepCopy(t2)
 			if err != nil {
 				t.Errorf("Failed setting up the test: %v", err)
 			}
@@ -550,15 +551,15 @@ func TestFindOldReplicaSets(t *testing.T) {
 		test       string
 		deployment extensions.Deployment
 		rsList     []*extensions.ReplicaSet
-		podList    *api.PodList
+		podList    *v1.PodList
 		expected   []*extensions.ReplicaSet
 	}{
 		{
 			test:       "Get old ReplicaSets",
 			deployment: deployment,
 			rsList:     []*extensions.ReplicaSet{&newRS, &oldRS},
-			podList: &api.PodList{
-				Items: []api.Pod{
+			podList: &v1.PodList{
+				Items: []v1.Pod{
 					newPod,
 					oldPod,
 				},
@@ -569,8 +570,8 @@ func TestFindOldReplicaSets(t *testing.T) {
 			test:       "Get old ReplicaSets with no new ReplicaSet",
 			deployment: deployment,
 			rsList:     []*extensions.ReplicaSet{&oldRS},
-			podList: &api.PodList{
-				Items: []api.Pod{
+			podList: &v1.PodList{
+				Items: []v1.Pod{
 					oldPod,
 				},
 			},
@@ -580,8 +581,8 @@ func TestFindOldReplicaSets(t *testing.T) {
 			test:       "Get empty old ReplicaSets",
 			deployment: deployment,
 			rsList:     []*extensions.ReplicaSet{&newRS},
-			podList: &api.PodList{
-				Items: []api.Pod{
+			podList: &v1.PodList{
+				Items: []v1.Pod{
 					newPod,
 				},
 			},

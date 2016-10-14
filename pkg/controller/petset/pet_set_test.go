@@ -22,12 +22,13 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/apps"
-	"k8s.io/kubernetes/pkg/client/cache"
-	fake_internal "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/apps/unversioned"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/apps/unversioned/fake"
+	fake_internal "k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/kubernetes/typed/apps/v1alpha1"
+	"k8s.io/client-go/1.5/kubernetes/typed/apps/v1alpha1/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/apps"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/util/errors"
 )
@@ -50,7 +51,7 @@ func checkPets(ps *apps.PetSet, creates, deletes int, fc *fakePetClient, t *test
 	if fc.petsCreated != creates || fc.petsDeleted != deletes {
 		t.Errorf("Found (creates: %d, deletes: %d), expected (creates: %d, deletes: %d)", fc.petsCreated, fc.petsDeleted, creates, deletes)
 	}
-	gotClaims := map[string]api.PersistentVolumeClaim{}
+	gotClaims := map[string]v1.PersistentVolumeClaim{}
 	for _, pvc := range fc.claims {
 		gotClaims[pvc.Name] = pvc
 	}

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
+	"k8s.io/client-go/1.5/dynamic"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/util/metrics"
 )
 

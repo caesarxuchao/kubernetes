@@ -20,23 +20,24 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/apis/policy"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
-	policyclientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/policy/unversioned"
-	"k8s.io/kubernetes/pkg/client/record"
+	"k8s.io/client-go/1.5/kubernetes"
+	v1core "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+	policyclientset "k8s.io/client-go/1.5/kubernetes/typed/policy/v1alpha1"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/apis/policy"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/client-go/1.5/tools/record"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
-	"k8s.io/kubernetes/pkg/watch"
 
 	"github.com/golang/glog"
 )
@@ -85,7 +86,7 @@ type controllerAndScale struct {
 
 // podControllerFinder is a function type that maps a pod to a list of
 // controllers and their scale.
-type podControllerFinder func(*api.Pod) ([]controllerAndScale, error)
+type podControllerFinder func(*v1.Pod) ([]controllerAndScale, error)
 
 func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient internalclientset.Interface) *DisruptionController {
 	dc := &DisruptionController{
@@ -94,7 +95,7 @@ func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient i
 		queue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "disruption"),
 		broadcaster:   record.NewBroadcaster(),
 	}
-	dc.recorder = dc.broadcaster.NewRecorder(api.EventSource{Component: "controllermanager"})
+	dc.recorder = dc.broadcaster.NewRecorder(v1.EventSource{Component: "controllermanager"})
 
 	dc.getUpdater = func() updater { return dc.writePdbStatus }
 
@@ -108,11 +109,11 @@ func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient i
 
 	dc.pdbStore, dc.pdbController = cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return dc.kubeClient.Policy().PodDisruptionBudgets(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return dc.kubeClient.Policy().PodDisruptionBudgets(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return dc.kubeClient.Policy().PodDisruptionBudgets(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return dc.kubeClient.Policy().PodDisruptionBudgets(v1.NamespaceAll).Watch(options)
 			},
 		},
 		&policy.PodDisruptionBudget{},
@@ -127,14 +128,14 @@ func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient i
 
 	dc.rcIndexer, dc.rcController = cache.NewIndexerInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return dc.kubeClient.Core().ReplicationControllers(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return dc.kubeClient.Core().ReplicationControllers(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return dc.kubeClient.Core().ReplicationControllers(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return dc.kubeClient.Core().ReplicationControllers(v1.NamespaceAll).Watch(options)
 			},
 		},
-		&api.ReplicationController{},
+		&v1.ReplicationController{},
 		30*time.Second,
 		cache.ResourceEventHandlerFuncs{},
 		cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc},
@@ -144,11 +145,11 @@ func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient i
 
 	dc.rsLister.Indexer, dc.rsController = cache.NewIndexerInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return dc.kubeClient.Extensions().ReplicaSets(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return dc.kubeClient.Extensions().ReplicaSets(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return dc.kubeClient.Extensions().ReplicaSets(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return dc.kubeClient.Extensions().ReplicaSets(v1.NamespaceAll).Watch(options)
 			},
 		},
 		&extensions.ReplicaSet{},
@@ -160,11 +161,11 @@ func NewDisruptionController(podInformer cache.SharedIndexInformer, kubeClient i
 
 	dc.dIndexer, dc.dController = cache.NewIndexerInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return dc.kubeClient.Extensions().Deployments(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return dc.kubeClient.Extensions().Deployments(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return dc.kubeClient.Extensions().Deployments(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return dc.kubeClient.Extensions().Deployments(v1.NamespaceAll).Watch(options)
 			},
 		},
 		&extensions.Deployment{},
@@ -190,7 +191,7 @@ func (dc *DisruptionController) finders() []podControllerFinder {
 }
 
 // getPodReplicaSets finds replicasets which have no matching deployments.
-func (dc *DisruptionController) getPodReplicaSets(pod *api.Pod) ([]controllerAndScale, error) {
+func (dc *DisruptionController) getPodReplicaSets(pod *v1.Pod) ([]controllerAndScale, error) {
 	cas := []controllerAndScale{}
 	rss, err := dc.rsLister.GetPodReplicaSets(pod)
 	// GetPodReplicaSets returns an error only if no ReplicaSets are found.  We
@@ -217,7 +218,7 @@ func (dc *DisruptionController) getPodReplicaSets(pod *api.Pod) ([]controllerAnd
 }
 
 // getPodDeployments finds deployments for any replicasets which are being managed by deployments.
-func (dc *DisruptionController) getPodDeployments(pod *api.Pod) ([]controllerAndScale, error) {
+func (dc *DisruptionController) getPodDeployments(pod *v1.Pod) ([]controllerAndScale, error) {
 	cas := []controllerAndScale{}
 	rss, err := dc.rsLister.GetPodReplicaSets(pod)
 	// GetPodReplicaSets returns an error only if no ReplicaSets are found.  We
@@ -245,7 +246,7 @@ func (dc *DisruptionController) getPodDeployments(pod *api.Pod) ([]controllerAnd
 	return cas, nil
 }
 
-func (dc *DisruptionController) getPodReplicationControllers(pod *api.Pod) ([]controllerAndScale, error) {
+func (dc *DisruptionController) getPodReplicationControllers(pod *v1.Pod) ([]controllerAndScale, error) {
 	cas := []controllerAndScale{}
 	rcs, err := dc.rcLister.GetPodControllers(pod)
 	if err == nil {
@@ -260,7 +261,7 @@ func (dc *DisruptionController) Run(stopCh <-chan struct{}) {
 	glog.V(0).Infof("Starting disruption controller")
 	if dc.kubeClient != nil {
 		glog.V(0).Infof("Sending events to api server.")
-		dc.broadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{Interface: dc.kubeClient.Core().Events("")})
+		dc.broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: dc.kubeClient.Core().Events("")})
 	} else {
 		glog.V(0).Infof("No api server defined - no events will be sent to API server.")
 	}
@@ -294,7 +295,7 @@ func (dc *DisruptionController) removeDb(obj interface{}) {
 }
 
 func (dc *DisruptionController) addPod(obj interface{}) {
-	pod := obj.(*api.Pod)
+	pod := obj.(*v1.Pod)
 	glog.V(4).Infof("addPod called on pod %q", pod.Name)
 	pdb := dc.getPdbForPod(pod)
 	if pdb == nil {
@@ -306,7 +307,7 @@ func (dc *DisruptionController) addPod(obj interface{}) {
 }
 
 func (dc *DisruptionController) updatePod(old, cur interface{}) {
-	pod := cur.(*api.Pod)
+	pod := cur.(*v1.Pod)
 	glog.V(4).Infof("updatePod called on pod %q", pod.Name)
 	pdb := dc.getPdbForPod(pod)
 	if pdb == nil {
@@ -318,7 +319,7 @@ func (dc *DisruptionController) updatePod(old, cur interface{}) {
 }
 
 func (dc *DisruptionController) deletePod(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
+	pod, ok := obj.(*v1.Pod)
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
 	// the deleted key/value. Note that this value might be stale. If the pod
@@ -330,7 +331,7 @@ func (dc *DisruptionController) deletePod(obj interface{}) {
 			glog.Errorf("Couldn't get object from tombstone %+v", obj)
 			return
 		}
-		pod, ok = tombstone.Obj.(*api.Pod)
+		pod, ok = tombstone.Obj.(*v1.Pod)
 		if !ok {
 			glog.Errorf("Tombstone contained object that is not a pod %+v", obj)
 			return
@@ -355,7 +356,7 @@ func (dc *DisruptionController) enqueuePdb(pdb *policy.PodDisruptionBudget) {
 	dc.queue.Add(key)
 }
 
-func (dc *DisruptionController) getPdbForPod(pod *api.Pod) *policy.PodDisruptionBudget {
+func (dc *DisruptionController) getPdbForPod(pod *v1.Pod) *policy.PodDisruptionBudget {
 	// GetPodPodDisruptionBudgets returns an error only if no
 	// PodDisruptionBudgets are found.  We don't return that as an error to the
 	// caller.
@@ -368,25 +369,25 @@ func (dc *DisruptionController) getPdbForPod(pod *api.Pod) *policy.PodDisruption
 	if len(pdbs) > 1 {
 		msg := fmt.Sprintf("Pod %q/%q matches multiple PodDisruptionBudgets.  Chose %q arbitrarily.", pod.Namespace, pod.Name, pdbs[0].Name)
 		glog.Warning(msg)
-		dc.recorder.Event(pod, api.EventTypeWarning, "MultiplePodDisruptionBudgets", msg)
+		dc.recorder.Event(pod, v1.EventTypeWarning, "MultiplePodDisruptionBudgets", msg)
 	}
 	return &pdbs[0]
 }
 
-func (dc *DisruptionController) getPodsForPdb(pdb *policy.PodDisruptionBudget) ([]*api.Pod, error) {
+func (dc *DisruptionController) getPodsForPdb(pdb *policy.PodDisruptionBudget) ([]*v1.Pod, error) {
 	sel, err := unversioned.LabelSelectorAsSelector(pdb.Spec.Selector)
 	if sel.Empty() {
-		return []*api.Pod{}, nil
+		return []*v1.Pod{}, nil
 	}
 	if err != nil {
-		return []*api.Pod{}, err
+		return []*v1.Pod{}, err
 	}
 	pods, err := dc.podLister.Pods(pdb.Namespace).List(sel)
 	if err != nil {
-		return []*api.Pod{}, err
+		return []*v1.Pod{}, err
 	}
 	// TODO: Do we need to copy here?
-	result := make([]*api.Pod, 0, len(pods))
+	result := make([]*v1.Pod, 0, len(pods))
 	for i := range pods {
 		result = append(result, &(*pods[i]))
 	}
@@ -458,7 +459,7 @@ func (dc *DisruptionController) trySync(pdb *policy.PodDisruptionBudget) error {
 	return err
 }
 
-func (dc *DisruptionController) getExpectedPodCount(pdb *policy.PodDisruptionBudget, pods []*api.Pod) (expectedCount, desiredHealthy int32, err error) {
+func (dc *DisruptionController) getExpectedPodCount(pdb *policy.PodDisruptionBudget, pods []*v1.Pod) (expectedCount, desiredHealthy int32, err error) {
 	err = nil
 	// TODO(davidopp): consider making the way expectedCount and rules about
 	// permitted controller configurations (specifically, considering it an error
@@ -500,11 +501,11 @@ func (dc *DisruptionController) getExpectedPodCount(pdb *policy.PodDisruptionBud
 			}
 			if controllerCount == 0 {
 				err = fmt.Errorf("asked for percentage, but found no controllers for pod %q", pod.Name)
-				dc.recorder.Event(pdb, api.EventTypeWarning, "NoControllers", err.Error())
+				dc.recorder.Event(pdb, v1.EventTypeWarning, "NoControllers", err.Error())
 				return
 			} else if controllerCount > 1 {
 				err = fmt.Errorf("pod %q has %v>1 controllers", pod.Name, controllerCount)
-				dc.recorder.Event(pdb, api.EventTypeWarning, "TooManyControllers", err.Error())
+				dc.recorder.Event(pdb, v1.EventTypeWarning, "TooManyControllers", err.Error())
 				return
 			}
 		}
@@ -527,11 +528,11 @@ func (dc *DisruptionController) getExpectedPodCount(pdb *policy.PodDisruptionBud
 	return
 }
 
-func countHealthyPods(pods []*api.Pod) (currentHealthy int32) {
+func countHealthyPods(pods []*v1.Pod) (currentHealthy int32) {
 Pod:
 	for _, pod := range pods {
 		for _, c := range pod.Status.Conditions {
-			if c.Type == api.PodReady && c.Status == api.ConditionTrue {
+			if c.Type == v1.PodReady && c.Status == v1.ConditionTrue {
 				currentHealthy++
 				continue Pod
 			}
@@ -547,7 +548,7 @@ Pod:
 // this field correctly, we will prevent the /evict handler from approving an
 // eviction when it may be unsafe to do so.
 func (dc *DisruptionController) failSafe(pdb *policy.PodDisruptionBudget) error {
-	obj, err := api.Scheme.DeepCopy(*pdb)
+	obj, err := v1.Scheme.DeepCopy(*pdb)
 	if err != nil {
 		return err
 	}
@@ -568,7 +569,7 @@ func (dc *DisruptionController) updatePdbSpec(pdb *policy.PodDisruptionBudget, c
 		return nil
 	}
 
-	obj, err := api.Scheme.DeepCopy(*pdb)
+	obj, err := v1.Scheme.DeepCopy(*pdb)
 	if err != nil {
 		return err
 	}

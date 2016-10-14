@@ -23,16 +23,16 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/resource"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/api/v1"
-	_ "k8s.io/kubernetes/pkg/apimachinery/registered"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/client/restclient"
-	"k8s.io/kubernetes/pkg/client/testing/core"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/resource"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	_ "k8s.io/client-go/1.5/pkg/apimachinery/registered"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	restclient "k8s.io/client-go/1.5/rest"
+	core "k8s.io/client-go/1.5/testing"
 	"k8s.io/kubernetes/pkg/labels"
-	"k8s.io/kubernetes/pkg/runtime"
 
 	heapster "k8s.io/heapster/metrics/api/v1/types"
 	metrics_api "k8s.io/heapster/metrics/apis/metrics/v1alpha1"
@@ -74,7 +74,7 @@ type testCase struct {
 	reportedMetricsPoints [][]metricPoint
 	reportedPodMetrics    [][]int64
 	namespace             string
-	podListOverride       *api.PodList
+	podListOverride       *v1.PodList
 	selector              labels.Selector
 	useMetricsApi         bool
 }
@@ -92,10 +92,10 @@ func (tc *testCase) prepareTestClient(t *testing.T) *fake.Clientset {
 		if tc.podListOverride != nil {
 			return true, tc.podListOverride, nil
 		}
-		obj := &api.PodList{}
+		obj := &v1.PodList{}
 		for i := 0; i < tc.replicas; i++ {
 			podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
-			pod := buildPod(namespace, podName, podLabels, api.PodRunning, "1024")
+			pod := buildPod(namespace, podName, podLabels, v1.PodRunning, "1024")
 			obj.Items = append(obj.Items, pod)
 		}
 		return true, obj, nil
@@ -103,18 +103,18 @@ func (tc *testCase) prepareTestClient(t *testing.T) *fake.Clientset {
 
 	if tc.useMetricsApi {
 		fakeClient.AddProxyReactor("services", func(action core.Action) (handled bool, ret restclient.ResponseWrapper, err error) {
-			metrics := metrics_api.PodMetricsList{}
+			metrics := metrics_v1.PodMetricsList{}
 			for i, containers := range tc.reportedPodMetrics {
-				metric := metrics_api.PodMetrics{
+				metric := metrics_v1.PodMetrics{
 					ObjectMeta: v1.ObjectMeta{
 						Name:      fmt.Sprintf("%s-%d", podNamePrefix, i),
 						Namespace: namespace,
 					},
 					Timestamp:  unversioned.Time{Time: fixedTimestamp.Add(time.Duration(tc.targetTimestamp) * time.Minute)},
-					Containers: []metrics_api.ContainerMetrics{},
+					Containers: []metrics_v1.ContainerMetrics{},
 				}
 				for j, cpu := range containers {
-					cm := metrics_api.ContainerMetrics{
+					cm := metrics_v1.ContainerMetrics{
 						Name: fmt.Sprintf("%s-%d-container-%d", podNamePrefix, i, j),
 						Usage: v1.ResourceList{
 							v1.ResourceCPU: *resource.NewMilliQuantity(
@@ -160,25 +160,25 @@ func (tc *testCase) prepareTestClient(t *testing.T) *fake.Clientset {
 	return fakeClient
 }
 
-func buildPod(namespace, podName string, podLabels map[string]string, phase api.PodPhase, request string) api.Pod {
-	return api.Pod{
-		ObjectMeta: api.ObjectMeta{
+func buildPod(namespace, podName string, podLabels map[string]string, phase v1.PodPhase, request string) v1.Pod {
+	return v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
 			Name:      podName,
 			Namespace: namespace,
 			Labels:    podLabels,
 		},
-		Spec: api.PodSpec{
-			Containers: []api.Container{
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
 				{
-					Resources: api.ResourceRequirements{
-						Requests: api.ResourceList{
-							api.ResourceCPU: resource.MustParse(request),
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceCPU: resource.MustParse(request),
 						},
 					},
 				},
 			},
 		},
-		Status: api.PodStatus{
+		Status: v1.PodStatus{
 			Phase: phase,
 		},
 	}
@@ -240,7 +240,7 @@ func TestCPUPending(t *testing.T) {
 		targetTimestamp:    1,
 		reportedPodMetrics: [][]int64{{5000}, {5000}, {5000}},
 		useMetricsApi:      true,
-		podListOverride:    &api.PodList{},
+		podListOverride:    &v1.PodList{},
 	}
 
 	namespace := "test-namespace"
@@ -249,11 +249,11 @@ func TestCPUPending(t *testing.T) {
 	podRequest := []string{"1024", "2048", "3072", "200", "100"}
 	for i := 0; i < tc.replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
-		pod := buildPod(namespace, podName, podLabels, api.PodRunning, podRequest[i])
+		pod := buildPod(namespace, podName, podLabels, v1.PodRunning, podRequest[i])
 		tc.podListOverride.Items = append(tc.podListOverride.Items, pod)
 	}
-	tc.podListOverride.Items[3].Status.Phase = api.PodPending
-	tc.podListOverride.Items[4].Status.Phase = api.PodFailed
+	tc.podListOverride.Items[3].Status.Phase = v1.PodPending
+	tc.podListOverride.Items[4].Status.Phase = v1.PodFailed
 
 	tc.runTest(t)
 }
@@ -265,7 +265,7 @@ func TestCPUAllPending(t *testing.T) {
 		targetTimestamp:    1,
 		reportedPodMetrics: [][]int64{},
 		useMetricsApi:      true,
-		podListOverride:    &api.PodList{},
+		podListOverride:    &v1.PodList{},
 		desiredError:       fmt.Errorf("no running pods"),
 	}
 
@@ -274,7 +274,7 @@ func TestCPUAllPending(t *testing.T) {
 	podLabels := map[string]string{"name": podNamePrefix}
 	for i := 0; i < tc.replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
-		pod := buildPod(namespace, podName, podLabels, api.PodPending, "2048")
+		pod := buildPod(namespace, podName, podLabels, v1.PodPending, "2048")
 		tc.podListOverride.Items = append(tc.podListOverride.Items, pod)
 	}
 	tc.runTest(t)
@@ -298,7 +298,7 @@ func TestQPSPending(t *testing.T) {
 		targetResource:        "qps",
 		targetTimestamp:       1,
 		reportedMetricsPoints: [][]metricPoint{{{10, 1}}, {{20, 1}}, {{10, 1}}},
-		podListOverride:       &api.PodList{},
+		podListOverride:       &v1.PodList{},
 	}
 
 	namespace := "test-namespace"
@@ -306,10 +306,10 @@ func TestQPSPending(t *testing.T) {
 	podLabels := map[string]string{"name": podNamePrefix}
 	for i := 0; i < tc.replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
-		pod := buildPod(namespace, podName, podLabels, api.PodRunning, "256")
+		pod := buildPod(namespace, podName, podLabels, v1.PodRunning, "256")
 		tc.podListOverride.Items = append(tc.podListOverride.Items, pod)
 	}
-	tc.podListOverride.Items[0].Status.Phase = api.PodPending
+	tc.podListOverride.Items[0].Status.Phase = v1.PodPending
 	tc.runTest(t)
 }
 
@@ -320,7 +320,7 @@ func TestQPSAllPending(t *testing.T) {
 		targetResource:        "qps",
 		targetTimestamp:       1,
 		reportedMetricsPoints: [][]metricPoint{},
-		podListOverride:       &api.PodList{},
+		podListOverride:       &v1.PodList{},
 	}
 
 	namespace := "test-namespace"
@@ -328,10 +328,10 @@ func TestQPSAllPending(t *testing.T) {
 	podLabels := map[string]string{"name": podNamePrefix}
 	for i := 0; i < tc.replicas; i++ {
 		podName := fmt.Sprintf("%s-%d", podNamePrefix, i)
-		pod := buildPod(namespace, podName, podLabels, api.PodPending, "512")
+		pod := buildPod(namespace, podName, podLabels, v1.PodPending, "512")
 		tc.podListOverride.Items = append(tc.podListOverride.Items, pod)
 	}
-	tc.podListOverride.Items[0].Status.Phase = api.PodPending
+	tc.podListOverride.Items[0].Status.Phase = v1.PodPending
 	tc.runTest(t)
 }
 

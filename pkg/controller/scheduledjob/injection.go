@@ -19,10 +19,11 @@ package scheduledjob
 import (
 	"sync"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/batch"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/record"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/batch"
+	"k8s.io/client-go/1.5/tools/record"
 	"k8s.io/kubernetes/pkg/labels"
 )
 
@@ -174,7 +175,7 @@ func (f *fakeJobControl) Clear() {
 // created as an interface to allow testing.
 type podControlInterface interface {
 	// ListPods list pods
-	ListPods(namespace string, opts api.ListOptions) (*api.PodList, error)
+	ListPods(namespace string, opts v1.ListOptions) (*v1.PodList, error)
 	// DeleteJob deletes the pod identified by name.
 	// TODO: delete by UID?
 	DeletePod(namespace string, name string) error
@@ -188,7 +189,7 @@ type realPodControl struct {
 
 var _ podControlInterface = &realPodControl{}
 
-func (r realPodControl) ListPods(namespace string, opts api.ListOptions) (*api.PodList, error) {
+func (r realPodControl) ListPods(namespace string, opts v1.ListOptions) (*v1.PodList, error) {
 	return r.KubeClient.Core().Pods(namespace).List(opts)
 }
 
@@ -198,17 +199,17 @@ func (r realPodControl) DeletePod(namespace string, name string) error {
 
 type fakePodControl struct {
 	sync.Mutex
-	Pods          []api.Pod
+	Pods          []v1.Pod
 	DeletePodName []string
 	Err           error
 }
 
 var _ podControlInterface = &fakePodControl{}
 
-func (f *fakePodControl) ListPods(namespace string, opts api.ListOptions) (*api.PodList, error) {
+func (f *fakePodControl) ListPods(namespace string, opts v1.ListOptions) (*v1.PodList, error) {
 	f.Lock()
 	defer f.Unlock()
-	return &api.PodList{Items: f.Pods}, nil
+	return &v1.PodList{Items: f.Pods}, nil
 }
 
 func (f *fakePodControl) DeletePod(namespace string, name string) error {

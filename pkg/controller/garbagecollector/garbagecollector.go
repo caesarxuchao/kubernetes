@@ -23,16 +23,17 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api/meta"
-	"k8s.io/kubernetes/pkg/api/meta/metatypes"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
+	"k8s.io/client-go/1.5/dynamic"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/errors"
+	"k8s.io/client-go/1.5/pkg/api/meta"
+	"k8s.io/client-go/1.5/pkg/api/meta/metatypes"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
+	"k8s.io/client-go/1.5/tools/cache"
 	"k8s.io/kubernetes/pkg/controller/garbagecollector/metaonly"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/clock"
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
@@ -40,7 +41,6 @@ import (
 	"k8s.io/kubernetes/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
-	"k8s.io/kubernetes/pkg/watch"
 )
 
 const ResourceResyncTime time.Duration = 0
@@ -232,7 +232,7 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 	}
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
-		if finalizer == api.FinalizerOrphan {
+		if finalizer == v1.FinalizerOrphan {
 			return true
 		}
 	}
@@ -277,7 +277,7 @@ func (gc *GarbageCollector) removeOrphanFinalizer(owner *node) error {
 		var newFinalizers []string
 		found := false
 		for _, f := range finalizers {
-			if f == api.FinalizerOrphan {
+			if f == v1.FinalizerOrphan {
 				found = true
 				break
 			} else {
@@ -450,24 +450,24 @@ type GarbageCollector struct {
 
 func gcListWatcher(client *dynamic.Client, resource unversioned.GroupVersionResource) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(options api.ListOptions) (runtime.Object, error) {
+		ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 			// APIResource.Kind is not used by the dynamic client, so
 			// leave it empty. We want to list this resource in all
 			// namespaces if it's namespace scoped, so leave
 			// APIResource.Namespaced as false is all right.
 			apiResource := unversioned.APIResource{Name: resource.Resource}
 			return client.ParameterCodec(dynamic.VersionedParameterEncoderWithV1Fallback).
-				Resource(&apiResource, api.NamespaceAll).
+				Resource(&apiResource, v1.NamespaceAll).
 				List(&options)
 		},
-		WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
+		WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 			// APIResource.Kind is not used by the dynamic client, so
 			// leave it empty. We want to list this resource in all
 			// namespaces if it's namespace scoped, so leave
 			// APIResource.Namespaced as false is all right.
 			apiResource := unversioned.APIResource{Name: resource.Resource}
 			return client.ParameterCodec(dynamic.VersionedParameterEncoderWithV1Fallback).
-				Resource(&apiResource, api.NamespaceAll).
+				Resource(&apiResource, v1.NamespaceAll).
 				Watch(&options)
 		},
 	}
@@ -651,7 +651,7 @@ func (gc *GarbageCollector) patchObject(item objectReference, patch []byte) (*ru
 	if err != nil {
 		return nil, err
 	}
-	return client.Resource(resource, item.Namespace).Patch(item.Name, api.StrategicMergePatchType, patch)
+	return client.Resource(resource, item.Namespace).Patch(item.Name, v1.StrategicMergePatchType, patch)
 }
 
 func objectReferenceToUnstructured(ref objectReference) *runtime.Unstructured {

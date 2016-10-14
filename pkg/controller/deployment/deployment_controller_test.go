@@ -20,16 +20,17 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apimachinery/registered"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
-	"k8s.io/kubernetes/pkg/client/record"
-	"k8s.io/kubernetes/pkg/client/testing/core"
+	"k8s.io/client-go/1.5/kubernetes/fake"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apimachinery/registered"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/runtime"
+	core "k8s.io/client-go/1.5/testing"
+	"k8s.io/client-go/1.5/tools/record"
 	"k8s.io/kubernetes/pkg/controller"
 	"k8s.io/kubernetes/pkg/controller/informers"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/util/uuid"
 )
@@ -41,15 +42,15 @@ var (
 
 func rs(name string, replicas int, selector map[string]string, timestamp unversioned.Time) *extensions.ReplicaSet {
 	return &extensions.ReplicaSet{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name:              name,
 			CreationTimestamp: timestamp,
-			Namespace:         api.NamespaceDefault,
+			Namespace:         v1.NamespaceDefault,
 		},
 		Spec: extensions.ReplicaSetSpec{
 			Replicas: int32(replicas),
 			Selector: &unversioned.LabelSelector{MatchLabels: selector},
-			Template: api.PodTemplateSpec{},
+			Template: v1.PodTemplateSpec{},
 		},
 	}
 }
@@ -65,10 +66,10 @@ func newRSWithStatus(name string, specReplicas, statusReplicas int, selector map
 func newDeployment(name string, replicas int, revisionHistoryLimit *int32, maxSurge, maxUnavailable *intstr.IntOrString, selector map[string]string) *extensions.Deployment {
 	d := extensions.Deployment{
 		TypeMeta: unversioned.TypeMeta{APIVersion: registered.GroupOrDie(extensions.GroupName).GroupVersion.String()},
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			UID:       uuid.NewUUID(),
 			Name:      name,
-			Namespace: api.NamespaceDefault,
+			Namespace: v1.NamespaceDefault,
 		},
 		Spec: extensions.DeploymentSpec{
 			Strategy: extensions.DeploymentStrategy{
@@ -77,12 +78,12 @@ func newDeployment(name string, replicas int, revisionHistoryLimit *int32, maxSu
 			},
 			Replicas: int32(replicas),
 			Selector: &unversioned.LabelSelector{MatchLabels: selector},
-			Template: api.PodTemplateSpec{
-				ObjectMeta: api.ObjectMeta{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
 					Labels: selector,
 				},
-				Spec: api.PodSpec{
-					Containers: []api.Container{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
 						{
 							Image: "foo/bar",
 						},
@@ -103,9 +104,9 @@ func newDeployment(name string, replicas int, revisionHistoryLimit *int32, maxSu
 
 func newReplicaSet(d *extensions.Deployment, name string, replicas int) *extensions.ReplicaSet {
 	return &extensions.ReplicaSet{
-		ObjectMeta: api.ObjectMeta{
+		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
-			Namespace: api.NamespaceDefault,
+			Namespace: v1.NamespaceDefault,
 		},
 		Spec: extensions.ReplicaSetSpec{
 			Replicas: int32(replicas),
@@ -130,7 +131,7 @@ type fixture struct {
 	// Objects to put in the store.
 	dLister   []*extensions.Deployment
 	rsLister  []*extensions.ReplicaSet
-	podLister []*api.Pod
+	podLister []*v1.Pod
 
 	// Actions expected to happen on the client. Objects from here are also
 	// preloaded into NewSimpleFake.
@@ -156,7 +157,7 @@ func (f *fixture) expectUpdateRSAction(rs *extensions.ReplicaSet) {
 	f.actions = append(f.actions, core.NewUpdateAction(unversioned.GroupVersionResource{Resource: "replicasets"}, rs.Namespace, rs))
 }
 
-func (f *fixture) expectListPodAction(namespace string, opt api.ListOptions) {
+func (f *fixture) expectListPodAction(namespace string, opt v1.ListOptions) {
 	f.actions = append(f.actions, core.NewListAction(unversioned.GroupVersionResource{Resource: "pods"}, namespace, opt))
 }
 

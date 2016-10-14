@@ -22,21 +22,22 @@ import (
 	"sort"
 	"time"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/apis/apps"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	unversionedcore "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/typed/core/unversioned"
-	"k8s.io/kubernetes/pkg/client/record"
+	"k8s.io/client-go/1.5/kubernetes"
+	v1core "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/apps"
+	"k8s.io/client-go/1.5/tools/cache"
+	"k8s.io/client-go/1.5/tools/record"
 
+	"k8s.io/client-go/1.5/pkg/runtime"
+	"k8s.io/client-go/1.5/pkg/watch"
 	"k8s.io/kubernetes/pkg/controller"
-	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/errors"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/pkg/util/workqueue"
-	"k8s.io/kubernetes/pkg/watch"
 
 	"github.com/golang/glog"
 )
@@ -86,8 +87,8 @@ type PetSetController struct {
 func NewPetSetController(podInformer cache.SharedIndexInformer, kubeClient internalclientset.Interface, resyncPeriod time.Duration) *PetSetController {
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
-	eventBroadcaster.StartRecordingToSink(&unversionedcore.EventSinkImpl{Interface: kubeClient.Core().Events("")})
-	recorder := eventBroadcaster.NewRecorder(api.EventSource{Component: "petset"})
+	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: kubeClient.Core().Events("")})
+	recorder := eventBroadcaster.NewRecorder(v1.EventSource{Component: "petset"})
 	pc := &apiServerPetClient{kubeClient, recorder, &defaultPetHealthChecker{}}
 
 	psc := &PetSetController{
@@ -112,11 +113,11 @@ func NewPetSetController(podInformer cache.SharedIndexInformer, kubeClient inter
 
 	psc.psStore.Store, psc.psController = cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc: func(options api.ListOptions) (runtime.Object, error) {
-				return psc.kubeClient.Apps().PetSets(api.NamespaceAll).List(options)
+			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+				return psc.kubeClient.Apps().PetSets(v1.NamespaceAll).List(options)
 			},
-			WatchFunc: func(options api.ListOptions) (watch.Interface, error) {
-				return psc.kubeClient.Apps().PetSets(api.NamespaceAll).Watch(options)
+			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+				return psc.kubeClient.Apps().PetSets(v1.NamespaceAll).Watch(options)
 			},
 		},
 		&apps.PetSet{},
@@ -156,7 +157,7 @@ func (psc *PetSetController) Run(workers int, stopCh <-chan struct{}) {
 
 // addPod adds the petset for the pod to the sync queue
 func (psc *PetSetController) addPod(obj interface{}) {
-	pod := obj.(*api.Pod)
+	pod := obj.(*v1.Pod)
 	glog.V(4).Infof("Pod %s created, labels: %+v", pod.Name, pod.Labels)
 	ps := psc.getPetSetForPod(pod)
 	if ps == nil {
@@ -168,8 +169,8 @@ func (psc *PetSetController) addPod(obj interface{}) {
 // updatePod adds the petset for the current and old pods to the sync queue.
 // If the labels of the pod didn't change, this method enqueues a single petset.
 func (psc *PetSetController) updatePod(old, cur interface{}) {
-	curPod := cur.(*api.Pod)
-	oldPod := old.(*api.Pod)
+	curPod := cur.(*v1.Pod)
+	oldPod := old.(*v1.Pod)
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
 		// Periodic resync will send update events for all known pods.
 		// Two different versions of the same pod will always have different RVs.
@@ -189,7 +190,7 @@ func (psc *PetSetController) updatePod(old, cur interface{}) {
 
 // deletePod enqueues the petset for the pod accounting for deletion tombstones.
 func (psc *PetSetController) deletePod(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
+	pod, ok := obj.(*v1.Pod)
 
 	// When a delete is dropped, the relist will notice a pod in the store not
 	// in the list, leading to the insertion of a tombstone object which contains
@@ -201,7 +202,7 @@ func (psc *PetSetController) deletePod(obj interface{}) {
 			glog.Errorf("couldn't get object from tombstone %+v", obj)
 			return
 		}
-		pod, ok = tombstone.Obj.(*api.Pod)
+		pod, ok = tombstone.Obj.(*v1.Pod)
 		if !ok {
 			glog.Errorf("tombstone contained object that is not a pod %+v", obj)
 			return
@@ -214,18 +215,18 @@ func (psc *PetSetController) deletePod(obj interface{}) {
 }
 
 // getPodsForPetSets returns the pods that match the selectors of the given petset.
-func (psc *PetSetController) getPodsForPetSet(ps *apps.PetSet) ([]*api.Pod, error) {
+func (psc *PetSetController) getPodsForPetSet(ps *apps.PetSet) ([]*v1.Pod, error) {
 	// TODO: Do we want the petset to fight with RCs? check parent petset annoation, or name prefix?
 	sel, err := unversioned.LabelSelectorAsSelector(ps.Spec.Selector)
 	if err != nil {
-		return []*api.Pod{}, err
+		return []*v1.Pod{}, err
 	}
 	pods, err := psc.podStore.Pods(ps.Namespace).List(sel)
 	if err != nil {
-		return []*api.Pod{}, err
+		return []*v1.Pod{}, err
 	}
 	// TODO: Do we need to copy?
-	result := make([]*api.Pod, 0, len(pods))
+	result := make([]*v1.Pod, 0, len(pods))
 	for i := range pods {
 		result = append(result, &(*pods[i]))
 	}
@@ -233,7 +234,7 @@ func (psc *PetSetController) getPodsForPetSet(ps *apps.PetSet) ([]*api.Pod, erro
 }
 
 // getPetSetForPod returns the pet set managing the given pod.
-func (psc *PetSetController) getPetSetForPod(pod *api.Pod) *apps.PetSet {
+func (psc *PetSetController) getPetSetForPod(pod *v1.Pod) *apps.PetSet {
 	ps, err := psc.psStore.GetPodPetSets(pod)
 	if err != nil {
 		glog.V(4).Infof("No PetSets found for pod %v, PetSet controller will avoid syncing", pod.Name)
@@ -320,7 +321,7 @@ func (psc *PetSetController) Sync(key string) error {
 }
 
 // syncPetSet syncs a tuple of (petset, pets).
-func (psc *PetSetController) syncPetSet(ps *apps.PetSet, pets []*api.Pod) (int, error) {
+func (psc *PetSetController) syncPetSet(ps *apps.PetSet, pets []*v1.Pod) (int, error) {
 	glog.Infof("Syncing PetSet %v/%v with %d pets", ps.Namespace, ps.Name, len(pets))
 
 	it := NewPetSetIterator(ps, pets)

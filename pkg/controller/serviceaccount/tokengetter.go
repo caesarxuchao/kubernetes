@@ -17,8 +17,9 @@ limitations under the License.
 package serviceaccount
 
 import (
-	"k8s.io/kubernetes/pkg/api"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	clientset "k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/registry/core/secret"
 	secretetcd "k8s.io/kubernetes/pkg/registry/core/secret/etcd"
 	serviceaccountregistry "k8s.io/kubernetes/pkg/registry/core/serviceaccount"
@@ -40,10 +41,10 @@ type clientGetter struct {
 func NewGetterFromClient(c clientset.Interface) serviceaccount.ServiceAccountTokenGetter {
 	return clientGetter{c}
 }
-func (c clientGetter) GetServiceAccount(namespace, name string) (*api.ServiceAccount, error) {
+func (c clientGetter) GetServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
 	return c.client.Core().ServiceAccounts(namespace).Get(name)
 }
-func (c clientGetter) GetSecret(namespace, name string) (*api.Secret, error) {
+func (c clientGetter) GetSecret(namespace, name string) (*v1.Secret, error) {
 	return c.client.Core().Secrets(namespace).Get(name)
 }
 
@@ -58,12 +59,12 @@ type registryGetter struct {
 func NewGetterFromRegistries(serviceAccounts serviceaccountregistry.Registry, secrets secret.Registry) serviceaccount.ServiceAccountTokenGetter {
 	return &registryGetter{serviceAccounts, secrets}
 }
-func (r *registryGetter) GetServiceAccount(namespace, name string) (*api.ServiceAccount, error) {
-	ctx := api.WithNamespace(api.NewContext(), namespace)
+func (r *registryGetter) GetServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
+	ctx := v1.WithNamespace(v1.NewContext(), namespace)
 	return r.serviceAccounts.GetServiceAccount(ctx, name)
 }
-func (r *registryGetter) GetSecret(namespace, name string) (*api.Secret, error) {
-	ctx := api.WithNamespace(api.NewContext(), namespace)
+func (r *registryGetter) GetSecret(namespace, name string) (*v1.Secret, error) {
+	ctx := v1.WithNamespace(v1.NewContext(), namespace)
 	return r.secrets.GetSecret(ctx, name)
 }
 
