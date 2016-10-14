@@ -37,9 +37,17 @@ $K1/grep-sed.sh "k8s.io/kubernetes/pkg/apis" "k8s.io/client-go/1.5/pkg/apis"
 # PART III: rewrite api. to v1.
 $K1/grep-sed.sh "api\." "v1."
 
+# Don't rewrite metrics_api to metrics_v1
+$K1/grep-sed.sh "metrics_v1" "metrics_api"
+
+
 # PART IV: dependencies of client-go/kubernetes,
 $K1/grep-sed.sh "k8s.io/kubernetes/pkg/watch" "k8s.io/client-go/1.5/pkg/watch"
 $K1/grep-sed.sh "k8s.io/kubernetes/pkg/runtime" "k8s.io/client-go/1.5/pkg/runtime"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/labels" "k8s.io/client-go/1.5/pkg/labels"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/fields" "k8s.io/client-go/1.5/pkg/fields"
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/types" "k8s.io/client-go/1.5/pkg/types"
+
 
 #pkg/watch
 #pkg/runtime
@@ -49,6 +57,15 @@ $K1/grep-sed.sh "k8s.io/kubernetes/pkg/runtime" "k8s.io/client-go/1.5/pkg/runtim
 # api.CreatedByAnnotation, not v1
 # api.StrategicMergePatchType, not v1
 
+
+
+
+
+
+#volume.NewSpecFromPersistentVolume, it's in pkg/volume, it's taking k8s.io/kubernetes types.
+# in general, what to do with calls to pkg/volume?
+
+# copy GetAccessModesAsString from pkg/api/helpers.go to pkg/v1/helpers.go
 
 # NOTES
 find ./ -name "*.go" | xargs gofmt -w
