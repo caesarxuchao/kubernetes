@@ -35,7 +35,10 @@ $K1/grep-sed.sh "k8s.io/client-go/1.5/pkg/api/pod" "k8s.io/kubernetes/pkg/api/po
 $K1/grep-sed.sh "k8s.io/kubernetes/pkg/apis" "k8s.io/client-go/1.5/pkg/apis"
 
 # PART III: rewrite api. to v1.
-$K1/grep-sed.sh "api\." "v1."
+#$K1/grep-sed.sh "api\." "v1."
+gofmt -w -r 'api.a -> v1.a' ./
+gofmt -w -r 'v1.Scheme -> api.Scheme' ./
+gofmt -w -r 'v1.Unversioned -> api.Unversioned' ./
 
 # Don't rewrite metrics_api to metrics_v1
 $K1/grep-sed.sh "metrics_v1" "metrics_api"
@@ -54,6 +57,10 @@ set -x
 find ./ -type f -name "*.go" | grep -v volume/persistentvolume/index.go | grep -v volume/persistentvolume/pv_controller.go | grep -v volume/persistentvolume/pv_controller_base.go | xargs sed -i "s,volume\.,volumeshadow\.,g"
 set +x
 
+#PART VI: rewrite labelselectors, to call .String()
+git grep -l "\<LabelSelector.*}" | xargs sed -i "/unversioned.LabelSelector/b; s/\<LabelSelector\(.*\)}/LabelSelector\1.String()}/g"
+git grep -l "FieldSelector =" | xargs sed -i "s/FieldSelector =\(.*\)$/FieldSelector =\1.String()/g".String()
+
 #pkg/watch
 #pkg/runtime
 
@@ -66,9 +73,6 @@ set +x
 
 
 
-
-#volume.NewSpecFromPersistentVolume, it's in pkg/volume, it's taking k8s.io/kubernetes types.
-# in general, what to do with calls to pkg/volume?
 
 # copy GetAccessModesAsString from pkg/api/helpers.go to pkg/v1/helpers.go
 
