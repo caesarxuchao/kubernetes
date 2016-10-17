@@ -48,6 +48,11 @@ $K1/grep-sed.sh "k8s.io/kubernetes/pkg/labels" "k8s.io/client-go/1.5/pkg/labels"
 $K1/grep-sed.sh "k8s.io/kubernetes/pkg/fields" "k8s.io/client-go/1.5/pkg/fields"
 $K1/grep-sed.sh "k8s.io/kubernetes/pkg/types" "k8s.io/client-go/1.5/pkg/types"
 
+#PART V: use volumeshadow
+$K1/grep-sed.sh "k8s.io/kubernetes/pkg/volume" "k8s.io/kubernetes/pkg/volumeshadow"
+set -x
+find ./ -type f -name "*.go" | grep -v volume/persistentvolume/index.go | grep -v volume/persistentvolume/pv_controller.go | grep -v volume/persistentvolume/pv_controller_base.go | xargs sed -i "s,volume\.,volumeshadow\.,g"
+set +x
 
 #pkg/watch
 #pkg/runtime
@@ -69,3 +74,5 @@ $K1/grep-sed.sh "k8s.io/kubernetes/pkg/types" "k8s.io/client-go/1.5/pkg/types"
 
 # NOTES
 find ./ -name "*.go" | xargs gofmt -w
+
+goimports -w ./
