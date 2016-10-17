@@ -204,12 +204,12 @@ func (plugin *FakeVolumePlugin) RequiresRemount() bool {
 func (plugin *FakeVolumePlugin) NewMounter(spec *Spec, pod *api.Pod, opts VolumeOptions) (Mounter, error) {
 	plugin.Lock()
 	defer plugin.Unlock()
-	volume := plugin.getFakeVolume(&plugin.Mounters)
-	volume.PodUID = pod.UID
-	volume.VolName = spec.Name()
-	volume.Plugin = plugin
-	volume.MetricsNil = MetricsNil{}
-	return volume, nil
+	v := plugin.getFakeVolume(&plugin.Mounters)
+	v.PodUID = pod.UID
+	v.VolName = spec.Name()
+	v.Plugin = plugin
+	v.MetricsNil = MetricsNil{}
+	return v, nil
 }
 
 func (plugin *FakeVolumePlugin) GetMounters() (Mounters []*FakeVolume) {
@@ -221,12 +221,12 @@ func (plugin *FakeVolumePlugin) GetMounters() (Mounters []*FakeVolume) {
 func (plugin *FakeVolumePlugin) NewUnmounter(volName string, podUID types.UID) (Unmounter, error) {
 	plugin.Lock()
 	defer plugin.Unlock()
-	volume := plugin.getFakeVolume(&plugin.Unmounters)
-	volume.PodUID = podUID
-	volume.VolName = volName
-	volume.Plugin = plugin
-	volume.MetricsNil = MetricsNil{}
-	return volume, nil
+	v := plugin.getFakeVolume(&plugin.Unmounters)
+	v.PodUID = podUID
+	v.VolName = volName
+	v.Plugin = plugin
+	v.MetricsNil = MetricsNil{}
+	return v, nil
 }
 
 func (plugin *FakeVolumePlugin) GetUnmounters() (Unmounters []*FakeVolume) {

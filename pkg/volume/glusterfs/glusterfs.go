@@ -529,15 +529,15 @@ func (p *glusterfsVolumeProvisioner) CreateVolume() (r *api.GlusterfsVolumeSourc
 		return nil, 0, fmt.Errorf("failed to create gluster REST client, REST server authentication failed")
 	}
 	volumeReq := &gapi.VolumeCreateRequest{Size: sz, Durability: gapi.VolumeDurabilityInfo{Type: durabilitytype, Replicate: gapi.ReplicaDurability{Replica: replicacount}}}
-	volume, err := cli.VolumeCreate(volumeReq)
+	v, err := cli.VolumeCreate(volumeReq)
 	if err != nil {
 		glog.Errorf("glusterfs: error creating volume %s ", err)
 		return nil, 0, fmt.Errorf("error creating volume %v", err)
 	}
-	glog.V(1).Infof("glusterfs: volume with size: %d and name: %s created", volume.Size, volume.Name)
+	glog.V(1).Infof("glusterfs: volume with size: %d and name: %s created", v.Size, v.Name)
 	return &api.GlusterfsVolumeSource{
 		EndpointsName: p.endpoint,
-		Path:          volume.Name,
+		Path:          v.Name,
 		ReadOnly:      false,
 	}, sz, nil
 }
