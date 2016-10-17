@@ -88,6 +88,9 @@ echo "copying and converting pkg/api/resource_help.go to v1"
 # the helpers are needed by many controllers, so manually copy it
 cp "${MAIN_REPO}/pkg/api/resource_helpers.go" "${CLIENT_REPO}/pkg/api/v1/"
 sed -i "s,package api,package v1,g" "${CLIENT_REPO}/pkg/api/v1/resource_helpers.go"
+cp "${MAIN_REPO}/pkg/api/helpers.go" "${CLIENT_REPO}/pkg/api/v1/"
+sed -i "s,package api,package v1,g" "${CLIENT_REPO}/pkg/api/v1/helpers.go"
+sed -i "s/FieldSelector: \(.*\),$/FieldSelector: \1.String(),/g" "${CLIENT_REPO}/pkg/api/v1/helpers.go"
 
 echo "rewriting imports"
 grep -Rl "\"${MAIN_REPO_FROM_SRC}" ./ | grep ".go" | grep -v "vendor/" | xargs sed -i "s|\"${MAIN_REPO_FROM_SRC}|\"${CLIENT_REPO_FROM_SRC}|g"
