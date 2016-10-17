@@ -84,6 +84,11 @@ find ./ -name "README.md" -delete
 echo "rewriting Godeps.json"
 go run "${DIR}/godeps-json-updater.go" --godeps-file="${CLIENT_REPO}/Godeps/Godeps.json" --client-go-import-path="${CLIENT_REPO_FROM_SRC}"
 
+echo "copying and converting pkg/api/resource_help.go to v1"
+# the helpers are needed by many controllers, so manually copy it
+cp "${MAIN_REPO}/pkg/api/resource_helpers.go" "${CLIENT_REPO}/pkg/api/v1/"
+sed -i "s,package api,package v1,g" "${CLIENT_REPO}/pkg/api/v1/resource_helpers.go"
+
 echo "rewriting imports"
 grep -Rl "\"${MAIN_REPO_FROM_SRC}" ./ | grep ".go" | grep -v "vendor/" | xargs sed -i "s|\"${MAIN_REPO_FROM_SRC}|\"${CLIENT_REPO_FROM_SRC}|g"
 
