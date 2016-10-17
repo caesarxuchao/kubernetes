@@ -552,6 +552,14 @@ func GetAvoidPodsFromNodeAnnotations(annotations map[string]string) (AvoidPods, 
 	return avoidPods, nil
 }
 
+// Sysctl defines a kernel parameter to be set
+type Sysctl struct {
+	// Name of a property to set
+	Name string `json:"name"`
+	// Value of a property to set
+	Value string `json:"value"`
+}
+
 // SysctlsFromPodAnnotations parses the sysctl annotations into a slice of safe Sysctls
 // and a slice of unsafe Sysctls. This is only a convenience wrapper around
 // SysctlsFromPodAnnotation.
