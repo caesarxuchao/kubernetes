@@ -1568,14 +1568,6 @@ type PodSpec struct {
 	Subdomain string `json:"subdomain,omitempty"`
 }
 
-// Sysctl defines a kernel parameter to be set
-type Sysctl struct {
-	// Name of a property to set
-	Name string `json:"name"`
-	// Value of a property to set
-	Value string `json:"value"`
-}
-
 // PodSecurityContext holds pod-level security attributes and common container settings.
 // Some fields are also present in container.securityContext.  Field values of
 // container.securityContext take precedence over field values of PodSecurityContext.
@@ -1753,6 +1745,35 @@ type ReplicationControllerStatus struct {
 
 	// ObservedGeneration is the most recent generation observed by the controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Represents the latest available observations of a replication controller's current state.
+	Conditions []ReplicationControllerCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+}
+
+type ReplicationControllerConditionType string
+
+// These are valid conditions of a replication controller.
+const (
+	// ReplicationControllerReplicaFailure is added in a replication controller when one of its pods
+	// fails to be created due to insufficient quota, limit ranges, pod security policy, node selectors,
+	// etc. or deleted due to kubelet being down or finalizers are failing.
+	ReplicationControllerReplicaFailure ReplicationControllerConditionType = "ReplicaFailure"
+)
+
+// ReplicationControllerCondition describes the state of a replication controller at a certain point.
+type ReplicationControllerCondition struct {
+	// Type of replication controller condition.
+	Type ReplicationControllerConditionType `json:"type"`
+	// Status of the condition, one of True, False, Unknown.
+	Status ConditionStatus `json:"status"`
+	// Last time we probed the condition.
+	LastProbeTime unversioned.Time `json:"lastProbeTime,omitempty"`
+	// The last time the condition transitioned from one status to another.
+	LastTransitionTime unversioned.Time `json:"lastTransitionTime,omitempty"`
+	// The reason for the condition's last transition.
+	Reason string `json:"reason,omitempty"`
+	// A human readable message indicating details about the transition.
+	Message string `json:"message,omitempty"`
 }
 
 // +genclient=true
@@ -2655,6 +2676,8 @@ const (
 	LimitTypePod LimitType = "Pod"
 	// Limit that applies to all containers in a namespace
 	LimitTypeContainer LimitType = "Container"
+	// Limit that applies to all persistent volume claims in a namespace
+	LimitTypePersistentVolumeClaim LimitType = "PersistentVolumeClaim"
 )
 
 // LimitRangeItem defines a min/max usage limit for any resource that matches on kind

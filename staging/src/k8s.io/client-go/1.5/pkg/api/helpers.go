@@ -123,6 +123,7 @@ func IsStandardContainerResourceName(str string) bool {
 var standardLimitRangeTypes = sets.NewString(
 	string(LimitTypePod),
 	string(LimitTypeContainer),
+	string(LimitTypePersistentVolumeClaim),
 )
 
 // IsStandardLimitRangeType returns true if the type is Pod or Container
@@ -549,6 +550,14 @@ func GetAvoidPodsFromNodeAnnotations(annotations map[string]string) (AvoidPods, 
 		}
 	}
 	return avoidPods, nil
+}
+
+// Sysctl defines a kernel parameter to be set
+type Sysctl struct {
+	// Name of a property to set
+	Name string `json:"name"`
+	// Value of a property to set
+	Value string `json:"value"`
 }
 
 // SysctlsFromPodAnnotations parses the sysctl annotations into a slice of safe Sysctls
