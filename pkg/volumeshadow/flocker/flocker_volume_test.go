@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"k8s.io/client-go/1.5/pkg/api/resource"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/api/unversioned"
 	utiltesting "k8s.io/kubernetes/pkg/util/testing"
 	"k8s.io/kubernetes/pkg/volumeshadow"
 	volumetest "k8s.io/kubernetes/pkg/volumeshadow/testing"
