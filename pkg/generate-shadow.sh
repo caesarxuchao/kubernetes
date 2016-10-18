@@ -33,6 +33,8 @@ cp -r "${VOLUME_DIR}" "${VOLUME_SHADOW_DIR}"
 
 gofmt -w -r 'api.a -> v1.a' "${VOLUME_SHADOW_DIR}"
 gofmt -w -r 'volume.a -> volumeshadow.a' "${VOLUME_SHADOW_DIR}"
+# the order of the next two lines is important
+find "${VOLUME_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i 's,k8s.io/kubernetes/pkg/api/unversioned",k8s.io/client-go/1.5/pkg/api/unversioned",g'
 find "${VOLUME_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i 's,k8s.io/kubernetes/pkg/api",k8s.io/client-go/1.5/pkg/api/v1",g'
 find "${VOLUME_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i "s,package volume$,package volumeshadow,g"
 sed -i "s,package volume,package volumeshadow,g" "${VOLUME_SHADOW_DIR}"/doc.go
