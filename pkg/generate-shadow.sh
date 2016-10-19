@@ -4,6 +4,39 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+readonly SERVICEACCOUNT_DIR="${DIR}/serviceaccount"
+readonly SERVICEACCOUNT_SHADOW_DIR="${DIR}/serviceaccountshadow"
+
+rm -rf "${SERVICEACCOUNT_SHADOW_DIR}"
+cp -r "${SERVICEACCOUNT_DIR}" "${SERVICEACCOUNT_SHADOW_DIR}"
+
+#rename package
+#find "${FIELDPATH_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i "s,package fieldpath$,package fieldpathshadow,g"
+
+#rename canonical path
+find "${SERVICEACCOUNT_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i 's,k8s.io/kubernetes/pkg/serviceaccount,k8s.io/kubernetes/pkg/serviceaccountshadow,g'
+
+gofmt -w -r 'api.a -> v1.a' "${SERVICEACCOUNT_SHADOW_DIR}"
+# Scheme is still in api
+gofmt -w -r 'v1.Scheme -> api.Scheme' "${SERVICEACCOUNT_SHADOW_DIR}"
+
+# still need pkg api, for api.Scheme
+find "${SERVICEACCOUNT_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i 's,"k8s.io/kubernetes/pkg/api","k8s.io/client-go/1.5/pkg/api"\n   "k8s.io/client-go/1.5/pkg/api/v1",g'
+
+find "${SERVICEACCOUNT_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i 's,k8s.io/kubernetes/pkg/api/meta",k8s.io/client-go/1.5/pkg/api/meta",g'
+
+# change clientset
+find "${SERVICEACCOUNT_SHADOW_DIR}" -type f -name "*.go" -print0 | xargs -0 sed -i "s,k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset,k8s.io/client-go/1.5/kubernetes,g"
+
+# remove registryGetter
+# to do it less hacky, we can split registryGetter in its own file.
+sed -i '/registryGetter/,$d' "${SERVICEACCOUNT_SHADOW_DIR}/tokengetter.go"
+
+goimports -w "${SERVICEACCOUNT_SHADOW_DIR}"
+
+exit 0
+###########################
+
 readonly FIELDPATH_DIR="${DIR}/fieldpath"
 readonly FIELDPATH_SHADOW_DIR="${DIR}/fieldpathshadow"
 
