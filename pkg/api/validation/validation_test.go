@@ -8706,3 +8706,17 @@ func TestEndpointAddressNodeNameCanBeAnIPAddress(t *testing.T) {
 		t.Error("Endpoint should accept a NodeName that is an IP address")
 	}
 }
+
+// TODO: need an e2e test as well
+func TestInvalidDeleteOptions(t *testing.T) {
+	policy := api.DeletePropagationDefault
+	trueVar := true
+	deleteOptions := &api.DeleteOptions{
+		OrphanDependents:  &trueVar,
+		PropagationPolicy: &policy,
+	}
+	errList := ValidateDeleteOptions(deleteOptions)
+	if len(errList) == 0 || !strings.Contains(errList.ToAggregate().Error(), "cannot be both set") {
+		t.Errorf("unexpected error message: %q", errList.ToAggregate().Error())
+	}
+}
