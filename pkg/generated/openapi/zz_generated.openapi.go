@@ -7648,6 +7648,13 @@ var OpenAPIDefinitions *common.OpenAPIDefinitions = &common.OpenAPIDefinitions{
 							Format:      "",
 						},
 					},
+					"PropagationPolicy": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Whether and how garbage collection will be performed. Defaults to DeletePropagationDefault. Either this field or OrphanDependents may be set, but not both.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
