@@ -1021,6 +1021,226 @@ func TestStoreDeleteWithOrphanDependents(t *testing.T) {
 	}
 }
 
+// Test the DeleteOptions.PropagationPolicy is handled correctly
+func TestStoreDeletePropagationPolicy(t *testing.T) {
+	initialGeneration := int64(1)
+
+	// defaultDeleteStrategy doesn't implement rest.GarbageCollectionDeleteStrategy.
+	defaultDeleteStrategy := &testRESTStrategy{api.Scheme, api.SimpleNameGenerator, true, false, true}
+	// orphanDeleteStrategy indicates the default garbage collection policy is
+	// to orphan dependentes.
+	orphanDeleteStrategy := &testOrphanDeleteStrategy{defaultDeleteStrategy}
+
+	foregroundPolicy := api.DeletePropagationForeground
+	backgroundPolicy := api.DeletePropagationBackground
+	orphanPolicy := api.DeletePropagationOrphan
+	defaultPolicy := api.DeletePropagationDefault
+
+	testcases := map[string]struct {
+		options  *api.DeleteOptions
+		strategy rest.RESTDeleteStrategy
+		// finalizers that are already set in the object
+		existingFinalizers []string
+		expectedNotFound   bool
+		expectedFinalizers []string
+	}{
+		"no existing finalizers, PropagationPolicy=Foreground, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           defaultDeleteStrategy,
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"no existing finalizers, PropagationPolicy=Foreground, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           orphanDeleteStrategy,
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"no existing finalizers, PropagationPolicy=Background, defaultDeleteStrategy": {
+			options:          &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:         defaultDeleteStrategy,
+			expectedNotFound: true,
+		},
+		"no existing finalizers, PropagationPolicy=Background, orphanDeleteStrategy": {
+			options:          &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:         orphanDeleteStrategy,
+			expectedNotFound: true,
+		},
+		"no existing finalizers, PropagationPolicy=OrphanDependents, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           defaultDeleteStrategy,
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"no existing finalizers, PropagationPolicy=OrphanDependents, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           orphanDeleteStrategy,
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"no existing finalizers, PropagationPolicy=Default, defaultDeleteStrategy": {
+			options:          &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:         defaultDeleteStrategy,
+			expectedNotFound: true,
+		},
+		"no existing finalizers, PropagationPolicy=Default, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:           orphanDeleteStrategy,
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+
+		// all cases in the following block have "existing orphan finalizer"
+		"existing orphan finalizer, PropagationPolicy=Foreground, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"existing orphan finalizer, PropagationPolicy=Foreground, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"existing orphan finalizer, PropagationPolicy=Background, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedNotFound:   true,
+		},
+		"existing orphan finalizer, PropagationPolicy=Background, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedNotFound:   true,
+		},
+		"existing orphan finalizer, PropagationPolicy=OrphanDependents, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"existing orphan finalizer, PropagationPolicy=OrphanDependents, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"existing orphan finalizer, PropagationPolicy=Default, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"existing orphan finalizer, PropagationPolicy=Default, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerOrphanDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+
+		// all cases in the following block have "existing deleteDependents finalizer"
+		"existing deleteDependents finalizer, PropagationPolicy=Foreground, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=Foreground, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &foregroundPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=Background, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedNotFound:   true,
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=Background, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &backgroundPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedNotFound:   true,
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=OrphanDependents, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=OrphanDependents, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &orphanPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerOrphanDependents},
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=Default, defaultDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:           defaultDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+		"existing deleteDependents finalizer, PropagationPolicy=Default, orphanDeleteStrategy": {
+			options:            &api.DeleteOptions{PropagationPolicy: &defaultPolicy},
+			strategy:           orphanDeleteStrategy,
+			existingFinalizers: []string{api.FinalizerDeleteDependents},
+			expectedFinalizers: []string{api.FinalizerDeleteDependents},
+		},
+	}
+
+	testContext := api.WithNamespace(api.NewContext(), "test")
+	destroyFunc, registry := NewTestGenericStoreRegistry(t)
+	registry.EnableGarbageCollection = true
+	defer destroyFunc()
+
+	createPod := func(i int, finalizers []string) *api.Pod {
+		return &api.Pod{
+			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("pod-%d", i), Finalizers: finalizers, Generation: initialGeneration},
+			Spec:       api.PodSpec{NodeName: "machine"},
+		}
+	}
+
+	i := 0
+	for title, tc := range testcases {
+		t.Logf("case title: %s", title)
+		registry.DeleteStrategy = tc.strategy
+		i++
+		pod := createPod(i, tc.existingFinalizers)
+		// create pod
+		_, err := registry.Create(testContext, pod)
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+		_, err = registry.Delete(testContext, pod.Name, tc.options)
+		obj, err := registry.Get(testContext, pod.Name)
+		if tc.expectedNotFound {
+			if err == nil || !errors.IsNotFound(err) {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			continue
+		}
+		if !tc.expectedNotFound && err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+		if !tc.expectedNotFound {
+			pod, ok := obj.(*api.Pod)
+			if !ok {
+				t.Fatalf("Expect the object to be a pod, but got %#v", obj)
+			}
+			if e, a := tc.expectedFinalizers, pod.ObjectMeta.Finalizers; !reflect.DeepEqual(e, a) {
+				t.Errorf("%v: Expect object %s to have finalizers %v, got %v", pod.Name, pod.ObjectMeta.Name, e, a)
+			}
+			if pod.ObjectMeta.DeletionTimestamp == nil {
+				t.Errorf("%v: Expect the object to have DeletionTimestamp set, but got %#v", pod.Name, pod.ObjectMeta)
+			}
+			if pod.ObjectMeta.DeletionGracePeriodSeconds == nil || *pod.ObjectMeta.DeletionGracePeriodSeconds != 0 {
+				t.Errorf("%v: Expect the object to have 0 DeletionGracePeriodSecond, but got %#v", pod.Name, pod.ObjectMeta)
+			}
+			if pod.Generation <= initialGeneration {
+				t.Errorf("%v: Deletion didn't increase Generation.", pod.Name)
+			}
+		}
+	}
+}
+
 func TestStoreDeleteCollection(t *testing.T) {
 	podA := &api.Pod{ObjectMeta: api.ObjectMeta{Name: "foo"}}
 	podB := &api.Pod{ObjectMeta: api.ObjectMeta{Name: "bar"}}
