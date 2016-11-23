@@ -233,7 +233,7 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 	}
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
-		if finalizer == v1.FinalizerOrphan {
+		if finalizer == v1.FinalizerOrphanDependents {
 			return true
 		}
 	}
@@ -278,7 +278,7 @@ func (gc *GarbageCollector) removeOrphanFinalizer(owner *node) error {
 		var newFinalizers []string
 		found := false
 		for _, f := range finalizers {
-			if f == v1.FinalizerOrphan {
+			if f == v1.FinalizerOrphanDependents {
 				found = true
 				break
 			} else {

@@ -99,7 +99,7 @@ func TestSecretController(t *testing.T) {
 	updatedSecret := GetSecretFromChan(secretUpdateChan)
 	assert.True(t, secretController.hasFinalizerFunc(updatedSecret, deletionhelper.FinalizerDeleteFromUnderlyingClusters))
 	updatedSecret = GetSecretFromChan(secretUpdateChan)
-	assert.True(t, secretController.hasFinalizerFunc(updatedSecret, api_v1.FinalizerOrphan))
+	assert.True(t, secretController.hasFinalizerFunc(updatedSecret, api_v1.FinalizerOrphanDependents))
 	secret1 = *updatedSecret
 
 	// Verify that the secret is created in underlying cluster1.
