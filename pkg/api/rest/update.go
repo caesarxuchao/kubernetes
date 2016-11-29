@@ -66,6 +66,7 @@ func validateCommonFields(obj, old runtime.Object) (field.ErrorList, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get old object metadata: %v", err)
 	}
+	allErrs = append(allErrs, validation.ValidateObjectMeta(objectMeta, field.NewPath("metadata"))...)
 	allErrs = append(allErrs, validation.ValidateObjectMetaUpdate(objectMeta, oldObjectMeta, field.NewPath("metadata"))...)
 
 	return allErrs, nil
