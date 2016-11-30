@@ -19,6 +19,7 @@ package garbagecollector
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -40,6 +41,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/clock"
 	"k8s.io/kubernetes/pkg/util/json"
 	"k8s.io/kubernetes/pkg/util/sets"
+	"k8s.io/kubernetes/pkg/util/strategicpatch"
 	"k8s.io/kubernetes/pkg/util/workqueue"
 )
 
@@ -473,5 +475,39 @@ func TestAbsentUIDCache(t *testing.T) {
 	}
 	if count != 1 {
 		t.Errorf("expected only 1 GET rc1 request, got %d", count)
+	}
+}
+
+func TestDeleteOwnerRefPatch(t *testing.T) {
+	original := v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
+			UID: "100",
+			OwnerReferences: []v1.OwnerReference{
+				{UID: "1"},
+				{UID: "2"},
+				{UID: "3"},
+			},
+		},
+	}
+	originalData := serilizeOrDie(t, original)
+	expected := v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
+			UID: "100",
+			OwnerReferences: []v1.OwnerReference{
+				{UID: "1"},
+			},
+		},
+	}
+	patch := deleteOwnerRefPatch("100", "2", "3")
+	patched, err := strategicpatch.StrategicMergePatch(originalData, patch, v1.Pod{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got v1.Pod
+	if err := json.Unmarshal(patched, &got); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("expected: %#v,\ngot: %#v", expected, got)
 	}
 }

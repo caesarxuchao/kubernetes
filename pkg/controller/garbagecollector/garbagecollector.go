@@ -18,6 +18,7 @@ package garbagecollector
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -70,7 +71,10 @@ type node struct {
 	// dependents will be read by the orphan() routine, we need to protect it with a lock.
 	dependentsLock sync.RWMutex
 	dependents     map[*node]struct{}
-	// When processing an Update event, we need to compare the updated
+	// this is set by processEvent() if the object has non-nil DeletionTimestamp
+	// and has the FianlizerDeleteDependents.
+	deletingDependents bool
+	// when processing an Update event, we need to compare the updated
 	// ownerReferences with the owners recorded in the graph.
 	owners []metatypes.OwnerReference
 }
@@ -213,9 +217,10 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	return added, removed
 }
 
-func shouldOrphanDependents(e *event, accessor meta.Object) bool {
+// returns if the object referred by the event transitions to "being deleted".
+func deletionStarts(e *event, accessor meta.Object) bool {
 	// The delta_fifo may combine the creation and update of the object into one
-	// event, so we need to check AddEvent as well.
+	// event, so if there is no e.oldObj, we just return if the e.obj is being deleted.
 	if e.oldObj == nil {
 		if accessor.GetDeletionTimestamp() == nil {
 			return false
@@ -226,10 +231,39 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 			utilruntime.HandleError(fmt.Errorf("cannot access oldObj: %v", err))
 			return false
 		}
-		// ignore the event if it's not updating DeletionTimestamp from non-nil to nil.
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("cannot access newObj: %v", err))
+			return false
+		}
 		if accessor.GetDeletionTimestamp() == nil || oldAccessor.GetDeletionTimestamp() != nil {
 			return false
 		}
+	}
+	return true
+}
+
+func hasDeleteDependentsFinalizer(accessor meta.Object) bool {
+	finalizers := accessor.GetFinalizers()
+	for _, finalizer := range finalizers {
+		if finalizer == v1.FinalizerDeleteDependents {
+			return true
+		}
+	}
+	return false
+}
+
+func waitingForDependentsDeletion(e *event, accessor meta.Object) bool {
+	if !deletionStarts(e, accessor) {
+		// ignore the event if it's not about the object starting being deleted.
+		return false
+	}
+	return hasDeleteDependentsFinalizer(accessor)
+}
+
+func shouldOrphanDependents(e *event, accessor meta.Object) bool {
+	if !deletionStarts(e, accessor) {
+		// ignore the event if it's not about the object starting being deleted.
+		return false
 	}
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
@@ -240,14 +274,23 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 	return false
 }
 
+func deleteOwnerRefPatch(dependentUID types.UID, ownerUIDs ...types.UID) []byte {
+	var pieces []string
+	for _, ownerUID := range ownerUIDs {
+		pieces = append(pieces, fmt.Sprintf(`{"$patch":"delete","uid":"%s"}`, ownerUID))
+	}
+	patch := fmt.Sprintf(`{"metadata":{"ownerReferences":[%s],"uid":"%s"}}`, strings.Join(pieces, ","), dependentUID)
+	return []byte(patch)
+}
+
 // dependents are copies of pointers to the owner's dependents, they don't need to be locked.
 func (gc *GarbageCollector) orhpanDependents(owner objectReference, dependents []*node) error {
 	var failedDependents []objectReference
 	var errorsSlice []error
 	for _, dependent := range dependents {
 		// the dependent.identity.UID is used as precondition
-		deleteOwnerRefPatch := fmt.Sprintf(`{"metadata":{"ownerReferences":[{"$patch":"delete","uid":"%s"}],"uid":"%s"}}`, owner.UID, dependent.identity.UID)
-		_, err := gc.patchObject(dependent.identity, []byte(deleteOwnerRefPatch))
+		patch := deleteOwnerRefPatch(dependent.identity.UID, owner.UID)
+		_, err := gc.patchObject(dependent.identity, patch)
 		// note that if the target ownerReference doesn't exist in the
 		// dependent, strategic merge patch will NOT return an error.
 		if err != nil && !errors.IsNotFound(err) {
@@ -263,7 +306,7 @@ func (gc *GarbageCollector) orhpanDependents(owner objectReference, dependents [
 
 // TODO: Using Patch when strategicmerge supports deleting an entry from a
 // slice of a base type.
-func (gc *GarbageCollector) removeOrphanFinalizer(owner *node) error {
+func (gc *GarbageCollector) removeFinalizer(owner *node, targetFinalizer string) error {
 	const retries = 5
 	for count := 0; count < retries; count++ {
 		ownerObject, err := gc.getObject(owner.identity)
@@ -278,7 +321,7 @@ func (gc *GarbageCollector) removeOrphanFinalizer(owner *node) error {
 		var newFinalizers []string
 		found := false
 		for _, f := range finalizers {
-			if f == v1.FinalizerOrphanDependents {
+			if f == targetFinalizer {
 				found = true
 				break
 			} else {
@@ -334,7 +377,7 @@ func (gc *GarbageCollector) orphanFinalizer() {
 		return
 	}
 	// update the owner, remove "orphaningFinalizer" from its finalizers list
-	err = gc.removeOrphanFinalizer(owner)
+	err = gc.removeFinalizer(owner, v1.FinalizerOrphanDependents)
 	if err != nil {
 		glog.V(6).Infof("removeOrphanFinalizer for %s failed with %v", owner.identity, err)
 		gc.orphanQueue.Add(timedItem)
@@ -380,8 +423,9 @@ func (p *Propagator) processEvent() {
 				},
 				Namespace: accessor.GetNamespace(),
 			},
-			dependents: make(map[*node]struct{}),
-			owners:     accessor.GetOwnerReferences(),
+			dependents:         make(map[*node]struct{}),
+			owners:             accessor.GetOwnerReferences(),
+			deletingDependents: hasDeleteDependentsFinalizer(accessor),
 		}
 		p.insertNode(newNode)
 		// the underlying delta_fifo may combine a creation and deletion into one event
@@ -389,12 +433,22 @@ func (p *Propagator) processEvent() {
 			glog.V(6).Infof("add %s to the orphanQueue", newNode.identity)
 			p.gc.orphanQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: newNode})
 		}
+		if waitingForDependentsDeletion(event, accessor) {
+			glog.V(6).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", newNode.identity)
+			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: newNode})
+		}
 	case (event.eventType == addEvent || event.eventType == updateEvent) && found:
 		// caveat: if GC observes the creation of the dependents later than the
 		// deletion of the owner, then the orphaning finalizer won't be effective.
 		if shouldOrphanDependents(event, accessor) {
 			glog.V(6).Infof("add %s to the orphanQueue", existingNode.identity)
 			p.gc.orphanQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: existingNode})
+		}
+		if waitingForDependentsDeletion(event, accessor) {
+			glog.V(6).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", existingNode.identity)
+			// if the existingNode is added as a "virtual" node, its deletingDependents field is not properly set, so always set it here.
+			existingNode.deletingDependents = true
+			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: existingNode})
 		}
 		// add/remove owner refs
 		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
@@ -422,6 +476,14 @@ func (p *Propagator) processEvent() {
 		}
 		for dep := range existingNode.dependents {
 			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: dep})
+		}
+		for _, owner := range existingNode.owners {
+			ownerNode, found := p.uidToNode.Read(owner.UID)
+			if !found || !ownerNode.deletingDependents {
+				continue
+			}
+			// this is to let processItem check if all the owner's dependents are deleted.
+			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: ownerNode})
 		}
 	}
 	EventProcessingLatency.Observe(sinceInMicroseconds(p.gc.clock, timedItem.StartTime))
@@ -608,7 +670,7 @@ func (gc *GarbageCollector) apiResource(apiVersion, kind string, namespaced bool
 	return &resource, nil
 }
 
-func (gc *GarbageCollector) deleteObject(item objectReference) error {
+func (gc *GarbageCollector) deleteObject(item objectReference, policy v1.DeletePropagationPolicy) error {
 	fqKind := schema.FromAPIVersionAndKind(item.APIVersion, item.Kind)
 	client, err := gc.clientPool.ClientForGroupVersionKind(fqKind)
 	gc.registeredRateLimiter.registerIfNotPresent(fqKind.GroupVersion(), client, "garbage_collector_operation")
@@ -618,7 +680,7 @@ func (gc *GarbageCollector) deleteObject(item objectReference) error {
 	}
 	uid := item.UID
 	preconditions := v1.Preconditions{UID: &uid}
-	deleteOptions := v1.DeleteOptions{Preconditions: &preconditions}
+	deleteOptions := v1.DeleteOptions{Preconditions: &preconditions, PropagationPolicy: &policy}
 	return client.Resource(resource, item.Namespace).Delete(item.Name, &deleteOptions)
 }
 
@@ -679,6 +741,75 @@ func objectReferenceToMetadataOnlyObject(ref objectReference) *metaonly.Metadata
 	}
 }
 
+// solid: the owner exists, and is not "waiting"
+// dangling: the owner does not exist
+// waiting: the owner exists, its deletionTimestamp is non-nil, and it has
+// FianlizerDeletingDependents
+func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []metatypes.OwnerReference) (
+	solid []metatypes.OwnerReference,
+	dangling []metatypes.OwnerReference,
+	waiting []metatypes.OwnerReference,
+	err error,
+) {
+	for _, reference := range latestReferences {
+		if gc.absentOwnerCache.Has(reference.UID) {
+			glog.V(6).Infof("according to the absentOwnerCache, object %s's owner %s/%s, %s does not exist", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
+			dangling = append(dangling, reference)
+			continue
+		}
+		// TODO: we need to verify the reference resource is supported by the
+		// system. If it's not a valid resource, the garbage collector should i)
+		// ignore the reference when decide if the object should be deleted, and
+		// ii) should update the object to remove such references. This is to
+		// prevent objects having references to an old resource from being
+		// deleted during a cluster upgrade.
+		fqKind := schema.FromAPIVersionAndKind(reference.APIVersion, reference.Kind)
+		client, err := gc.clientPool.ClientForGroupVersionKind(fqKind)
+		if err != nil {
+			return solid, dangling, waiting, err
+		}
+		resource, err := gc.apiResource(reference.APIVersion, reference.Kind, len(item.identity.Namespace) != 0)
+		if err != nil {
+			return solid, dangling, waiting, err
+		}
+		owner, err := client.Resource(resource, item.identity.Namespace).Get(reference.Name)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				gc.absentOwnerCache.Add(reference.UID)
+				glog.V(6).Infof("object %s's owner %s/%s, %s is not found", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
+			} else {
+				return solid, dangling, waiting, err
+			}
+		}
+
+		if owner.GetUID() != reference.UID {
+			glog.V(6).Infof("object %s's owner %s/%s, %s is not found, UID mismatch", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
+			gc.absentOwnerCache.Add(reference.UID)
+			dangling = append(dangling, reference)
+			continue
+		}
+
+		ownerAccessor, err := meta.Accessor(owner)
+		if err != nil {
+			return solid, dangling, waiting, err
+		}
+		if ownerAccessor.GetDeletionTimestamp != nil && hasDeleteDependentsFinalizer(ownerAccessor) {
+			waiting = append(waiting, reference)
+		} else {
+			solid = append(solid, reference)
+		}
+	}
+	return solid, dangling, waiting, nil
+}
+
+func ownerRefsToUIDs(refs []metatypes.OwnerReference) []types.UID {
+	var ret []types.UID
+	for _, ref := range refs {
+		ret = append(ret, ref.UID)
+	}
+	return ret
+}
+
 func (gc *GarbageCollector) processItem(item *node) error {
 	// Get the latest item from the API server
 	latest, err := gc.getObject(item.identity)
@@ -708,51 +839,41 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		gc.propagator.eventQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: event})
 		return nil
 	}
+
+	if item.deletingDependents {
+		if len(item.dependents) == 0 {
+			return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
+		} else {
+			return nil
+		}
+	}
+
 	ownerReferences := latest.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
 		glog.V(6).Infof("object %s's doesn't have an owner, continue on next item", item.identity)
 		return nil
 	}
-	// TODO: we need to remove dangling references if the object is not to be
-	// deleted.
-	for _, reference := range ownerReferences {
-		if gc.absentOwnerCache.Has(reference.UID) {
-			glog.V(6).Infof("according to the absentOwnerCache, object %s's owner %s/%s, %s does not exist", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
-			continue
-		}
-		// TODO: we need to verify the reference resource is supported by the
-		// system. If it's not a valid resource, the garbage collector should i)
-		// ignore the reference when decide if the object should be deleted, and
-		// ii) should update the object to remove such references. This is to
-		// prevent objects having references to an old resource from being
-		// deleted during a cluster upgrade.
-		fqKind := schema.FromAPIVersionAndKind(reference.APIVersion, reference.Kind)
-		client, err := gc.clientPool.ClientForGroupVersionKind(fqKind)
-		if err != nil {
-			return err
-		}
-		resource, err := gc.apiResource(reference.APIVersion, reference.Kind, len(item.identity.Namespace) != 0)
-		if err != nil {
-			return err
-		}
-		owner, err := client.Resource(resource, item.identity.Namespace).Get(reference.Name)
-		if err == nil {
-			if owner.GetUID() != reference.UID {
-				glog.V(6).Infof("object %s's owner %s/%s, %s is not found, UID mismatch", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
-				gc.absentOwnerCache.Add(reference.UID)
-				continue
-			}
-			glog.V(6).Infof("object %s has at least an existing owner, will not garbage collect", item.identity.UID)
-			return nil
-		} else if errors.IsNotFound(err) {
-			gc.absentOwnerCache.Add(reference.UID)
-			glog.V(6).Infof("object %s's owner %s/%s, %s is not found", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
-		} else {
-			return err
-		}
+	solid, dangling, waiting, err := gc.classifyReferences(item, ownerReferences)
+	if err != nil {
+		return err
 	}
-	glog.V(2).Infof("none of object %s's owners exist any more, will garbage collect it", item.identity)
-	return gc.deleteObject(item.identity)
+	if len(solid) != 0 {
+		glog.V(6).Infof("object %s has at least an existing owner, will not garbage collect", item.identity.UID)
+		if len(dangling) != 0 || len(waiting) != 0 {
+			glog.V(6).Infof("remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity.UID)
+		}
+		// TODO: add an e2e test for this case
+		patch := deleteOwnerRefPatch(item.identity.UID, append(ownerRefsToUIDs(dangling), ownerRefsToUIDs(waiting)...)...)
+		_, err = gc.patchObject(item.identity, patch)
+		return err
+	} else {
+		if len(waiting) != 0 {
+			glog.V(2).Infof("at least one owner of object %s has FianlizerDeletingDependents, so object is going to be deleted with DeletePropagationForeground", item.identity.UID)
+			return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
+		}
+		glog.V(2).Infof("delete object %s with DeletePropagationDefault", item.identity.UID)
+		return gc.deleteObject(item.identity, v1.DeletePropagationDefault)
+	}
 }
 
 func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
