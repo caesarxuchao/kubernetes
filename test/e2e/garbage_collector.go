@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/release_1_5"
@@ -29,6 +30,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 )
+
+func getDeletePropagationForegroundOptions() *v1.DeleteOptions {
+	return &v1.DeleteOptions{Policy: &v1.DeletePropagationForeground}
+}
 
 func getOrphanOptions() *v1.DeleteOptions {
 	var trueVar = true
@@ -272,6 +277,66 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 			return false, nil
 		}); err != nil && err != wait.ErrWaitTimeout {
 			framework.Failf("%v", err)
+		}
+		gatherMetrics(f)
+	})
+
+	It("[Feature:GarbageCollector] should keep the rc around until all its pods are deleted if the deleteOptions says so", func() {
+		clientSet := f.ClientSet
+		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
+		podClient := clientSet.Core().Pods(f.Namespace.Name)
+		rcName := "simpletest.rc"
+		rc := newOwnerRC(f, rcName)
+		replicas := int32(10)
+		rc.Spec.Replicas = &replicas
+		By("create the rc")
+		rc, err := rcClient.Create(rc)
+		if err != nil {
+			framework.Failf("Failed to create replication controller: %v", err)
+		}
+		// wait for rc to create pods
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			rc, err := rcClient.Get(rc.Name)
+			if err != nil {
+				return false, fmt.Errorf("Failed to get rc: %v", err)
+			}
+			if rc.Status.Replicas == *rc.Spec.Replicas {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}); err != nil {
+			framework.Failf("failed to wait for the rc.Status.Replicas to reach rc.Spec.Replicas: %v", err)
+		}
+		By("delete the rc")
+		deleteOptions := getDeletePropagationForegroundOptions()
+		deleteOptions.Preconditions = v1.NewUIDPreconditions(string(rc.UID))
+		if err := rcClient.Delete(rc.ObjectMeta.Name, deleteOptions); err != nil {
+			framework.Failf("failed to delete the rc: %v", err)
+		}
+		By("wait for the rc to be deleted")
+		// the default graceful period for pods are 15s, 60 seconds should be long enough.
+		if err := wait.Poll(5*time.Second, 60*time.Second, func() (bool, error) {
+			rcs, err := rcClient.Get(rc.Name)
+			if err == nil {
+				return false, nil
+			} else {
+				if errors.IsNotFound(err) {
+					return true, nil
+				} else {
+					return false, err
+				}
+			}
+		}); err != nil && err != wait.ErrWaitTimeout {
+			framework.Failf("%v", err)
+		}
+		// There shouldn't be any pods
+		pods, err := podClient.List(v1.ListOptions{})
+		if err != nil {
+			return false, fmt.Errorf("Failed to list pods: %v", err)
+		}
+		if len(pods.Items) != 0 {
+			framework.Failf("expected no pods, got %#v", pods)
 		}
 		gatherMetrics(f)
 	})
