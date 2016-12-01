@@ -10252,8 +10252,15 @@ var OpenAPIDefinitions *common.OpenAPIDefinitions = &common.OpenAPIDefinitions{
 							Format:      "",
 						},
 					},
+					"BlockOwnerDeletion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "If true, AND if the owner has the \"DeletingDependents\" finalizer, then the owner cannot be deleted from the key-value store until this reference is removed. Defaults to false. To set this field, a user needs \"delete\" permission of the owner, otherwise 422 (Unprocessable Entity) will be returned.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"apiVersion", "kind", "name", "uid"},
+				Required: []string{"apiVersion", "kind", "name", "uid", "BlockOwnerDeletion"},
 			},
 		},
 		Dependencies: []string{},

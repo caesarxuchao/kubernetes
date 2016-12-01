@@ -2440,6 +2440,7 @@ func autoConvert_v1_OwnerReference_To_api_OwnerReference(in *OwnerReference, out
 	out.Name = in.Name
 	out.UID = types.UID(in.UID)
 	out.Controller = (*bool)(unsafe.Pointer(in.Controller))
+	out.BlockOwnerDeletion = (*bool)(unsafe.Pointer(in.BlockOwnerDeletion))
 	return nil
 }
 
@@ -2453,6 +2454,7 @@ func autoConvert_api_OwnerReference_To_v1_OwnerReference(in *api.OwnerReference,
 	out.Name = in.Name
 	out.UID = types.UID(in.UID)
 	out.Controller = (*bool)(unsafe.Pointer(in.Controller))
+	out.BlockOwnerDeletion = (*bool)(unsafe.Pointer(in.BlockOwnerDeletion))
 	return nil
 }
 

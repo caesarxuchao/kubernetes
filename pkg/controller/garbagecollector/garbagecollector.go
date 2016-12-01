@@ -74,6 +74,8 @@ type node struct {
 	// this is set by processEvent() if the object has non-nil DeletionTimestamp
 	// and has the FianlizerDeleteDependents.
 	deletingDependents bool
+	// this records if the object's deletionTimestamp is non-nil.
+	beingDeleted bool
 	// when processing an Update event, we need to compare the updated
 	// ownerReferences with the owners recorded in the graph.
 	owners []metatypes.OwnerReference
@@ -242,6 +244,10 @@ func deletionStarts(e *event, accessor meta.Object) bool {
 	return true
 }
 
+func beingDeleted(accessor meta.Object) bool {
+	return accessor.GetDeletionTimestamp() != nil
+}
+
 func hasDeleteDependentsFinalizer(accessor meta.Object) bool {
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
@@ -252,7 +258,7 @@ func hasDeleteDependentsFinalizer(accessor meta.Object) bool {
 	return false
 }
 
-func waitingForDependentsDeletion(e *event, accessor meta.Object) bool {
+func startsWaitingForDependentsDeletion(e *event, accessor meta.Object) bool {
 	if !deletionStarts(e, accessor) {
 		// ignore the event if it's not about the object starting being deleted.
 		return false
@@ -425,7 +431,8 @@ func (p *Propagator) processEvent() {
 			},
 			dependents:         make(map[*node]struct{}),
 			owners:             accessor.GetOwnerReferences(),
-			deletingDependents: hasDeleteDependentsFinalizer(accessor),
+			deletingDependents: beingDeleted(accessor) && hasDeleteDependentsFinalizer(accessor),
+			beingDeleted:       beingDeleted(accessor),
 		}
 		p.insertNode(newNode)
 		// the underlying delta_fifo may combine a creation and deletion into one event
@@ -433,9 +440,12 @@ func (p *Propagator) processEvent() {
 			glog.V(6).Infof("add %s to the orphanQueue", newNode.identity)
 			p.gc.orphanQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: newNode})
 		}
-		if waitingForDependentsDeletion(event, accessor) {
-			glog.V(6).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", newNode.identity)
+		if startsWaitingForDependentsDeletion(event, accessor) {
+			glog.V(2).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", newNode.identity)
 			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: newNode})
+			for dep := range newNode.dependents {
+				p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: dep})
+			}
 		}
 	case (event.eventType == addEvent || event.eventType == updateEvent) && found:
 		// caveat: if GC observes the creation of the dependents later than the
@@ -444,11 +454,17 @@ func (p *Propagator) processEvent() {
 			glog.V(6).Infof("add %s to the orphanQueue", existingNode.identity)
 			p.gc.orphanQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: existingNode})
 		}
-		if waitingForDependentsDeletion(event, accessor) {
-			glog.V(6).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", existingNode.identity)
+		if beingDeleted(accessor) {
+			existingNode.beingDeleted = true
+		}
+		if startsWaitingForDependentsDeletion(event, accessor) {
+			glog.V(2).Infof("add %s to the dirtyQueue, because it's waiting for its dependents to be deleted", existingNode.identity)
 			// if the existingNode is added as a "virtual" node, its deletingDependents field is not properly set, so always set it here.
 			existingNode.deletingDependents = true
 			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: existingNode})
+			for dep := range existingNode.dependents {
+				p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: dep})
+			}
 		}
 		// add/remove owner refs
 		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
@@ -793,7 +809,7 @@ func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []me
 		if err != nil {
 			return solid, dangling, waiting, err
 		}
-		if ownerAccessor.GetDeletionTimestamp != nil && hasDeleteDependentsFinalizer(ownerAccessor) {
+		if ownerAccessor.GetDeletionTimestamp() != nil && hasDeleteDependentsFinalizer(ownerAccessor) {
 			waiting = append(waiting, reference)
 		} else {
 			solid = append(solid, reference)
@@ -811,6 +827,12 @@ func ownerRefsToUIDs(refs []metatypes.OwnerReference) []types.UID {
 }
 
 func (gc *GarbageCollector) processItem(item *node) error {
+	glog.V(2).Infof("CHAO: processing item %s", item.identity)
+	// "being deleted" is an one-way trip to the final deletion. We'll just wait for the final deletion, and then process the object's dependents.
+	if item.beingDeleted && !item.deletingDependents {
+		glog.V(2).Infof("CHAO: processing item %s returned at once", item.identity)
+		return nil
+	}
 	// Get the latest item from the API server
 	latest, err := gc.getObject(item.identity)
 	if err != nil {
@@ -840,17 +862,23 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		return nil
 	}
 
+	// TODO: orphanFinalizer() routine is similar. Consider merging orphanFinalizer() into processItem() as well.
 	if item.deletingDependents {
 		if len(item.dependents) == 0 {
+			glog.V(2).Infof("CHAO: remove DeleteDependents finalizer for item %s", item.identity)
 			return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
 		} else {
+			for dep := range item.dependents {
+				glog.V(2).Infof("CHAO: adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
+				gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
+			}
 			return nil
 		}
 	}
 
 	ownerReferences := latest.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
-		glog.V(6).Infof("object %s's doesn't have an owner, continue on next item", item.identity)
+		glog.V(2).Infof("CHAO: object %s's doesn't have an owner, continue on next item", item.identity)
 		return nil
 	}
 	solid, dangling, waiting, err := gc.classifyReferences(item, ownerReferences)
@@ -858,20 +886,20 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		return err
 	}
 	if len(solid) != 0 {
-		glog.V(6).Infof("object %s has at least an existing owner, will not garbage collect", item.identity.UID)
+		glog.V(2).Infof("CHAO: object %s has at least an existing owner, will not garbage collect", item.identity)
 		if len(dangling) != 0 || len(waiting) != 0 {
-			glog.V(6).Infof("remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity.UID)
+			glog.V(2).Infof("CHAO: remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity)
 		}
 		// TODO: add an e2e test for this case
 		patch := deleteOwnerRefPatch(item.identity.UID, append(ownerRefsToUIDs(dangling), ownerRefsToUIDs(waiting)...)...)
 		_, err = gc.patchObject(item.identity, patch)
 		return err
 	} else {
-		if len(waiting) != 0 {
-			glog.V(2).Infof("at least one owner of object %s has FianlizerDeletingDependents, so object is going to be deleted with DeletePropagationForeground", item.identity.UID)
+		if len(waiting) != 0 && len(item.dependents) != 0 {
+			glog.V(2).Infof("CHAO: at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
 			return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
 		}
-		glog.V(2).Infof("delete object %s with DeletePropagationDefault", item.identity.UID)
+		glog.V(2).Infof("CHAO: delete object %s with DeletePropagationDefault", item.identity)
 		return gc.deleteObject(item.identity, v1.DeletePropagationDefault)
 	}
 }

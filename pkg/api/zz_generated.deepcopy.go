@@ -2025,6 +2025,13 @@ func DeepCopy_api_OwnerReference(in interface{}, out interface{}, c *conversion.
 		} else {
 			out.Controller = nil
 		}
+		if in.BlockOwnerDeletion != nil {
+			in, out := &in.BlockOwnerDeletion, &out.BlockOwnerDeletion
+			*out = new(bool)
+			**out = **in
+		} else {
+			out.BlockOwnerDeletion = nil
+		}
 		return nil
 	}
 }

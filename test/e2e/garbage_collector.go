@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
@@ -29,10 +30,12 @@ import (
 	"k8s.io/kubernetes/test/e2e/framework"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func getDeletePropagationForegroundOptions() *v1.DeleteOptions {
-	return &v1.DeleteOptions{Policy: &v1.DeletePropagationForeground}
+	policy := v1.DeletePropagationForeground
+	return &v1.DeleteOptions{PropagationPolicy: &policy}
 }
 
 func getOrphanOptions() *v1.DeleteOptions {
@@ -43,6 +46,10 @@ func getOrphanOptions() *v1.DeleteOptions {
 func getNonOrphanOptions() *v1.DeleteOptions {
 	var falseVar = false
 	return &v1.DeleteOptions{OrphanDependents: &falseVar}
+}
+
+func getSelector() map[string]string {
+	return map[string]string{"app": "gc-test"}
 }
 
 func newOwnerRC(f *framework.Framework, name string) *v1.ReplicationController {
@@ -59,12 +66,13 @@ func newOwnerRC(f *framework.Framework, name string) *v1.ReplicationController {
 		},
 		Spec: v1.ReplicationControllerSpec{
 			Replicas: &replicas,
-			Selector: map[string]string{"app": "gc-test"},
+			Selector: getSelector(),
 			Template: &v1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
-					Labels: map[string]string{"app": "gc-test"},
+					Labels: getSelector(),
 				},
 				Spec: v1.PodSpec{
+					TerminationGracePeriodSeconds: func() *int64 { i := int64(0); return &i }(),
 					Containers: []v1.Container{
 						{
 							Name:  "nginx",
@@ -178,7 +186,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
 		rc := newOwnerRC(f, rcName)
-		replicas := int32(100)
+		replicas := int32(10)
 		rc.Spec.Replicas = &replicas
 		By("create the rc")
 		rc, err := rcClient.Create(rc)
@@ -215,7 +223,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 				return false, nil
 			}
 			return true, nil
-		}); err != nil && err != wait.ErrWaitTimeout {
+		}); err != nil {
 			framework.Failf("%v", err)
 		}
 		By("wait for 30 seconds to see if the garbage collector mistakenly deletes the pods")
@@ -287,7 +295,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
 		rc := newOwnerRC(f, rcName)
-		replicas := int32(10)
+		replicas := int32(100)
 		rc.Spec.Replicas = &replicas
 		By("create the rc")
 		rc, err := rcClient.Create(rc)
@@ -315,10 +323,20 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 			framework.Failf("failed to delete the rc: %v", err)
 		}
 		By("wait for the rc to be deleted")
-		// the default graceful period for pods are 15s, 60 seconds should be long enough.
-		if err := wait.Poll(5*time.Second, 60*time.Second, func() (bool, error) {
-			rcs, err := rcClient.Get(rc.Name)
+		// default client QPS is 20, deleting each pod requires 2 requests, so 30s should be enough
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			_, err := rcClient.Get(rc.Name)
 			if err == nil {
+				pods, _ := podClient.List(v1.ListOptions{})
+				framework.Logf("%d pods remaining", len(pods.Items))
+				count := 0
+				for _, pod := range pods.Items {
+					if pod.ObjectMeta.DeletionTimestamp == nil {
+						count++
+					}
+				}
+				framework.Logf("%d pods has nil DeletionTimestamp", count)
+				framework.Logf("")
 				return false, nil
 			} else {
 				if errors.IsNotFound(err) {
@@ -327,16 +345,141 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 					return false, err
 				}
 			}
-		}); err != nil && err != wait.ErrWaitTimeout {
-			framework.Failf("%v", err)
+		}); err != nil {
+			rc, err2 := rcClient.Get(rc.Name)
+			if err2 != nil {
+				framework.Failf("%v", err2)
+			}
+			framework.Logf("rc=%#v", rc)
+			pods, err3 := podClient.List(v1.ListOptions{})
+			if err3 != nil {
+				framework.Failf("%v", err3)
+			}
+			framework.Logf("%d remaining pods are:", len(pods.Items))
+			for _, pod := range pods.Items {
+				framework.Logf("%#v", pod.ObjectMeta)
+			}
 		}
 		// There shouldn't be any pods
 		pods, err := podClient.List(v1.ListOptions{})
 		if err != nil {
-			return false, fmt.Errorf("Failed to list pods: %v", err)
+			framework.Failf("%v", err)
 		}
 		if len(pods.Items) != 0 {
 			framework.Failf("expected no pods, got %#v", pods)
+		}
+		gatherMetrics(f)
+	})
+
+	It("[Feature:GarbageCollector] should ignore dependents that have both valid owner and owner that's waiting for dependents to be deleted", func() {
+		clientSet := f.ClientSet
+		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
+		podClient := clientSet.Core().Pods(f.Namespace.Name)
+		rc1Name := "simpletest-rc-to-be-deleted"
+		rc1 := newOwnerRC(f, rc1Name)
+		replicas := int32(100)
+		halfReplicas := 50
+		rc1.Spec.Replicas = &replicas
+		By("create the rc1")
+		rc1, err := rcClient.Create(rc1)
+		if err != nil {
+			framework.Failf("Failed to create replication controller: %v", err)
+		}
+		rc2Name := "simpletest-rc-to-stay"
+		rc2 := newOwnerRC(f, rc2Name)
+		replicas = int32(0)
+		rc2.Spec.Replicas = &replicas
+		rc2.Spec.Selector = nil
+		rc2.Spec.Template.ObjectMeta.Labels = map[string]string{"another.key": "another.value"}
+		By("create the rc2")
+		rc2, err = rcClient.Create(rc2)
+		if err != nil {
+			framework.Failf("Failed to create replication controller: %v", err)
+		}
+		// wait for rc1 to be stable
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			rc1, err := rcClient.Get(rc1.Name)
+			if err != nil {
+				return false, fmt.Errorf("Failed to get rc: %v", err)
+			}
+			if rc1.Status.Replicas == *rc1.Spec.Replicas {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}); err != nil {
+			framework.Failf("failed to wait for the rc.Status.Replicas to reach rc.Spec.Replicas: %v", err)
+		}
+		By(fmt.Sprintf("set half of pods created by rc %s to have rc %s as owner as well", rc1Name, rc2Name))
+		pods, err := podClient.List(v1.ListOptions{})
+		Expect(err).NotTo(HaveOccurred())
+		patch := fmt.Sprintf(`{"metadata":{"ownerReferences":[{"apiVersion":"v1","kind":"ReplicationController","name":"%s","uid":"%s"}]}}`, rc2.ObjectMeta.Name, rc2.ObjectMeta.UID)
+		for i := 0; i < halfReplicas; i++ {
+			pod := pods.Items[i]
+			_, err := podClient.Patch(pod.Name, api.StrategicMergePatchType, []byte(patch))
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		By(fmt.Sprintf("delete the rc %s", rc1Name))
+		deleteOptions := getDeletePropagationForegroundOptions()
+		deleteOptions.Preconditions = v1.NewUIDPreconditions(string(rc1.UID))
+		if err := rcClient.Delete(rc1.ObjectMeta.Name, deleteOptions); err != nil {
+			framework.Failf("failed to delete the rc: %v", err)
+		}
+		By("wait for the rc to be deleted")
+		// default client QPS is 20, deleting each pod requires 2 requests, so 30s should be enough
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			_, err := rcClient.Get(rc1.Name)
+			if err == nil {
+				pods, _ := podClient.List(v1.ListOptions{})
+				framework.Logf("%d pods remaining", len(pods.Items))
+				count := 0
+				for _, pod := range pods.Items {
+					if pod.ObjectMeta.DeletionTimestamp == nil {
+						count++
+					}
+				}
+				framework.Logf("%d pods has nil DeletionTimestamp", count)
+				framework.Logf("")
+				return false, nil
+			} else {
+				if errors.IsNotFound(err) {
+					return true, nil
+				} else {
+					return false, err
+				}
+			}
+		}); err != nil {
+			rc1, err2 := rcClient.Get(rc1.Name)
+			if err2 != nil {
+				framework.Failf("%v", err2)
+			}
+			framework.Logf("rc=%#v", rc1)
+			pods, err3 := podClient.List(v1.ListOptions{})
+			if err3 != nil {
+				framework.Failf("%v", err3)
+			}
+			framework.Logf("%d remaining pods are:", len(pods.Items))
+			for _, pod := range pods.Items {
+				framework.Logf("%#v", pod.ObjectMeta)
+			}
+		}
+		// half of the pods should still exist,
+		pods, err = podClient.List(v1.ListOptions{})
+		if err != nil {
+			framework.Failf("%v", err)
+		}
+		if len(pods.Items) != halfReplicas {
+			framework.Failf("expected %d pods, got %d", halfReplicas, len(pods.Items))
+		}
+		for _, pod := range pods.Items {
+			if pod.ObjectMeta.DeletionTimestamp != nil {
+				framework.Failf("expected pod DeletionTimestamp to be nil, got %#v", pod.ObjectMeta)
+			}
+			// they should only have 1 ownerReference left
+			if len(pod.ObjectMeta.OwnerReferences) != 1 {
+				framework.Failf("expected pod to only have 1 owner, got %#v", pod.ObjectMeta.OwnerReferences)
+			}
 		}
 		gatherMetrics(f)
 	})
