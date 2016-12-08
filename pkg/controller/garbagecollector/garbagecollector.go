@@ -891,6 +891,9 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		} else {
 			for _, dep := range blockingDependents {
 				glog.V(2).Infof("CHAO: adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
+				// TODO: perhaps should only enqueue if the dependent is not
+				// already in the deleting state (imagining item is a deployment,
+				// and dep is a rs)
 				gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
 			}
 			return nil
@@ -917,6 +920,11 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		return err
 	} else {
 		if len(waiting) != 0 && len(item.dependents) != 0 {
+			for _, dep := range item.dependents {
+				if dep.deletingDependents {
+					glog.V(2).Infof("though at least one owner of object %s has FianlizerDeletingDependents, the object has dependents who already so it is going to be deleted with DeletePropagationForegroundXXXXXXXXXXXXX")
+				}
+			}
 			glog.V(2).Infof("CHAO: at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
 			return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
 		}
