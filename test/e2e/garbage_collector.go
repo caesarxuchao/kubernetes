@@ -52,9 +52,7 @@ func getSelector() map[string]string {
 	return map[string]string{"app": "gc-test"}
 }
 
-func newOwnerRC(f *framework.Framework, name string) *v1.ReplicationController {
-	var replicas int32
-	replicas = 2
+func newOwnerRC(f *framework.Framework, name string, replicas int32) *v1.ReplicationController {
 	return &v1.ReplicationController{
 		TypeMeta: unversioned.TypeMeta{
 			Kind:       "ReplicationController",
@@ -134,7 +132,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
-		rc := newOwnerRC(f, rcName)
+		rc := newOwnerRC(f, rcName, 2)
 		By("create the rc")
 		rc, err := rcClient.Create(rc)
 		if err != nil {
@@ -185,7 +183,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
-		rc := newOwnerRC(f, rcName)
+		rc := newOwnerRC(f, rcName, 2)
 		replicas := int32(10)
 		rc.Spec.Replicas = &replicas
 		By("create the rc")
@@ -247,7 +245,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
-		rc := newOwnerRC(f, rcName)
+		rc := newOwnerRC(f, rcName, 2)
 		By("create the rc")
 		rc, err := rcClient.Create(rc)
 		if err != nil {
@@ -294,7 +292,7 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rcName := "simpletest.rc"
-		rc := newOwnerRC(f, rcName)
+		rc := newOwnerRC(f, rcName, 2)
 		replicas := int32(100)
 		rc.Spec.Replicas = &replicas
 		By("create the rc")
@@ -371,24 +369,119 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 		gatherMetrics(f)
 	})
 
-	It("[Feature:GarbageCollector] should ignore dependents that have both valid owner and owner that's waiting for dependents to be deleted", func() {
+	It("[Feature:GarbageCollector] should not block the deletion of the owner if all its dependents are non-blocking", func() {
+		clientSet := f.ClientSet
+		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
+		podClient := clientSet.Core().Pods(f.Namespace.Name)
+		rcName := "simpletest.rc"
+		rc := newOwnerRC(f, rcName, 1)
+		// the created pods can't be deleted because they have unhandled
+		// finalizers.
+		rc.Spec.Template.ObjectMeta.Finalizers = []string{"x/y"}
+		defer func() {
+
+			patch := []byte(`{"metadata":{"finalizers":null}}`)
+			pods, err := podClient.List(v1.ListOptions{})
+			Expect(err).NotTo(HaveOccurred())
+			for _, pod := range pods.Items {
+				pod.Finalizers = []string{}
+				for {
+					_, err = podClient.Patch(pod.Name, api.StrategicMergePatchType, patch)
+					if err == nil {
+						break
+					}
+				}
+			}
+		}()
+		By("create the rc")
+		rc, err := rcClient.Create(rc)
+		if err != nil {
+			framework.Failf("Failed to create replication controller: %v", err)
+		}
+		// wait for rc to create pods
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			rc, err := rcClient.Get(rc.Name)
+			if err != nil {
+				return false, fmt.Errorf("Failed to get rc: %v", err)
+			}
+			if rc.Status.Replicas == *rc.Spec.Replicas {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}); err != nil {
+			framework.Failf("failed to wait for the rc.Status.Replicas to reach rc.Spec.Replicas: %v", err)
+		}
+		By("delete the rc")
+		deleteOptions := getDeletePropagationForegroundOptions()
+		deleteOptions.Preconditions = v1.NewUIDPreconditions(string(rc.UID))
+		if err := rcClient.Delete(rc.ObjectMeta.Name, deleteOptions); err != nil {
+			framework.Failf("failed to delete the rc: %v", err)
+		}
+		By("wait for the rc to be deleted")
+		// default client QPS is 20, deleting each pod requires 2 requests, so 30s should be enough
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			_, err := rcClient.Get(rc.Name)
+			if err == nil {
+				pods, _ := podClient.List(v1.ListOptions{})
+				framework.Logf("%d pods remaining", len(pods.Items))
+				count := 0
+				for _, pod := range pods.Items {
+					if pod.ObjectMeta.DeletionTimestamp == nil {
+						count++
+					}
+				}
+				framework.Logf("%d pods has nil DeletionTimestamp", count)
+				framework.Logf("")
+				return false, nil
+			} else {
+				if errors.IsNotFound(err) {
+					return true, nil
+				} else {
+					return false, err
+				}
+			}
+		}); err != nil {
+			rc, err2 := rcClient.Get(rc.Name)
+			if err2 != nil {
+				framework.Failf("%v", err2)
+			}
+			framework.Logf("rc=%#v", rc)
+			pods, err3 := podClient.List(v1.ListOptions{})
+			if err3 != nil {
+				framework.Failf("%v", err3)
+			}
+			framework.Logf("%d remaining pods are:", len(pods.Items))
+			for _, pod := range pods.Items {
+				framework.Logf("%#v", pod.ObjectMeta)
+			}
+		}
+		// the pod should still be around, it has an unhandled finalizer
+		pods, err := podClient.List(v1.ListOptions{})
+		if err != nil {
+			framework.Failf("%v", err)
+		}
+		if len(pods.Items) != 1 {
+			framework.Failf("expected 1 pods, got %#v", pods)
+		}
+		gatherMetrics(f)
+	})
+
+	It("[Feature:GarbageCollector] should not delete dependents that have both valid owner and owner that's waiting for dependents to be deleted", func() {
 		clientSet := f.ClientSet
 		rcClient := clientSet.Core().ReplicationControllers(f.Namespace.Name)
 		podClient := clientSet.Core().Pods(f.Namespace.Name)
 		rc1Name := "simpletest-rc-to-be-deleted"
-		rc1 := newOwnerRC(f, rc1Name)
 		replicas := int32(100)
 		halfReplicas := 50
-		rc1.Spec.Replicas = &replicas
+		rc1 := newOwnerRC(f, rc1Name, replicas)
 		By("create the rc1")
 		rc1, err := rcClient.Create(rc1)
 		if err != nil {
 			framework.Failf("Failed to create replication controller: %v", err)
 		}
 		rc2Name := "simpletest-rc-to-stay"
-		rc2 := newOwnerRC(f, rc2Name)
-		replicas = int32(0)
-		rc2.Spec.Replicas = &replicas
+		rc2 := newOwnerRC(f, rc2Name, 0)
 		rc2.Spec.Selector = nil
 		rc2.Spec.Template.ObjectMeta.Labels = map[string]string{"another.key": "another.value"}
 		By("create the rc2")

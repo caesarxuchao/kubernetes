@@ -22,9 +22,10 @@ package metatypes
 import "k8s.io/kubernetes/pkg/types"
 
 type OwnerReference struct {
-	APIVersion string
-	Kind       string
-	UID        types.UID
-	Name       string
-	Controller *bool
+	APIVersion         string
+	Kind               string
+	UID                types.UID
+	Name               string
+	Controller         *bool
+	BlockOwnerDeletion *bool
 }

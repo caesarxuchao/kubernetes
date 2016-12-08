@@ -335,6 +335,14 @@ func extractFromOwnerReference(v reflect.Value, o *metatypes.OwnerReference) err
 		controller := *controllerPtr
 		o.Controller = &controller
 	}
+	var blockOwnerDeletionPtr *bool
+	if err := runtime.Field(v, "BlockOwnerDeletion", &blockOwnerDeletionPtr); err != nil {
+		return err
+	}
+	if blockOwnerDeletionPtr != nil {
+		block := *blockOwnerDeletionPtr
+		o.BlockOwnerDeletion = &block
+	}
 	return nil
 }
 

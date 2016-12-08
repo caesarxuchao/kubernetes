@@ -18,6 +18,7 @@ package garbagecollector
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -62,10 +63,8 @@ func (s objectReference) String() string {
 	return fmt.Sprintf("[%s/%s, namespace: %s, name: %s, uid: %s]", s.APIVersion, s.Kind, s.Namespace, s.Name, s.UID)
 }
 
-// node does not require a lock to protect. The single-threaded
-// Propagator.processEvent() is the sole writer of the nodes. The multi-threaded
-// GarbageCollector.processItem() reads the nodes, but it only reads the fields
-// that never get changed by Propagator.processEvent().
+// The single-threaded Propagator.processEvent() is the sole writer of the
+// nodes. The multi-threaded GarbageCollector.processItem() reads the nodes.
 type node struct {
 	identity objectReference
 	// dependents will be read by the orphan() routine, we need to protect it with a lock.
@@ -91,6 +90,18 @@ func (ownerNode *node) deleteDependent(dependent *node) {
 	ownerNode.dependentsLock.Lock()
 	defer ownerNode.dependentsLock.Unlock()
 	delete(ownerNode.dependents, dependent)
+}
+
+func (self *node) blockingDependents() []*node {
+	var ret []*node
+	for dep := range self.dependents {
+		for _, owner := range dep.owners {
+			if owner.UID == self.identity.UID && owner.BlockOwnerDeletion != nil && *owner.BlockOwnerDeletion {
+				ret = append(ret, dep)
+			}
+		}
+	}
+	return ret
 }
 
 type eventType int
@@ -195,7 +206,7 @@ func (p *Propagator) removeNode(n *node) {
 
 // TODO: profile this function to see if a naive N^2 algorithm performs better
 // when the number of references is small.
-func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerReference) (added []metatypes.OwnerReference, removed []metatypes.OwnerReference) {
+func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerReference) (added []metatypes.OwnerReference, removed []metatypes.OwnerReference, changed []metatypes.OwnerReference) {
 	oldUIDToRef := make(map[string]metatypes.OwnerReference)
 	for i := 0; i < len(old); i++ {
 		oldUIDToRef[string(old[i].UID)] = old[i]
@@ -209,6 +220,7 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 
 	addedUID := newUIDSet.Difference(oldUIDSet)
 	removedUID := oldUIDSet.Difference(newUIDSet)
+	intersection := oldUIDSet.Intersection(newUIDSet)
 
 	for uid := range addedUID {
 		added = append(added, newUIDToRef[uid])
@@ -216,7 +228,12 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	for uid := range removedUID {
 		removed = append(removed, oldUIDToRef[uid])
 	}
-	return added, removed
+	for uid := range intersection {
+		if !reflect.DeepEqual(oldUIDToRef[uid], newUIDToRef[uid]) {
+			changed = append(changed, newUIDToRef[uid])
+		}
+	}
+	return added, removed, changed
 }
 
 // returns if the object referred by the event transitions to "being deleted".
@@ -467,10 +484,13 @@ func (p *Propagator) processEvent() {
 			}
 		}
 		// add/remove owner refs
-		added, removed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
-		if len(added) == 0 && len(removed) == 0 {
+		added, removed, changed := referencesDiffs(existingNode.owners, accessor.GetOwnerReferences())
+		if len(added) == 0 && len(removed) == 0 && len(changed) == 0 {
 			glog.V(6).Infof("The updateEvent %#v doesn't change node references, ignore", event)
 			return
+		}
+		if len(changed) != 0 {
+			glog.V(2).Infof("CHAO: references %#v changed for object %s", changed, existingNode.identity)
 		}
 		// update the node itself
 		existingNode.owners = accessor.GetOwnerReferences()
@@ -864,11 +884,12 @@ func (gc *GarbageCollector) processItem(item *node) error {
 
 	// TODO: orphanFinalizer() routine is similar. Consider merging orphanFinalizer() into processItem() as well.
 	if item.deletingDependents {
-		if len(item.dependents) == 0 {
+		blockingDependents := item.blockingDependents()
+		if len(blockingDependents) != 0 {
 			glog.V(2).Infof("CHAO: remove DeleteDependents finalizer for item %s", item.identity)
 			return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
 		} else {
-			for dep := range item.dependents {
+			for _, dep := range blockingDependents {
 				glog.V(2).Infof("CHAO: adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
 				gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
 			}
