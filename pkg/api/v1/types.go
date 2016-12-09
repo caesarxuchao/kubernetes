@@ -3439,7 +3439,8 @@ type OwnerReference struct {
 	// Defaults to false.
 	// To set this field, a user needs "delete" permission of the owner,
 	// otherwise 422 (Unprocessable Entity) will be returned.
-	BlockOwnerDeletion *bool `json:"blockOwnerDeletion,omitempty" protobuf:"varint,6,opt,name=blockOwnerDeletion"`
+	// +optional
+	BlockOwnerDeletion *bool `json:"blockOwnerDeletion,omitempty" protobuf:"varint,7,opt,name=blockOwnerDeletion"`
 }
 
 // ObjectReference contains enough information to let you inspect or modify the referred object.
