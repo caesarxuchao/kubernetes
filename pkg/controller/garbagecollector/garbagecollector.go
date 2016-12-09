@@ -17,6 +17,7 @@ limitations under the License.
 package garbagecollector
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -92,16 +93,35 @@ func (ownerNode *node) deleteDependent(dependent *node) {
 	delete(ownerNode.dependents, dependent)
 }
 
-func (self *node) blockingDependents() []*node {
+func (n *node) blockingDependents() []*node {
 	var ret []*node
-	for dep := range self.dependents {
+	for dep := range n.dependents {
 		for _, owner := range dep.owners {
-			if owner.UID == self.identity.UID && owner.BlockOwnerDeletion != nil && *owner.BlockOwnerDeletion {
+			if owner.UID == n.identity.UID && owner.BlockOwnerDeletion != nil && *owner.BlockOwnerDeletion {
 				ret = append(ret, dep)
 			}
 		}
 	}
 	return ret
+}
+
+// TODO: add a unit test
+// generate a patch that unsets the BlockOwnerDeletion field of all
+// ownerReferences of node.
+func (n *node) unblockOwnerReferences() ([]byte, error) {
+	var dummy v1.Pod
+	var blockingRefs []metatypes.OwnerReference
+	falseVar := false
+	for _, owner := range n.owners {
+		if owner.BlockOwnerDeletion != nil && *owner.BlockOwnerDeletion {
+			ref := owner
+			ref.BlockOwnerDeletion = &falseVar
+			blockingRefs = append(blockingRefs, ref)
+		}
+	}
+	dummy.ObjectMeta.SetOwnerReferences(blockingRefs)
+	dummy.ObjectMeta.UID = n.identity.UID
+	return json.Marshal(dummy)
 }
 
 type eventType int
@@ -914,15 +934,22 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		if len(dangling) != 0 || len(waiting) != 0 {
 			glog.V(2).Infof("CHAO: remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity)
 		}
-		// TODO: add an e2e test for this case
 		patch := deleteOwnerRefPatch(item.identity.UID, append(ownerRefsToUIDs(dangling), ownerRefsToUIDs(waiting)...)...)
 		_, err = gc.patchObject(item.identity, patch)
 		return err
 	} else {
 		if len(waiting) != 0 && len(item.dependents) != 0 {
-			for _, dep := range item.dependents {
+			for dep := range item.dependents {
 				if dep.deletingDependents {
-					glog.V(2).Infof("though at least one owner of object %s has FianlizerDeletingDependents, the object has dependents who already so it is going to be deleted with DeletePropagationForegroundXXXXXXXXXXXXX")
+					glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground, and ", item.identity, dep.identity)
+					patch, err := item.unblockOwnerReferences()
+					if err != nil {
+						return err
+					}
+					if _, err := gc.patchObject(item.identity, patch); err != nil {
+						return err
+					}
+					break
 				}
 			}
 			glog.V(2).Infof("CHAO: at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)

@@ -28,6 +28,7 @@ import (
 
 	_ "k8s.io/kubernetes/pkg/api/install"
 
+	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/meta/metatypes"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
@@ -509,5 +510,57 @@ func TestDeleteOwnerRefPatch(t *testing.T) {
 	}
 	if !reflect.DeepEqual(expected, got) {
 		t.Errorf("expected: %#v,\ngot: %#v", expected, got)
+	}
+}
+
+func TestUnblockOwnerReference(t *testing.T) {
+	trueVar := true
+	falseVar := false
+	original := v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
+			UID: "100",
+			OwnerReferences: []v1.OwnerReference{
+				{UID: "1", BlockOwnerDeletion: &trueVar},
+				{UID: "2", BlockOwnerDeletion: &falseVar},
+				{UID: "3"},
+			},
+		},
+	}
+	originalData := serilizeOrDie(t, original)
+	expected := v1.Pod{
+		ObjectMeta: v1.ObjectMeta{
+			UID: "100",
+			OwnerReferences: []v1.OwnerReference{
+				{UID: "1", BlockOwnerDeletion: &falseVar},
+				{UID: "2", BlockOwnerDeletion: &falseVar},
+				{UID: "3"},
+			},
+		},
+	}
+	accessor, err := meta.Accessor(&original)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := node{
+		owners: accessor.GetOwnerReferences(),
+	}
+	patch, err := n.unblockOwnerReferences()
+	if err != nil {
+		t.Fatal(err)
+	}
+	patched, err := strategicpatch.StrategicMergePatch(originalData, patch, v1.Pod{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got v1.Pod
+	if err := json.Unmarshal(patched, &got); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("expected: %#v,\ngot: %#v", expected, got)
+		t.Errorf("expected: %#v,\ngot: %#v", expected.OwnerReferences, got.OwnerReferences)
+		for _, ref := range got.OwnerReferences {
+			t.Errorf("ref.UID=%s, ref.BlockOwnerDeletion=%v", ref.UID, *ref.BlockOwnerDeletion)
+		}
 	}
 }
