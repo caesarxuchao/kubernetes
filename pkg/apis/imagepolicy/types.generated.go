@@ -1997,7 +1997,7 @@ func (x codecSelfer1234) decSliceapi_OwnerReference(v *[]pkg2_api.OwnerReference
 
 			yyrg174 := len(yyv174) > 0
 			yyv2174 := yyv174
-			yyrl174, yyrt174 = z.DecInferLen(yyl174, z.DecBasicHandle().MaxInitLen, 72)
+			yyrl174, yyrt174 = z.DecInferLen(yyl174, z.DecBasicHandle().MaxInitLen, 80)
 			if yyrt174 {
 				if yyrl174 <= cap(yyv174) {
 					yyv174 = yyv174[:yyrl174]
