@@ -197,6 +197,38 @@ func NewGarbageCollector(metaOnlyClientPool dynamic.ClientPool, clientPool dynam
 	return gc, nil
 }
 
+func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
+	glog.Infof("Garbage Collector: Initializing")
+	for _, monitor := range gc.monitors {
+		go monitor.controller.Run(stopCh)
+	}
+
+	wait.PollInfinite(10*time.Second, func() (bool, error) {
+		for _, monitor := range gc.monitors {
+			if !monitor.controller.HasSynced() {
+				glog.Infof("Garbage Collector: Waiting for resource monitors to be synced...")
+				return false, nil
+			}
+		}
+		return true, nil
+	})
+	glog.Infof("Garbage Collector: All monitored resources synced. Proceeding to collect garbage")
+
+	// worker
+	go wait.Until(gc.propagator.processEvent, 0, stopCh)
+
+	for i := 0; i < workers; i++ {
+		go wait.Until(gc.worker, 0, stopCh)
+		go wait.Until(gc.orphanFinalizer, 0, stopCh)
+	}
+	Register()
+	<-stopCh
+	glog.Infof("Garbage Collector: Shutting down")
+	gc.dirtyQueue.ShutDown()
+	gc.orphanQueue.ShutDown()
+	gc.propagator.eventQueue.ShutDown()
+}
+
 func (gc *GarbageCollector) worker() {
 	timedItem, quit := gc.dirtyQueue.Get()
 	if quit {
@@ -213,16 +245,6 @@ func (gc *GarbageCollector) worker() {
 	DirtyProcessingLatency.Observe(sinceInMicroseconds(gc.clock, timedItem.StartTime))
 }
 
-func objectReferenceToUnstructured(ref objectReference) *runtime.Unstructured {
-	ret := &runtime.Unstructured{}
-	ret.SetKind(ref.Kind)
-	ret.SetAPIVersion(ref.APIVersion)
-	ret.SetUID(ref.UID)
-	ret.SetNamespace(ref.Namespace)
-	ret.SetName(ref.Name)
-	return ret
-}
-
 func objectReferenceToMetadataOnlyObject(ref objectReference) *metaonly.MetadataOnlyObject {
 	return &metaonly.MetadataOnlyObject{
 		TypeMeta: unversioned.TypeMeta{
@@ -237,10 +259,12 @@ func objectReferenceToMetadataOnlyObject(ref objectReference) *metaonly.Metadata
 	}
 }
 
+// classify the latestReferences to three categories:
 // solid: the owner exists, and is not "waiting"
 // dangling: the owner does not exist
 // waiting: the owner exists, its deletionTimestamp is non-nil, and it has
 // FianlizerDeletingDependents
+// This function involves communications to the server.
 func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []metatypes.OwnerReference) (
 	solid []metatypes.OwnerReference,
 	dangling []metatypes.OwnerReference,
@@ -273,6 +297,7 @@ func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []me
 			if errors.IsNotFound(err) {
 				gc.absentOwnerCache.Add(reference.UID)
 				glog.V(6).Infof("object %s's owner %s/%s, %s is not found", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
+				dangling = append(dangling, reference)
 			} else {
 				return solid, dangling, waiting, err
 			}
@@ -307,10 +332,10 @@ func ownerRefsToUIDs(refs []metatypes.OwnerReference) []types.UID {
 }
 
 func (gc *GarbageCollector) processItem(item *node) error {
-	glog.V(2).Infof("CHAO: processing item %s", item.identity)
+	glog.V(2).Infof("processing item %s", item.identity)
 	// "being deleted" is an one-way trip to the final deletion. We'll just wait for the final deletion, and then process the object's dependents.
 	if item.beingDeleted && !item.deletingDependents {
-		glog.V(2).Infof("CHAO: processing item %s returned at once", item.identity)
+		glog.V(6).Infof("processing item %s returned at once", item.identity)
 		return nil
 	}
 	// Get the latest item from the API server
@@ -344,44 +369,37 @@ func (gc *GarbageCollector) processItem(item *node) error {
 
 	// TODO: orphanFinalizer() routine is similar. Consider merging orphanFinalizer() into processItem() as well.
 	if item.deletingDependents {
-		blockingDependents := item.blockingDependents()
-		if len(blockingDependents) == 0 {
-			glog.V(2).Infof("CHAO: remove DeleteDependents finalizer for item %s", item.identity)
-			return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
-		} else {
-			for _, dep := range blockingDependents {
-				glog.V(2).Infof("CHAO: adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
-				// TODO: perhaps should only enqueue if the dependent is not
-				// already in the deleting state (imagining item is a deployment,
-				// and dep is a rs)
-				gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
-			}
-			return nil
-		}
+		return gc.processingDeletingDependentsItem(item)
 	}
 
 	ownerReferences := latest.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
-		glog.V(2).Infof("CHAO: object %s's doesn't have an owner, continue on next item", item.identity)
+		glog.V(2).Infof("object %s's doesn't have an owner, continue on next item", item.identity)
 		return nil
 	}
+
 	solid, dangling, waiting, err := gc.classifyReferences(item, ownerReferences)
-	glog.V(2).Infof("CHAO: classify references of %s.\nsolid: %#v\ndangling: %#v\nwaiting: %#v\n", item.identity, solid, dangling, waiting)
 	if err != nil {
 		return err
 	}
+	glog.V(6).Infof("classify references of %s.\nsolid: %#v\ndangling: %#v\nwaiting: %#v\n", item.identity, solid, dangling, waiting)
+
 	if len(solid) != 0 {
-		glog.V(2).Infof("CHAO: object %s has at least an existing owner, will not garbage collect", item.identity)
+		glog.V(2).Infof("object %s has at least an existing owner, will not garbage collect", item.identity)
 		if len(dangling) != 0 || len(waiting) != 0 {
-			glog.V(2).Infof("CHAO: remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity)
+			glog.V(2).Infof("remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity)
 		}
 		patch := deleteOwnerRefPatch(item.identity.UID, append(ownerRefsToUIDs(dangling), ownerRefsToUIDs(waiting)...)...)
 		_, err = gc.patchObject(item.identity, patch)
+		// TODO: add all waiting owners to the dirty queue.
 		return err
 	} else {
 		if len(waiting) != 0 && len(item.dependents) != 0 {
 			for dep := range item.dependents {
 				if dep.deletingDependents {
+					// TODO: this circle detection has false positive, we should
+					// apply a more rigorous detection if this turns out to be a
+					// problem.
 					glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground", item.identity, dep.identity)
 					patch, err := item.patchToUnblockOwnerReferences()
 					if err != nil {
@@ -393,7 +411,7 @@ func (gc *GarbageCollector) processItem(item *node) error {
 					break
 				}
 			}
-			glog.V(2).Infof("CHAO: at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
+			glog.V(2).Infof("at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
 			return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
 		}
 		glog.V(2).Infof("CHAO: delete object %s with DeletePropagationDefault", item.identity)
@@ -401,82 +419,22 @@ func (gc *GarbageCollector) processItem(item *node) error {
 	}
 }
 
-func (gc *GarbageCollector) Run(workers int, stopCh <-chan struct{}) {
-	glog.Infof("Garbage Collector: Initializing")
-	for _, monitor := range gc.monitors {
-		go monitor.controller.Run(stopCh)
+// process item that's waiting for its dependents to be deleted
+func (gc *GarbageCollector) processingDeletingDependentsItem(item *node) error {
+	blockingDependents := item.blockingDependents()
+	if len(blockingDependents) == 0 {
+		glog.V(2).Infof("remove DeleteDependents finalizer for item %s", item.identity)
+		return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
+	} else {
+		for _, dep := range blockingDependents {
+			glog.V(2).Infof("adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
+			// TODO: perhaps should only enqueue if the dependent is not
+			// already in the deleting state (imagining item is a deployment,
+			// and dep is a rs)
+			gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
+		}
+		return nil
 	}
-
-	wait.PollInfinite(10*time.Second, func() (bool, error) {
-		for _, monitor := range gc.monitors {
-			if !monitor.controller.HasSynced() {
-				glog.Infof("Garbage Collector: Waiting for resource monitors to be synced...")
-				return false, nil
-			}
-		}
-		return true, nil
-	})
-	glog.Infof("Garbage Collector: All monitored resources synced. Proceeding to collect garbage")
-
-	// worker
-	go wait.Until(gc.propagator.processEvent, 0, stopCh)
-
-	for i := 0; i < workers; i++ {
-		go wait.Until(gc.worker, 0, stopCh)
-		go wait.Until(gc.orphanFinalizer, 0, stopCh)
-	}
-	Register()
-	<-stopCh
-	glog.Infof("Garbage Collector: Shutting down")
-	gc.dirtyQueue.ShutDown()
-	gc.orphanQueue.ShutDown()
-	gc.propagator.eventQueue.ShutDown()
-}
-
-// TODO: Using Patch when strategicmerge supports deleting an entry from a
-// slice of a base type.
-func (gc *GarbageCollector) removeFinalizer(owner *node, targetFinalizer string) error {
-	const retries = 5
-	for count := 0; count < retries; count++ {
-		ownerObject, err := gc.getObject(owner.identity)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return nil
-			}
-			return fmt.Errorf("cannot finalize owner %s, because cannot get it. The garbage collector will retry later.", owner.identity)
-		}
-		accessor, err := meta.Accessor(ownerObject)
-		if err != nil {
-			return fmt.Errorf("cannot access the owner object: %v. The garbage collector will retry later.", err)
-		}
-		finalizers := accessor.GetFinalizers()
-		var newFinalizers []string
-		found := false
-		for _, f := range finalizers {
-			if f == targetFinalizer {
-				found = true
-				break
-			} else {
-				newFinalizers = append(newFinalizers, f)
-			}
-		}
-		if !found {
-			glog.V(6).Infof("the orphan finalizer is already removed from object %s", owner.identity)
-			return nil
-		}
-		// remove the owner from dependent's OwnerReferences
-		ownerObject.SetFinalizers(newFinalizers)
-		_, err = gc.updateObject(owner.identity, ownerObject)
-		if err == nil {
-			return nil
-		}
-		if err != nil && !errors.IsConflict(err) {
-			return fmt.Errorf("cannot update the finalizers of owner %s, with error: %v, tried %d times", owner.identity, err, count+1)
-		}
-		// retry if it's a conflict
-		glog.V(6).Infof("got conflict updating the owner object %s, tried %d times", owner.identity, count+1)
-	}
-	return fmt.Errorf("updateMaxRetries(%d) has reached. The garbage collector will retry later for owner %v.", retries, owner.identity)
 }
 
 // dependents are copies of pointers to the owner's dependents, they don't need to be locked.

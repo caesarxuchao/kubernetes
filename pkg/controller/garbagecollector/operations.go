@@ -22,6 +22,8 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/errors"
+	"k8s.io/kubernetes/pkg/api/meta"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/runtime"
@@ -90,4 +92,50 @@ func (gc *GarbageCollector) patchObject(item objectReference, patch []byte) (*ru
 		return nil, err
 	}
 	return client.Resource(resource, item.Namespace).Patch(item.Name, api.StrategicMergePatchType, patch)
+}
+
+// TODO: Using Patch when strategicmerge supports deleting an entry from a
+// slice of a base type.
+func (gc *GarbageCollector) removeFinalizer(owner *node, targetFinalizer string) error {
+	const retries = 5
+	for count := 0; count < retries; count++ {
+		ownerObject, err := gc.getObject(owner.identity)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+			return fmt.Errorf("cannot finalize owner %s, because cannot get it. The garbage collector will retry later.", owner.identity)
+		}
+		accessor, err := meta.Accessor(ownerObject)
+		if err != nil {
+			return fmt.Errorf("cannot access the owner object: %v. The garbage collector will retry later.", err)
+		}
+		finalizers := accessor.GetFinalizers()
+		var newFinalizers []string
+		found := false
+		for _, f := range finalizers {
+			if f == targetFinalizer {
+				found = true
+				break
+			} else {
+				newFinalizers = append(newFinalizers, f)
+			}
+		}
+		if !found {
+			glog.V(6).Infof("the orphan finalizer is already removed from object %s", owner.identity)
+			return nil
+		}
+		// remove the owner from dependent's OwnerReferences
+		ownerObject.SetFinalizers(newFinalizers)
+		_, err = gc.updateObject(owner.identity, ownerObject)
+		if err == nil {
+			return nil
+		}
+		if err != nil && !errors.IsConflict(err) {
+			return fmt.Errorf("cannot update the finalizers of owner %s, with error: %v, tried %d times", owner.identity, err, count+1)
+		}
+		// retry if it's a conflict
+		glog.V(6).Infof("got conflict updating the owner object %s, tried %d times", owner.identity, count+1)
+	}
+	return fmt.Errorf("updateMaxRetries(%d) has reached. The garbage collector will retry later for owner %v.", retries, owner.identity)
 }
