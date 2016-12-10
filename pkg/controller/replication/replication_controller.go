@@ -517,7 +517,8 @@ func (rm *ReplicationManager) manageReplicas(filteredPods []*v1.Pod, rc *v1.Repl
 				if rm.garbageCollectorEnabled {
 					var trueVar = true
 					controllerRef := &v1.OwnerReference{
-						APIVersion:         getRCKind().GroupVersion().String(),
+						//APIVersion:         getRCKind().GroupVersion().String(),
+						APIVersion:         "v100",
 						Kind:               getRCKind().Kind,
 						Name:               rc.Name,
 						UID:                rc.UID,

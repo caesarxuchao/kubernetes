@@ -26,6 +26,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/v1"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/release_1_5"
 	"k8s.io/kubernetes/pkg/metrics"
+	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/wait"
 	"k8s.io/kubernetes/test/e2e/framework"
 
@@ -77,6 +78,27 @@ func newOwnerRC(f *framework.Framework, name string, replicas int32) *v1.Replica
 							Image: "gcr.io/google_containers/nginx:1.7.9",
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+func newGCPod(name string) *v1.Pod {
+	return &v1.Pod{
+		TypeMeta: unversioned.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name: name,
+		},
+		Spec: v1.PodSpec{
+			TerminationGracePeriodSeconds: func() *int64 { i := int64(0); return &i }(),
+			Containers: []v1.Container{
+				{
+					Name:  "nginx",
+					Image: "gcr.io/google_containers/nginx:1.7.9",
 				},
 			},
 		},
@@ -575,5 +597,54 @@ var _ = framework.KubeDescribe("Garbage collector", func() {
 			}
 		}
 		gatherMetrics(f)
+	})
+
+	It("[Feature:GarbageCollector] should not be blocked by dependency circle", func() {
+		clientSet := f.ClientSet
+		podClient := clientSet.Core().Pods(f.Namespace.Name)
+		pod1 := newGCPod("pod1")
+		pod1, err := podClient.Create(pod1)
+		Expect(err).NotTo(HaveOccurred())
+		pod2 := newGCPod("pod2")
+		pod2, err = podClient.Create(pod2)
+		Expect(err).NotTo(HaveOccurred())
+		pod3 := newGCPod("pod3")
+		pod3, err = podClient.Create(pod3)
+		Expect(err).NotTo(HaveOccurred())
+		// create circular dependency
+		addRefPatch := func(name string, uid types.UID) []byte {
+			return []byte(fmt.Sprintf(`{"metadata":{"ownerReferences":[{"apiVersion":"v1","kind":"Pod","name":"%s","uid":"%s","controller":true,"blockOwnerDeletion":true}]}}`, name, uid))
+		}
+		pod1, err = podClient.Patch(pod1.Name, api.StrategicMergePatchType, addRefPatch(pod3.Name, pod3.UID))
+		Expect(err).NotTo(HaveOccurred())
+		framework.Logf("pod1.ObjectMeta.OwnerReferences=%#v", pod1.ObjectMeta.OwnerReferences)
+		pod2, err = podClient.Patch(pod2.Name, api.StrategicMergePatchType, addRefPatch(pod1.Name, pod1.UID))
+		Expect(err).NotTo(HaveOccurred())
+		framework.Logf("pod2.ObjectMeta.OwnerReferences=%#v", pod2.ObjectMeta.OwnerReferences)
+		pod3, err = podClient.Patch(pod3.Name, api.StrategicMergePatchType, addRefPatch(pod2.Name, pod2.UID))
+		Expect(err).NotTo(HaveOccurred())
+		framework.Logf("pod3.ObjectMeta.OwnerReferences=%#v", pod3.ObjectMeta.OwnerReferences)
+		// delete one pod, should result in the deletion of all pods
+		deleteOptions := getDeletePropagationForegroundOptions()
+		deleteOptions.Preconditions = v1.NewUIDPreconditions(string(pod1.UID))
+		err = podClient.Delete(pod1.ObjectMeta.Name, deleteOptions)
+		Expect(err).NotTo(HaveOccurred())
+		var pods *v1.PodList
+		var err2 error
+		if err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
+			pods, err2 = podClient.List(v1.ListOptions{})
+			if err2 != nil {
+				return false, fmt.Errorf("Failed to list pods: %v", err)
+			}
+			if len(pods.Items) == 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		}); err != nil {
+			framework.Logf("pods are %#v", pods.Items)
+			framework.Failf("failed to wait for all pods to be deleted: %v", err)
+
+		}
 	})
 })

@@ -105,11 +105,10 @@ func (n *node) blockingDependents() []*node {
 	return ret
 }
 
-// TODO: add a unit test
 // generate a patch that unsets the BlockOwnerDeletion field of all
 // ownerReferences of node.
 func (n *node) unblockOwnerReferences() ([]byte, error) {
-	var dummy v1.Pod
+	var dummy metaonly.MetadataOnlyObject
 	var blockingRefs []metatypes.OwnerReference
 	falseVar := false
 	for _, owner := range n.owners {
@@ -354,6 +353,9 @@ func (gc *GarbageCollector) removeFinalizer(owner *node, targetFinalizer string)
 	for count := 0; count < retries; count++ {
 		ownerObject, err := gc.getObject(owner.identity)
 		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
 			return fmt.Errorf("cannot finalize owner %s, because cannot get it. The garbage collector will retry later.", owner.identity)
 		}
 		accessor, err := meta.Accessor(ownerObject)
@@ -905,7 +907,7 @@ func (gc *GarbageCollector) processItem(item *node) error {
 	// TODO: orphanFinalizer() routine is similar. Consider merging orphanFinalizer() into processItem() as well.
 	if item.deletingDependents {
 		blockingDependents := item.blockingDependents()
-		if len(blockingDependents) != 0 {
+		if len(blockingDependents) == 0 {
 			glog.V(2).Infof("CHAO: remove DeleteDependents finalizer for item %s", item.identity)
 			return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
 		} else {
@@ -926,6 +928,7 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		return nil
 	}
 	solid, dangling, waiting, err := gc.classifyReferences(item, ownerReferences)
+	glog.V(2).Infof("CHAO: classify references of %s.\nsolid: %#v\ndangling: %#v\nwaiting: %#v\n", item.identity, solid, dangling, waiting)
 	if err != nil {
 		return err
 	}
@@ -941,12 +944,13 @@ func (gc *GarbageCollector) processItem(item *node) error {
 		if len(waiting) != 0 && len(item.dependents) != 0 {
 			for dep := range item.dependents {
 				if dep.deletingDependents {
-					glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground, and ", item.identity, dep.identity)
+					glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground", item.identity, dep.identity)
 					patch, err := item.unblockOwnerReferences()
 					if err != nil {
 						return err
 					}
 					if _, err := gc.patchObject(item.identity, patch); err != nil {
+						fmt.Println("CHAO: err 1, patch=", string(patch))
 						return err
 					}
 					break
