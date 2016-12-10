@@ -144,21 +144,31 @@ func (u *Unstructured) setNestedMap(value map[string]string, fields ...string) {
 
 func extractOwnerReference(src interface{}) metatypes.OwnerReference {
 	v := src.(map[string]interface{})
-	controllerPtr, ok := (getNestedField(v, "controller")).(*bool)
+	// though this field is a *bool, but when decoded from JSON, it's
+	// unmarshalled as bool.
+	var controllerPtr *bool
+	controller, ok := (getNestedField(v, "controller")).(bool)
 	if !ok {
 		controllerPtr = nil
 	} else {
-		if controllerPtr != nil {
-			controller := *controllerPtr
-			controllerPtr = &controller
-		}
+		controllerCopy := controller
+		controllerPtr = &controllerCopy
+	}
+	var blockOwnerDeletionPtr *bool
+	blockOwnerDeletion, ok := (getNestedField(v, "blockOwnerDeletion")).(bool)
+	if !ok {
+		blockOwnerDeletionPtr = nil
+	} else {
+		blockOwnerDeletionCopy := blockOwnerDeletion
+		blockOwnerDeletionPtr = &blockOwnerDeletionCopy
 	}
 	return metatypes.OwnerReference{
-		Kind:       getNestedString(v, "kind"),
-		Name:       getNestedString(v, "name"),
-		APIVersion: getNestedString(v, "apiVersion"),
-		UID:        (types.UID)(getNestedString(v, "uid")),
-		Controller: controllerPtr,
+		Kind:               getNestedString(v, "kind"),
+		Name:               getNestedString(v, "name"),
+		APIVersion:         getNestedString(v, "apiVersion"),
+		UID:                (types.UID)(getNestedString(v, "uid")),
+		Controller:         controllerPtr,
+		BlockOwnerDeletion: blockOwnerDeletionPtr,
 	}
 }
 
@@ -169,11 +179,17 @@ func setOwnerReference(src metatypes.OwnerReference) map[string]interface{} {
 		controller := *controllerPtr
 		controllerPtr = &controller
 	}
+	blockOwnerDeletionPtr := src.BlockOwnerDeletion
+	if blockOwnerDeletionPtr != nil {
+		blockOwnerDeletion := *blockOwnerDeletionPtr
+		blockOwnerDeletionPtr = &blockOwnerDeletion
+	}
 	setNestedField(ret, src.Kind, "kind")
 	setNestedField(ret, src.Name, "name")
 	setNestedField(ret, src.APIVersion, "apiVersion")
 	setNestedField(ret, string(src.UID), "uid")
 	setNestedField(ret, controllerPtr, "controller")
+	setNestedField(ret, blockOwnerDeletionPtr, "blockOwnerDeletion")
 	return ret
 }
 
