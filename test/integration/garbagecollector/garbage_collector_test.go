@@ -45,6 +45,11 @@ import (
 	"k8s.io/kubernetes/test/integration/framework"
 )
 
+func getDeletePropagationForegroundOptions() *v1.DeleteOptions {
+	policy := v1.DeletePropagationForeground
+	return &v1.DeleteOptions{PropagationPolicy: &policy}
+}
+
 func getOrphanOptions() *v1.DeleteOptions {
 	var trueVar = true
 	return &v1.DeleteOptions{OrphanDependents: &trueVar}
@@ -421,7 +426,7 @@ func TestOrphaning(t *testing.T) {
 		t.Fatalf("Failed to create replication controller: %v", err)
 	}
 
-	// these pods should be ophaned.
+	// these pods should be orphaned.
 	var podUIDs []types.UID
 	podsNum := 3
 	for i := 0; i < podsNum; i++ {
@@ -462,6 +467,71 @@ func TestOrphaning(t *testing.T) {
 	}
 
 	// verify pods don't have the ownerPod as an owner anymore
+	pods, err := podClient.List(v1.ListOptions{})
+	if err != nil {
+		t.Fatalf("Failed to list pods: %v", err)
+	}
+	if len(pods.Items) != podsNum {
+		t.Errorf("Expect %d pod(s), but got %#v", podsNum, pods)
+	}
+	for _, pod := range pods.Items {
+		if len(pod.ObjectMeta.OwnerReferences) != 0 {
+			t.Errorf("pod %s still has non-empty OwnerRefereces: %v", pod.ObjectMeta.Name, pod.ObjectMeta.OwnerReferences)
+		}
+	}
+}
+
+func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
+	s, gc, clientSet := setup(t)
+	defer s.Close()
+
+	ns := framework.CreateTestingNamespace("gc-orphaning", s, t)
+	defer framework.DeleteTestingNamespace(ns, s, t)
+
+	podClient := clientSet.Core().Pods(ns.Name)
+	rcClient := clientSet.Core().ReplicationControllers(ns.Name)
+	// create the RC with the orphan finalizer set
+	toBeDeletedRC, err := rcClient.Create(newOwnerRC(toBeDeletedRCName, ns.Name))
+	if err != nil {
+		t.Fatalf("Failed to create replication controller: %v", err)
+	}
+	remainingRC, err := rcClient.Create(newOwnerRC(remainingRCName, ns.Name))
+	if err != nil {
+		t.Fatalf("Failed to create replication controller: %v", err)
+	}
+	pod := newPod(podName, ns.Name, []v1.OwnerReference{
+		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name},
+		{UID: remainingRC.ObjectMeta.UID, Name: remainingRC.Name},
+	})
+	_, err = podClient.Create(pod)
+	if err != nil {
+		t.Fatalf("Failed to create Pod: %v", err)
+	}
+
+	stopCh := make(chan struct{})
+	go gc.Run(5, stopCh)
+	defer close(stopCh)
+
+	err = rcClient.Delete(toBeDeletedRCName, getDeletePropagationForegroundOptions())
+	if err != nil {
+		t.Fatalf("Failed to gracefully delete the rc: %v", err)
+	}
+	// verify the toBeDeleteRC is deleted
+	if err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
+		rcs, err := rcClient.List(v1.ListOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(rcs.Items) == 0 {
+			t.Logf("Still has %d RCs", len(rcs.Items))
+			return true, nil
+		}
+		return false, nil
+	}); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// verify pods don't have the toBeDeleteRC as an owner anymore
 	pods, err := podClient.List(v1.ListOptions{})
 	if err != nil {
 		t.Fatalf("Failed to list pods: %v", err)
