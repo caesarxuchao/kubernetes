@@ -106,9 +106,14 @@ func (p *Propagator) removeNode(n *node) {
 	p.removeDependentFromOwners(n, n.owners)
 }
 
+type ownerRefPair struct {
+	old metatypes.OwnerReference
+	new metatypes.OwnerReference
+}
+
 // TODO: profile this function to see if a naive N^2 algorithm performs better
 // when the number of references is small.
-func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerReference) (added []metatypes.OwnerReference, removed []metatypes.OwnerReference, changed []metatypes.OwnerReference) {
+func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerReference) (added []metatypes.OwnerReference, removed []metatypes.OwnerReference, changed []ownerRefPair) {
 	oldUIDToRef := make(map[string]metatypes.OwnerReference)
 	for i := 0; i < len(old); i++ {
 		oldUIDToRef[string(old[i].UID)] = old[i]
@@ -132,7 +137,7 @@ func referencesDiffs(old []metatypes.OwnerReference, new []metatypes.OwnerRefere
 	}
 	for uid := range intersection {
 		if !reflect.DeepEqual(oldUIDToRef[uid], newUIDToRef[uid]) {
-			changed = append(changed, newUIDToRef[uid])
+			changed = append(changed, ownerRefPair{old: oldUIDToRef[uid], new: newUIDToRef[uid]})
 		}
 	}
 	return added, removed, changed
@@ -201,6 +206,30 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 		return false
 	}
 	return hasOrphanFianlizer(accessor)
+}
+
+func (p *Propagator) addUnblockedOwnersToDirtyQueue(removed []metatypes.OwnerReference, changed []ownerRefPair) {
+	for _, ref := range removed {
+		if ref.BlockOwnerDeletion != nil && *ref.BlockOwnerDeletion {
+			node, found := p.uidToNode.Read(ref.UID)
+			if !found {
+				utilruntime.HandleError(fmt.Errorf("this shouldn't happen, cannot find %s in uidToNode", ref.UID))
+				continue
+			}
+			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: node})
+		}
+	}
+	for _, c := range changed {
+		if c.old.BlockOwnerDeletion != nil && *c.old.BlockOwnerDeletion &&
+			c.new.BlockOwnerDeletion != nil && !*c.new.BlockOwnerDeletion {
+			node, found := p.uidToNode.Read(c.new.UID)
+			if !found {
+				utilruntime.HandleError(fmt.Errorf("this shouldn't happen, cannot find %s in uidToNode", c.new.UID))
+				continue
+			}
+			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: node})
+		}
+	}
 }
 
 // Dequeueing an event from eventQueue, updating graph, populating dirty_queue.
@@ -285,13 +314,14 @@ func (p *Propagator) processEvent() {
 			return
 		}
 		if len(changed) != 0 {
-			glog.V(2).Infof("CHAO: references %#v changed for object %s", changed, existingNode.identity)
+			glog.V(6).Infof("references %#v changed for object %s", changed, existingNode.identity)
 		}
+		p.addUnblockedOwnersToDirtyQueue(removed, changed)
 		// update the node itself
 		existingNode.owners = accessor.GetOwnerReferences()
 		// Add the node to its new owners' dependent lists.
 		p.addDependentToOwners(existingNode, added)
-		// remove the node from the dependent list of node that are no long in
+		// remove the node from the dependent list of node that are no longer in
 		// the node's owners list.
 		p.removeDependentFromOwners(existingNode, removed)
 	case event.eventType == deleteEvent:

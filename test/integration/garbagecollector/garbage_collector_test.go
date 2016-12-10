@@ -30,6 +30,7 @@ import (
 	"github.com/golang/glog"
 	dto "github.com/prometheus/client_model/go"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/api/unversioned"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apimachinery/registered"
@@ -499,8 +500,9 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create replication controller: %v", err)
 	}
-	pod := newPod(podName, ns.Name, []v1.OwnerReference{
-		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name},
+	trueVar := true
+	pod := newPod("pod", ns.Name, []v1.OwnerReference{
+		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name, BlockOwnerDeletion: &trueVar},
 		{UID: remainingRC.ObjectMeta.UID, Name: remainingRC.Name},
 	})
 	_, err = podClient.Create(pod)
@@ -518,13 +520,12 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 	}
 	// verify the toBeDeleteRC is deleted
 	if err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
-		rcs, err := rcClient.List(v1.ListOptions{})
+		_, err := rcClient.Get(toBeDeletedRC.Name)
 		if err != nil {
+			if errors.IsNotFound(err) {
+				return true, nil
+			}
 			return false, err
-		}
-		if len(rcs.Items) == 0 {
-			t.Logf("Still has %d RCs", len(rcs.Items))
-			return true, nil
 		}
 		return false, nil
 	}); err != nil {
@@ -532,16 +533,13 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 	}
 
 	// verify pods don't have the toBeDeleteRC as an owner anymore
-	pods, err := podClient.List(v1.ListOptions{})
+	pod, err = podClient.Get("pod")
 	if err != nil {
 		t.Fatalf("Failed to list pods: %v", err)
 	}
-	if len(pods.Items) != podsNum {
-		t.Errorf("Expect %d pod(s), but got %#v", podsNum, pods)
-	}
-	for _, pod := range pods.Items {
-		if len(pod.ObjectMeta.OwnerReferences) != 0 {
-			t.Errorf("pod %s still has non-empty OwnerRefereces: %v", pod.ObjectMeta.Name, pod.ObjectMeta.OwnerReferences)
-		}
+	if len(pod.ObjectMeta.OwnerReferences) != 1 {
+		t.Errorf("expect pod to have only one ownerReference: got %#v", pod.ObjectMeta.OwnerReferences)
+	} else if pod.ObjectMeta.OwnerReferences[0].Name != remainingRC.Name {
+		t.Errorf("expect pod to have an ownerReference pointing to %s, got %#v", remainingRC.Name, pod.ObjectMeta.OwnerReferences)
 	}
 }
