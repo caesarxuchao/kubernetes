@@ -208,12 +208,14 @@ func shouldOrphanDependents(e *event, accessor meta.Object) bool {
 	return hasOrphanFianlizer(accessor)
 }
 
+// if an blocking ownerReference points to an object gets removed, or get set to
+// "BlockOwnerDeletion=false", add the object to the dirty queue.
 func (p *Propagator) addUnblockedOwnersToDirtyQueue(removed []metatypes.OwnerReference, changed []ownerRefPair) {
 	for _, ref := range removed {
 		if ref.BlockOwnerDeletion != nil && *ref.BlockOwnerDeletion {
 			node, found := p.uidToNode.Read(ref.UID)
 			if !found {
-				utilruntime.HandleError(fmt.Errorf("this shouldn't happen, cannot find %s in uidToNode", ref.UID))
+				glog.V(6).Infof("cannot find %s in uidToNode", ref.UID)
 				continue
 			}
 			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: node})
@@ -224,7 +226,7 @@ func (p *Propagator) addUnblockedOwnersToDirtyQueue(removed []metatypes.OwnerRef
 			c.new.BlockOwnerDeletion != nil && !*c.new.BlockOwnerDeletion {
 			node, found := p.uidToNode.Read(c.new.UID)
 			if !found {
-				utilruntime.HandleError(fmt.Errorf("this shouldn't happen, cannot find %s in uidToNode", c.new.UID))
+				glog.V(6).Infof("cannot find %s in uidToNode", c.new.UID)
 				continue
 			}
 			p.gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: p.gc.clock.Now(), Object: node})

@@ -264,7 +264,7 @@ func objectReferenceToMetadataOnlyObject(ref objectReference) *metaonly.Metadata
 // dangling: the owner does not exist
 // waiting: the owner exists, its deletionTimestamp is non-nil, and it has
 // FianlizerDeletingDependents
-// This function involves communications to the server.
+// This function communicates with the server.
 func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []metatypes.OwnerReference) (
 	solid []metatypes.OwnerReference,
 	dangling []metatypes.OwnerReference,
@@ -323,6 +323,15 @@ func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []me
 	return solid, dangling, waiting, nil
 }
 
+func (gc *GarbageCollector) generateVirtualDeleteEvent(identity objectReference) {
+	event := &event{
+		eventType: deleteEvent,
+		obj:       objectReferenceToMetadataOnlyObject(identity),
+	}
+	glog.V(6).Infof("generating virtual delete event for %s\n\n", event.obj)
+	gc.propagator.eventQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: event})
+}
+
 func ownerRefsToUIDs(refs []metatypes.OwnerReference) []types.UID {
 	var ret []types.UID
 	for _, ref := range refs {
@@ -346,32 +355,23 @@ func (gc *GarbageCollector) processItem(item *node) error {
 			// exist yet, so we need to enqueue a virtual Delete event to remove
 			// the virtual node from Propagator.uidToNode.
 			glog.V(6).Infof("item %v not found, generating a virtual delete event", item.identity)
-			event := &event{
-				eventType: deleteEvent,
-				obj:       objectReferenceToMetadataOnlyObject(item.identity),
-			}
-			glog.V(6).Infof("generating virtual delete event for %s\n\n", event.obj)
-			gc.propagator.eventQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: event})
+			gc.generateVirtualDeleteEvent(item.identity)
 			return nil
 		}
 		return err
 	}
 	if latest.GetUID() != item.identity.UID {
 		glog.V(6).Infof("UID doesn't match, item %v not found, generating a virtual delete event", item.identity)
-		event := &event{
-			eventType: deleteEvent,
-			obj:       objectReferenceToMetadataOnlyObject(item.identity),
-		}
-		glog.V(6).Infof("generating virtual delete event for %s\n\n", event.obj)
-		gc.propagator.eventQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: event})
+		gc.generateVirtualDeleteEvent(item.identity)
 		return nil
 	}
 
 	// TODO: orphanFinalizer() routine is similar. Consider merging orphanFinalizer() into processItem() as well.
 	if item.deletingDependents {
-		return gc.processingDeletingDependentsItem(item)
+		return gc.processDeletingDependentsItem(item)
 	}
 
+	// compute if we should delete the item
 	ownerReferences := latest.GetOwnerReferences()
 	if len(ownerReferences) == 0 {
 		glog.V(2).Infof("object %s's doesn't have an owner, continue on next item", item.identity)
@@ -384,54 +384,52 @@ func (gc *GarbageCollector) processItem(item *node) error {
 	}
 	glog.V(6).Infof("classify references of %s.\nsolid: %#v\ndangling: %#v\nwaiting: %#v\n", item.identity, solid, dangling, waiting)
 
-	if len(solid) != 0 {
-		glog.V(2).Infof("object %s has at least an existing owner, will not garbage collect", item.identity)
+	switch {
+	case len(solid) != 0:
+		glog.V(2).Infof("object %s has at least one existing owner, will not garbage collect", item.identity)
 		if len(dangling) != 0 || len(waiting) != 0 {
 			glog.V(2).Infof("remove dangling references %#v and waiting references %#v for object %s", dangling, waiting, item.identity)
 		}
 		patch := deleteOwnerRefPatch(item.identity.UID, append(ownerRefsToUIDs(dangling), ownerRefsToUIDs(waiting)...)...)
 		_, err = gc.patchObject(item.identity, patch)
-		// TODO: add all waiting owners to the dirty queue.
 		return err
-	} else {
-		if len(waiting) != 0 && len(item.dependents) != 0 {
-			for dep := range item.dependents {
-				if dep.deletingDependents {
-					// TODO: this circle detection has false positive, we should
-					// apply a more rigorous detection if this turns out to be a
-					// problem.
-					glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground", item.identity, dep.identity)
-					patch, err := item.patchToUnblockOwnerReferences()
-					if err != nil {
-						return err
-					}
-					if _, err := gc.patchObject(item.identity, patch); err != nil {
-						return err
-					}
-					break
+	case len(waiting) != 0 && len(item.dependents) != 0:
+		for dep := range item.dependents {
+			if dep.deletingDependents {
+				// this circle detection has false positives, we need to
+				// apply a more rigorous detection if this turns out to be a
+				// problem.
+				glog.V(2).Infof("processing object %s, some of its owners and its dependent [%s] have FianlizerDeletingDependents, to prevent potential cycle, its ownerReferences are going to be modified to be non-blocking, then the object is going to be deleted with DeletePropagationForeground", item.identity, dep.identity)
+				patch, err := item.patchToUnblockOwnerReferences()
+				if err != nil {
+					return err
 				}
+				if _, err := gc.patchObject(item.identity, patch); err != nil {
+					return err
+				}
+				break
 			}
-			glog.V(2).Infof("at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
-			return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
 		}
-		glog.V(2).Infof("CHAO: delete object %s with DeletePropagationDefault", item.identity)
+		glog.V(2).Infof("at least one owner of object %s has FianlizerDeletingDependents, and the object itself has dependents, so it is going to be deleted with DeletePropagationForeground", item.identity)
+		return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
+	default:
+		glog.V(2).Infof("delete object %s with DeletePropagationDefault", item.identity)
 		return gc.deleteObject(item.identity, v1.DeletePropagationDefault)
 	}
 }
 
 // process item that's waiting for its dependents to be deleted
-func (gc *GarbageCollector) processingDeletingDependentsItem(item *node) error {
+func (gc *GarbageCollector) processDeletingDependentsItem(item *node) error {
 	blockingDependents := item.blockingDependents()
 	if len(blockingDependents) == 0 {
 		glog.V(2).Infof("remove DeleteDependents finalizer for item %s", item.identity)
 		return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
 	} else {
 		for _, dep := range blockingDependents {
-			glog.V(2).Infof("adding dep %s to dirtyQueue, because %s is deletingDependents", dep.identity, item.identity)
-			// TODO: perhaps should only enqueue if the dependent is not
-			// already in the deleting state (imagining item is a deployment,
-			// and dep is a rs)
-			gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
+			if !dep.deletingDependents {
+				glog.V(2).Infof("adding %s to dirtyQueue, because its owner %s is deletingDependents", dep.identity, item.identity)
+				gc.dirtyQueue.Add(&workqueue.TimedWorkQueueItem{StartTime: gc.clock.Now(), Object: dep})
+			}
 		}
 		return nil
 	}

@@ -486,7 +486,7 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 	s, gc, clientSet := setup(t)
 	defer s.Close()
 
-	ns := framework.CreateTestingNamespace("gc-orphaning", s, t)
+	ns := framework.CreateTestingNamespace("gc-foreground1", s, t)
 	defer framework.DeleteTestingNamespace(ns, s, t)
 
 	podClient := clientSet.Core().Pods(ns.Name)
@@ -516,7 +516,7 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 
 	err = rcClient.Delete(toBeDeletedRCName, getDeletePropagationForegroundOptions())
 	if err != nil {
-		t.Fatalf("Failed to gracefully delete the rc: %v", err)
+		t.Fatalf("Failed to delete the rc: %v", err)
 	}
 	// verify the toBeDeleteRC is deleted
 	if err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
@@ -541,5 +541,123 @@ func TestSolidOwnerDoesNotBlockWaitingOwner(t *testing.T) {
 		t.Errorf("expect pod to have only one ownerReference: got %#v", pod.ObjectMeta.OwnerReferences)
 	} else if pod.ObjectMeta.OwnerReferences[0].Name != remainingRC.Name {
 		t.Errorf("expect pod to have an ownerReference pointing to %s, got %#v", remainingRC.Name, pod.ObjectMeta.OwnerReferences)
+	}
+}
+
+func TestNonBlockingOwnerRefDoesNotBlock(t *testing.T) {
+	s, gc, clientSet := setup(t)
+	defer s.Close()
+
+	ns := framework.CreateTestingNamespace("gc-foreground2", s, t)
+	defer framework.DeleteTestingNamespace(ns, s, t)
+
+	podClient := clientSet.Core().Pods(ns.Name)
+	rcClient := clientSet.Core().ReplicationControllers(ns.Name)
+	// create the RC with the orphan finalizer set
+	toBeDeletedRC, err := rcClient.Create(newOwnerRC(toBeDeletedRCName, ns.Name))
+	if err != nil {
+		t.Fatalf("Failed to create replication controller: %v", err)
+	}
+	// BlockingOwnerDeletion is not set
+	pod1 := newPod("pod1", ns.Name, []v1.OwnerReference{
+		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name},
+	})
+	// adding finalizer that no controller handles, so that the pod won't be deleted
+	pod1.ObjectMeta.Finalizers = []string{"x/y"}
+	// BlockingOwnerDeletion is false
+	falseVar := false
+	pod2 := newPod("pod2", ns.Name, []v1.OwnerReference{
+		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name, BlockOwnerDeletion: &falseVar},
+	})
+	// adding finalizer that no controller handles, so that the pod won't be deleted
+	pod2.ObjectMeta.Finalizers = []string{"x/y"}
+	_, err = podClient.Create(pod1)
+	if err != nil {
+		t.Fatalf("Failed to create Pod: %v", err)
+	}
+	_, err = podClient.Create(pod2)
+	if err != nil {
+		t.Fatalf("Failed to create Pod: %v", err)
+	}
+
+	stopCh := make(chan struct{})
+	go gc.Run(5, stopCh)
+	defer close(stopCh)
+
+	err = rcClient.Delete(toBeDeletedRCName, getDeletePropagationForegroundOptions())
+	if err != nil {
+		t.Fatalf("Failed to delete the rc: %v", err)
+	}
+	// verify the toBeDeleteRC is deleted
+	if err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
+		_, err := rcClient.Get(toBeDeletedRC.Name)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+		return false, nil
+	}); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// verify pods are still there
+	pods, err := podClient.List(v1.ListOptions{})
+	if err != nil {
+		t.Fatalf("Failed to list pods: %v", err)
+	}
+	if len(pods.Items) != 2 {
+		t.Errorf("expect there to be 2 pods, got %#v", pods.Items)
+	}
+}
+
+func TestBlockingOwnerRefDoesBlock(t *testing.T) {
+	s, gc, clientSet := setup(t)
+	defer s.Close()
+
+	ns := framework.CreateTestingNamespace("gc-foreground2", s, t)
+	defer framework.DeleteTestingNamespace(ns, s, t)
+
+	podClient := clientSet.Core().Pods(ns.Name)
+	rcClient := clientSet.Core().ReplicationControllers(ns.Name)
+	// create the RC with the orphan finalizer set
+	toBeDeletedRC, err := rcClient.Create(newOwnerRC(toBeDeletedRCName, ns.Name))
+	if err != nil {
+		t.Fatalf("Failed to create replication controller: %v", err)
+	}
+	trueVar := true
+	pod := newPod("pod", ns.Name, []v1.OwnerReference{
+		{UID: toBeDeletedRC.ObjectMeta.UID, Name: toBeDeletedRC.Name, BlockOwnerDeletion: &trueVar},
+	})
+	// adding finalizer that no controller handles, so that the pod won't be deleted
+	pod.ObjectMeta.Finalizers = []string{"x/y"}
+	_, err = podClient.Create(pod)
+	if err != nil {
+		t.Fatalf("Failed to create Pod: %v", err)
+	}
+
+	stopCh := make(chan struct{})
+	go gc.Run(5, stopCh)
+	defer close(stopCh)
+
+	err = rcClient.Delete(toBeDeletedRCName, getDeletePropagationForegroundOptions())
+	if err != nil {
+		t.Fatalf("Failed to delete the rc: %v", err)
+	}
+	time.Sleep(30 * time.Second)
+	// verify the toBeDeleteRC is NOT deleted
+	_, err = rcClient.Get(toBeDeletedRC.Name)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// verify pods are still there
+	pods, err := podClient.List(v1.ListOptions{})
+	if err != nil {
+		t.Fatalf("Failed to list pods: %v", err)
+	}
+	if len(pods.Items) != 1 {
+		t.Errorf("expect there to be 1 pods, got %#v", pods.Items)
 	}
 }

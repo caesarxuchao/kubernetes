@@ -63,6 +63,8 @@ func (ownerNode *node) deleteDependent(dependent *node) {
 	delete(ownerNode.dependents, dependent)
 }
 
+// blockingDependents returns the dependents that are blocking the deletion of
+// n.
 func (n *node) blockingDependents() []*node {
 	var ret []*node
 	for dep := range n.dependents {
