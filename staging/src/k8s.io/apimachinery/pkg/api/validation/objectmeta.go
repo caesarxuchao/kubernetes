@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 // TODO: delete this global variable when we enable the validation of common
@@ -101,7 +102,7 @@ func ValidateOwnerReferences(ownerReferences []metav1.OwnerReference, fldPath *f
 }
 
 // Validate finalizer names
-func ValidateFinalizerName(stringValue string, fldPath *field.Path) field.ErrorList {
+func validateFinalizerName(stringValue string, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	for _, msg := range validation.IsQualifiedName(stringValue) {
 		allErrs = append(allErrs, field.Invalid(fldPath, stringValue, msg))
@@ -171,8 +172,29 @@ func ValidateObjectMeta(meta *metav1.ObjectMeta, requiresNamespace bool, nameFn 
 	allErrs = append(allErrs, v1validation.ValidateLabels(meta.Labels, fldPath.Child("labels"))...)
 	allErrs = append(allErrs, ValidateAnnotations(meta.Annotations, fldPath.Child("annotations"))...)
 	allErrs = append(allErrs, ValidateOwnerReferences(meta.OwnerReferences, fldPath.Child("ownerReferences"))...)
-	for _, finalizer := range meta.Finalizers {
-		allErrs = append(allErrs, ValidateFinalizerName(finalizer, fldPath.Child("finalizers"))...)
+	allErrs = append(allErrs, ValidateFinalizers(meta.Finalizers, fldPath.Child("finalizers"))...)
+	return allErrs
+}
+
+// ValidateFinalizers tests if the finalizers name are valid, and if there are conflicting finalizers.
+func ValidateFinalizers(finalizers []string, fldPath *field.Path) field.ErrorList {
+	if fldPath == nil {
+		fldPath = field.NewPath("metadata", "finalizers")
+	}
+	allErrs := field.ErrorList{}
+	hasFinalizerOrphanDependents := false
+	hasFinalizerDeleteDependents := false
+	for _, finalizer := range finalizers {
+		allErrs = append(allErrs, validateFinalizerName(finalizer, fldPath)...)
+		if finalizer == api.FinalizerOrphanDependents {
+			hasFinalizerOrphanDependents = true
+		}
+		if finalizer == api.FinalizerDeleteDependents {
+			hasFinalizerDeleteDependents = true
+		}
+	}
+	if hasFinalizerDeleteDependents && hasFinalizerOrphanDependents {
+		allErrs = append(allErrs, field.Invalid(fldPath, finalizers, fmt.Sprintf("finalizer %s and %s cannot be both set", api.FinalizerOrphanDependents, api.FinalizerDeleteDependents)))
 	}
 	return allErrs
 }

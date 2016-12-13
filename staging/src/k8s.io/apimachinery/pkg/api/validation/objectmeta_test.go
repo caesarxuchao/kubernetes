@@ -25,6 +25,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/kubernetes/pkg/api"
 )
 
 const (
@@ -267,6 +268,28 @@ func TestValidateFinalizersUpdate(t *testing.T) {
 	}
 	for name, tc := range testcases {
 		errs := ValidateObjectMetaUpdate(&tc.New, &tc.Old, field.NewPath("field"))
+		if len(errs) == 0 {
+			if len(tc.ExpectedErr) != 0 {
+				t.Errorf("case: %q, expected error to contain %q", name, tc.ExpectedErr)
+			}
+		} else if e, a := tc.ExpectedErr, errs.ToAggregate().Error(); !strings.Contains(a, e) {
+			t.Errorf("case: %q, expected error to contain %q, got error %q", name, e, a)
+		}
+	}
+}
+
+func TestValidateFinalizersPreventConflictingFinalizers(t *testing.T) {
+	testcases := map[string]struct {
+		ObjectMeta  api.ObjectMeta
+		ExpectedErr string
+	}{
+		"conflicting finalizers": {
+			ObjectMeta:  api.ObjectMeta{Name: "test", ResourceVersion: "1", Finalizers: []string{api.FinalizerOrphanDependents, api.FinalizerDeleteDependents}},
+			ExpectedErr: "cannot be both set",
+		},
+	}
+	for name, tc := range testcases {
+		errs := ValidateObjectMeta(&tc.ObjectMeta, false, NameIsDNSSubdomain, field.NewPath("field"))
 		if len(errs) == 0 {
 			if len(tc.ExpectedErr) != 0 {
 				t.Errorf("case: %q, expected error to contain %q", name, tc.ExpectedErr)
