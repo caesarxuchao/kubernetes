@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/apimachinery/pkg/util/validationchao"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
@@ -102,6 +103,7 @@ type DiscoveryClient struct {
 // Convert metav1.APIVersions to metav1.APIGroup. APIVersions is used by legacy v1, so
 // group would be "".
 func apiVersionsToAPIGroup(apiVersions *metav1.APIVersions) (apiGroup metav1.APIGroup) {
+	fmt.Println(validationchao.ChaoTesting())
 	groupVersions := []metav1.GroupVersionForDiscovery{}
 	for _, version := range apiVersions.Versions {
 		groupVersion := metav1.GroupVersionForDiscovery{

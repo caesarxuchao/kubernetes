@@ -18,6 +18,7 @@ package clientset
 
 import (
 	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/util/validationchao"
 	discovery "k8s.io/client-go/discovery"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	rest "k8s.io/client-go/rest"
@@ -99,6 +100,10 @@ type Clientset struct {
 	*v1beta1rbac.RbacV1beta1Client
 	*v1alpha1rbac.RbacV1alpha1Client
 	*v1beta1storage.StorageV1beta1Client
+}
+
+func ChaoTesting() string {
+	return validationchao.ChaoTesting()
 }
 
 // CoreV1 retrieves the CoreV1Client
