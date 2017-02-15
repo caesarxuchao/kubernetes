@@ -22,21 +22,22 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api/meta"
-	"k8s.io/kubernetes/pkg/api/v1"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller/garbagecollector/metaonly"
-	"k8s.io/kubernetes/pkg/runtime/schema"
-	"k8s.io/kubernetes/pkg/types"
-	utilerrors "k8s.io/kubernetes/pkg/util/errors"
-	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
-	"k8s.io/kubernetes/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/util/workqueue"
 	// install the prometheus plugin
 	_ "k8s.io/kubernetes/pkg/util/workqueue/prometheus"
+	// import known versions
+	_ "k8s.io/client-go/kubernetes"
 )
 
 const ResourceResyncTime time.Duration = 0
@@ -154,7 +155,7 @@ func objectReferenceToMetadataOnlyObject(ref objectReference) *metaonly.Metadata
 			APIVersion: ref.APIVersion,
 			Kind:       ref.Kind,
 		},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ref.Namespace,
 			UID:       ref.UID,
 			Name:      ref.Name,
@@ -196,7 +197,7 @@ func (gc *GarbageCollector) classifyReferences(item *node, latestReferences []me
 		// status, but in practice, the difference is small.
 		owner, err := client.Resource(resource, item.identity.Namespace).Get(reference.Name)
 		switch {
-		case IsNotFound(err):
+		case errors.IsNotFound(err):
 			gc.absentOwnerCache.Add(reference.UID)
 			glog.V(5).Infof("object %s's owner %s/%s, %s is not found", item.identity.UID, reference.APIVersion, reference.Kind, reference.Name)
 			dangling = append(dangling, reference)
@@ -304,7 +305,7 @@ func (gc *GarbageCollector) attemptToDeleteItem(item *node) error {
 		return err
 	case len(waitingForDependentsDeletion) != 0 && item.dependentsLength() != 0:
 		deps := item.getDependents()
-		for dep := range deps {
+		for _, dep := range deps {
 			if dep.isDeletingDependents() {
 				// this circle detection has false positives, we need to
 				// apply a more rigorous detection if this turns out to be a
@@ -328,13 +329,13 @@ func (gc *GarbageCollector) attemptToDeleteItem(item *node) error {
 		// doesn't have dependents, the function will remove the
 		// FinalizerDeletingDependents from the item, resulting in the final
 		// deletion of the item.
-		return gc.deleteObject(item.identity, v1.DeletePropagationForeground)
+		return gc.deleteObject(item.identity, metav1.DeletePropagationForeground)
 	default:
 		// item doesn't have any solid owner, so it needs to be garbage
 		// collected. Also, none of item's owners is waiting for the deletion of
 		// the dependents, so GC deletes item with DeletePropagationDefault.
 		glog.V(2).Infof("delete object %s with DeletePropagationDefault", item.identity)
-		return gc.deleteObject(item.identity, v1.DeletePropagationDefault)
+		return gc.deleteObject(item.identity, metav1.DeletePropagationDefault)
 	}
 }
 
@@ -343,7 +344,7 @@ func (gc *GarbageCollector) processDeletingDependentsItem(item *node) error {
 	blockingDependents := item.blockingDependents()
 	if len(blockingDependents) == 0 {
 		glog.V(2).Infof("remove DeleteDependents finalizer for item %s", item.identity)
-		return gc.removeFinalizer(item, v1.FinalizerDeleteDependents)
+		return gc.removeFinalizer(item, metav1.FinalizerDeleteDependents)
 	}
 	for _, dep := range blockingDependents {
 		if !dep.isDeletingDependents() {
@@ -411,7 +412,7 @@ func (gc *GarbageCollector) attemptToOrphanWorker() bool {
 		return true
 	}
 	// update the owner, remove "orphaningFinalizer" from its finalizers list
-	err = gc.removeFinalizer(owner, v1.FinalizerOrphanDependents)
+	err = gc.removeFinalizer(owner, metav1.FinalizerOrphanDependents)
 	if err != nil {
 		glog.V(5).Infof("removeOrphanFinalizer for %s failed with %v", owner.identity, err)
 		gc.attemptToOrphan.AddRateLimited(item)

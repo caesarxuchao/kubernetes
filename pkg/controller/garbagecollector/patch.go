@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"strings"
 
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/controller/garbagecollector/metaonly"
-	"k8s.io/kubernetes/pkg/types"
 )
 
 func deleteOwnerRefPatch(dependentUID types.UID, ownerUIDs ...types.UID) []byte {
@@ -50,5 +50,6 @@ func (n *node) patchToUnblockOwnerReferences() ([]byte, error) {
 	}
 	dummy.ObjectMeta.SetOwnerReferences(blockingRefs)
 	dummy.ObjectMeta.UID = n.identity.UID
+	fmt.Printf("CHAO: dummy=%#v", dummy)
 	return json.Marshal(dummy)
 }

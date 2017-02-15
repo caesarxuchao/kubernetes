@@ -73,7 +73,9 @@ type ListMeta struct {
 
 // These are internal finalizer values for Kubernetes-like APIs, must be qualified name unless defined here
 const (
-	FinalizerOrphan string = "orphan"
+	FinalizerOrphan           string = "orphan"
+	FinalizerOrphanDependents string = "orphan"
+	FinalizerDeleteDependents string = "DeletingDependents"
 )
 
 // ObjectMeta is metadata that all persisted resources must have, which includes all objects
@@ -255,6 +257,14 @@ type OwnerReference struct {
 	// If true, this reference points to the managing controller.
 	// +optional
 	Controller *bool `json:"controller,omitempty" protobuf:"varint,6,opt,name=controller"`
+	// If true, AND if the owner has the "DeletingDependents" finalizer, then
+	// the owner cannot be deleted from the key-value store until this
+	// reference is removed.
+	// Defaults to false.
+	// To set this field, a user needs "delete" permission of the owner,
+	// otherwise 422 (Unprocessable Entity) will be returned.
+	// +optional
+	BlockOwnerDeletion *bool `json:"blockOwnerDeletion,omitempty" protobuf:"varint,7,opt,name=blockOwnerDeletion"`
 }
 
 // ListOptions is the query options to a standard REST list call.
@@ -305,6 +315,22 @@ type GetOptions struct {
 	ResourceVersion string `json:"resourceVersion,omitempty" protobuf:"bytes,1,opt,name=resourceVersion"`
 }
 
+// DeletePropagationPolicy decides if a deletion will propagate to the dependents of the object, and how the garbage collector will handle the propagation.
+type DeletePropagationPolicy string
+
+const (
+	// The default depends on the existing finalizers on the object and the type of the object.
+	DeletePropagationDefault DeletePropagationPolicy = "DeletePropagationDefault"
+	// Orphans the dependents.
+	DeletePropagationOrphan DeletePropagationPolicy = "DeletePropagationOrphan"
+	// Deletes the object from the key-value store, the garbage collector will delete the dependents in the background.
+	DeletePropagationBackground DeletePropagationPolicy = "DeletePropagationBackground"
+	// The object exists in the key-value store until the garbage collector deletes all the dependents whose ownerReference.blockOwnerDeletion=true from the key-value store.
+	// API sever will put the "DeletingDependents" finalizer on the object, and sets its deletionTimestamp.
+	// This policy is cascading, i.e., the dependents will be deleted with DeletePropagationForeground.
+	DeletePropagationForeground DeletePropagationPolicy = "DeletePropagationForeground"
+)
+
 // DeleteOptions may be provided when deleting an API object.
 type DeleteOptions struct {
 	TypeMeta `json:",inline"`
@@ -325,6 +351,12 @@ type DeleteOptions struct {
 	// finalizer will be added to/removed from the object's finalizers list.
 	// +optional
 	OrphanDependents *bool `json:"orphanDependents,omitempty" protobuf:"varint,3,opt,name=orphanDependents"`
+
+	// Whether and how garbage collection will be performed.
+	// Defaults to DeletePropagationDefault.
+	// Either this field or OrphanDependents may be set, but not both.
+	// +optional
+	PropagationPolicy *DeletePropagationPolicy
 }
 
 // Preconditions must be fulfilled before an operation (update, delete, etc.) is carried out.

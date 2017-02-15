@@ -23,18 +23,17 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/client-go/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/api/meta"
-	"k8s.io/kubernetes/pkg/api/v1"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/client/cache"
-	"k8s.io/kubernetes/pkg/client/typed/dynamic"
-	"k8s.io/kubernetes/pkg/runtime"
-	"k8s.io/kubernetes/pkg/runtime/schema"
-	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
-	"k8s.io/kubernetes/pkg/util/sets"
-	"k8s.io/kubernetes/pkg/util/workqueue"
-	"k8s.io/kubernetes/pkg/watch"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 )
 
 type eventType int
@@ -59,7 +58,7 @@ type GraphBuilder struct {
 	restMapper meta.RESTMapper
 	// each monitor list/watches a resource, the results are funneled to the
 	// dependencyGraphBuilder
-	monitors []*cache.Controller
+	monitors []cache.Controller
 	// metaOnlyClientPool uses a special codec, which removes fields except for
 	// apiVersion, kind, and metadata during decoding.
 	metaOnlyClientPool dynamic.ClientPool
@@ -82,30 +81,30 @@ type GraphBuilder struct {
 
 func listWatcher(client *dynamic.Client, resource schema.GroupVersionResource) *cache.ListWatch {
 	return &cache.ListWatch{
-		ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			// APIResource.Kind is not used by the dynamic client, so
 			// leave it empty. We want to list this resource in all
 			// namespaces if it's namespace scoped, so leave
 			// APIResource.Namespaced as false is all right.
 			apiResource := metav1.APIResource{Name: resource.Resource}
 			return client.ParameterCodec(dynamic.VersionedParameterEncoderWithV1Fallback).
-				Resource(&apiResource, v1.NamespaceAll).
+				Resource(&apiResource, metav1.NamespaceAll).
 				List(&options)
 		},
-		WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 			// APIResource.Kind is not used by the dynamic client, so
 			// leave it empty. We want to list this resource in all
 			// namespaces if it's namespace scoped, so leave
 			// APIResource.Namespaced as false is all right.
 			apiResource := metav1.APIResource{Name: resource.Resource}
 			return client.ParameterCodec(dynamic.VersionedParameterEncoderWithV1Fallback).
-				Resource(&apiResource, v1.NamespaceAll).
+				Resource(&apiResource, metav1.NamespaceAll).
 				Watch(&options)
 		},
 	}
 }
 
-func (gb *GraphBuilder) controllerFor(resource schema.GroupVersionResource, kind schema.GroupVersionKind) (*cache.Controller, error) {
+func (gb *GraphBuilder) controllerFor(resource schema.GroupVersionResource, kind schema.GroupVersionKind) (cache.Controller, error) {
 	// TODO: consider store in one storage.
 	glog.V(5).Infof("create storage for resource %s", resource)
 	client, err := gb.metaOnlyClientPool.ClientForGroupVersionKind(kind)
@@ -299,7 +298,7 @@ func referencesDiffs(old []metav1.OwnerReference, new []metav1.OwnerReference) (
 }
 
 // returns if the object in the event just transitions to "being deleted".
-func deletionStarts(oldObj interface{}, newAccessor meta.Object) bool {
+func deletionStarts(oldObj interface{}, newAccessor metav1.Object) bool {
 	// The delta_fifo may combine the creation and update of the object into one
 	// event, so if there is no oldObj, we just return if the newObj (via
 	// newAccessor) is being deleted.
@@ -320,24 +319,24 @@ func deletionStarts(oldObj interface{}, newAccessor meta.Object) bool {
 	return true
 }
 
-func beingDeleted(accessor meta.Object) bool {
+func beingDeleted(accessor metav1.Object) bool {
 	return accessor.GetDeletionTimestamp() != nil
 }
 
-func hasDeleteDependentsFinalizer(accessor meta.Object) bool {
+func hasDeleteDependentsFinalizer(accessor metav1.Object) bool {
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
-		if finalizer == v1.FinalizerDeleteDependents {
+		if finalizer == metav1.FinalizerDeleteDependents {
 			return true
 		}
 	}
 	return false
 }
 
-func hasOrphanFianlizer(accessor meta.Object) bool {
+func hasOrphanFianlizer(accessor metav1.Object) bool {
 	finalizers := accessor.GetFinalizers()
 	for _, finalizer := range finalizers {
-		if finalizer == v1.FinalizerOrphanDependents {
+		if finalizer == metav1.FinalizerOrphanDependents {
 			return true
 		}
 	}
@@ -346,13 +345,13 @@ func hasOrphanFianlizer(accessor meta.Object) bool {
 
 // this function takes newAccessor directly because the caller already
 // instantiates an accessor for the newObj.
-func startsWaitingForDependentsDeleted(oldObj interface{}, newAccessor meta.Object) bool {
+func startsWaitingForDependentsDeleted(oldObj interface{}, newAccessor metav1.Object) bool {
 	return deletionStarts(oldObj, newAccessor) && hasDeleteDependentsFinalizer(newAccessor)
 }
 
 // this function takes newAccessor directly because the caller already
 // instantiates an accessor for the newObj.
-func startsWaitingForDependentsOrphaned(oldObj interface{}, newAccessor meta.Object) bool {
+func startsWaitingForDependentsOrphaned(oldObj interface{}, newAccessor metav1.Object) bool {
 	return deletionStarts(oldObj, newAccessor) && hasOrphanFianlizer(newAccessor)
 }
 
@@ -383,7 +382,7 @@ func (gb *GraphBuilder) addUnblockedOwnersToDeleteQueue(removed []metav1.OwnerRe
 	}
 }
 
-func (gb *GraphBuilder) processTransitions(oldObj interface{}, newAccessor meta.Object, n *node) {
+func (gb *GraphBuilder) processTransitions(oldObj interface{}, newAccessor metav1.Object, n *node) {
 	if startsWaitingForDependentsOrphaned(oldObj, newAccessor) {
 		glog.V(5).Infof("add %s to the attemptToOrphan", n.identity)
 		gb.attemptToOrphan.Add(n)

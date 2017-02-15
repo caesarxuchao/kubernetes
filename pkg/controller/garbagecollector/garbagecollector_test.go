@@ -144,7 +144,7 @@ func serilizeOrDie(t *testing.T, object interface{}) []byte {
 	return data
 }
 
-// test the attempToDeleteItem function making the expected actions.
+// test the attemptToDeleteItem function making the expected actions.
 func TestAttemptToDeleteItem(t *testing.T) {
 	pod := getPod("ToBeDeletedPod", []metav1.OwnerReference{
 		{
@@ -179,10 +179,10 @@ func TestAttemptToDeleteItem(t *testing.T) {
 			},
 			Namespace: pod.Namespace,
 		},
-		// owners are intentionally left empty. The attempToDeleteItem routine should get the latest item from the server.
+		// owners are intentionally left empty. The attemptToDeleteItem routine should get the latest item from the server.
 		owners: nil,
 	}
-	err := gc.attempToDeleteItem(item)
+	err := gc.attemptToDeleteItem(item)
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -298,8 +298,8 @@ func TestProcessEvent(t *testing.T) {
 		dependencyGraphBuilder := &GraphBuilder{
 			graphChanges: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 			uidToNode: &concurrentUIDToNode{
-				RWMutex:   &sync.RWMutex{},
-				uidToNode: make(map[types.UID]*node),
+				uidToNodeLock: sync.RWMutex{},
+				uidToNode:     make(map[types.UID]*node),
 			},
 			attemptToDelete:  workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 			absentOwnerCache: NewUIDCache(2),
@@ -348,8 +348,12 @@ func TestGCListWatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 	lw := listWatcher(client, podResource)
-	lw.Watch(metav1.ListOptions{ResourceVersion: "1"})
-	lw.List(metav1.ListOptions{ResourceVersion: "1"})
+	if _, err := lw.Watch(metav1.ListOptions{ResourceVersion: "1"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := lw.List(metav1.ListOptions{ResourceVersion: "1"}); err != nil {
+		t.Fatal(err)
+	}
 	if e, a := 2, len(testHandler.actions); e != a {
 		t.Errorf("expect %d requests, got %d", e, a)
 	}
@@ -372,7 +376,7 @@ func podToGCNode(pod *v1.Pod) *node {
 			},
 			Namespace: pod.Namespace,
 		},
-		// owners are intentionally left empty. The attempToDeleteItem routine should get the latest item from the server.
+		// owners are intentionally left empty. The attemptToDeleteItem routine should get the latest item from the server.
 		owners: nil,
 	}
 }
@@ -446,12 +450,12 @@ func TestAbsentUIDCache(t *testing.T) {
 	defer srv.Close()
 	gc := setupGC(t, clientConfig)
 	gc.absentOwnerCache = NewUIDCache(2)
-	gc.attempToDeleteItem(podToGCNode(rc1Pod1))
-	gc.attempToDeleteItem(podToGCNode(rc2Pod1))
+	gc.attemptToDeleteItem(podToGCNode(rc1Pod1))
+	gc.attemptToDeleteItem(podToGCNode(rc2Pod1))
 	// rc1 should already be in the cache, no request should be sent. rc1 should be promoted in the UIDCache
-	gc.attempToDeleteItem(podToGCNode(rc1Pod2))
+	gc.attemptToDeleteItem(podToGCNode(rc1Pod2))
 	// after this call, rc2 should be evicted from the UIDCache
-	gc.attempToDeleteItem(podToGCNode(rc3Pod1))
+	gc.attemptToDeleteItem(podToGCNode(rc3Pod1))
 	// check cache
 	if !gc.absentOwnerCache.Has(types.UID("1")) {
 		t.Errorf("expected rc1 to be in the cache")
@@ -476,7 +480,7 @@ func TestAbsentUIDCache(t *testing.T) {
 
 func TestDeleteOwnerRefPatch(t *testing.T) {
 	original := v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			UID: "100",
 			OwnerReferences: []metav1.OwnerReference{
 				{UID: "1"},
@@ -487,7 +491,7 @@ func TestDeleteOwnerRefPatch(t *testing.T) {
 	}
 	originalData := serilizeOrDie(t, original)
 	expected := v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			UID: "100",
 			OwnerReferences: []metav1.OwnerReference{
 				{UID: "1"},
@@ -512,7 +516,7 @@ func TestUnblockOwnerReference(t *testing.T) {
 	trueVar := true
 	falseVar := false
 	original := v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			UID: "100",
 			OwnerReferences: []metav1.OwnerReference{
 				{UID: "1", BlockOwnerDeletion: &trueVar},
@@ -523,7 +527,7 @@ func TestUnblockOwnerReference(t *testing.T) {
 	}
 	originalData := serilizeOrDie(t, original)
 	expected := v1.Pod{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			UID: "100",
 			OwnerReferences: []metav1.OwnerReference{
 				{UID: "1", BlockOwnerDeletion: &falseVar},

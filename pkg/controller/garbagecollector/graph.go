@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"sync"
 
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type objectReference struct {
@@ -101,7 +101,7 @@ func (ownerNode *node) getDependents() []*node {
 	ownerNode.dependentsLock.RLock()
 	defer ownerNode.dependentsLock.RUnlock()
 	var ret []*node
-	for dep := range node.dependents {
+	for dep := range ownerNode.dependents {
 		ret = append(ret, dep)
 	}
 	return ret

@@ -21,14 +21,13 @@ import (
 
 	"github.com/golang/glog"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api/meta"
-	"k8s.io/kubernetes/pkg/api/v1"
-	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/client/retry"
-	"k8s.io/kubernetes/pkg/runtime/schema"
 )
 
 // apiResource consults the REST mapper to translate an <apiVersion, kind,
@@ -48,7 +47,7 @@ func (gc *GarbageCollector) apiResource(apiVersion, kind string, namespaced bool
 	return &resource, nil
 }
 
-func (gc *GarbageCollector) deleteObject(item objectReference, policy v1.DeletePropagationPolicy) error {
+func (gc *GarbageCollector) deleteObject(item objectReference, policy metav1.DeletePropagationPolicy) error {
 	fqKind := schema.FromAPIVersionAndKind(item.APIVersion, item.Kind)
 	client, err := gc.clientPool.ClientForGroupVersionKind(fqKind)
 	gc.registeredRateLimiter.registerIfNotPresent(fqKind.GroupVersion(), client, "garbage_collector_operation")
@@ -57,8 +56,8 @@ func (gc *GarbageCollector) deleteObject(item objectReference, policy v1.DeleteP
 		return err
 	}
 	uid := item.UID
-	preconditions := v1.Preconditions{UID: &uid}
-	deleteOptions := v1.DeleteOptions{Preconditions: &preconditions, PropagationPolicy: &policy}
+	preconditions := metav1.Preconditions{UID: &uid}
+	deleteOptions := metav1.DeleteOptions{Preconditions: &preconditions, PropagationPolicy: &policy}
 	return client.Resource(resource, item.Namespace).Delete(item.Name, &deleteOptions)
 }
 
@@ -92,7 +91,7 @@ func (gc *GarbageCollector) patchObject(item objectReference, patch []byte) (*un
 	if err != nil {
 		return nil, err
 	}
-	return client.Resource(resource, item.Namespace).Patch(item.Name, api.StrategicMergePatchType, patch)
+	return client.Resource(resource, item.Namespace).Patch(item.Name, types.StrategicMergePatchType, patch)
 }
 
 // TODO: Using Patch when strategicmerge supports deleting an entry from a
