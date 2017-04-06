@@ -21,15 +21,10 @@ import (
 	"k8s.io/apimachinery/pkg/apimachinery/registered"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/kubernetes/pkg/api"
 
 	"k8s.io/kubernetes/federation/apis/federation"
 	"k8s.io/kubernetes/federation/apis/federation/v1beta1"
 )
-
-func init() {
-	Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-}
 
 // Install registers the API group and adds types to a scheme
 func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *registered.APIRegistrationManager, scheme *runtime.Scheme) {
@@ -46,7 +41,7 @@ func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *r
 		announced.VersionToSchemeFunc{
 			v1beta1.SchemeGroupVersion.Version: v1beta1.AddToScheme,
 		},
-	).Announce(groupFactoryRegistry).RegisterAndEnable(registry, scheme); err != nil {
+	).AnnounceIfNotAnnounced(groupFactoryRegistry).RegisterAndEnable(registry, scheme); err != nil {
 		panic(err)
 	}
 }

@@ -25,10 +25,6 @@ import (
 	corev1 "k8s.io/kubernetes/federation/apis/core/v1"
 )
 
-func init() {
-	Install(core.GroupFactoryRegistry, core.Registry, core.Scheme)
-}
-
 // Install registers the API group and adds types to a scheme
 func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *registered.APIRegistrationManager, scheme *runtime.Scheme) {
 	if err := announced.NewGroupMetaFactory(
@@ -49,7 +45,7 @@ func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *r
 		announced.VersionToSchemeFunc{
 			corev1.SchemeGroupVersion.Version: corev1.AddToScheme,
 		},
-	).Announce(groupFactoryRegistry).RegisterAndEnable(registry, scheme); err != nil {
+	).AnnounceIfNotAnnounced(groupFactoryRegistry).RegisterAndEnable(registry, scheme); err != nil {
 		panic(err)
 	}
 }
