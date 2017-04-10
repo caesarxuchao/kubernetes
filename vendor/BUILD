@@ -13521,7 +13521,6 @@ go_library(
         "k8s.io/client-go/pkg/api/json.go",
         "k8s.io/client-go/pkg/api/methods.go",
         "k8s.io/client-go/pkg/api/register.go",
-        "k8s.io/client-go/pkg/api/resource_helpers.go",
         "k8s.io/client-go/pkg/api/types.go",
         "k8s.io/client-go/pkg/api/zz_generated.deepcopy.go",
     ],
