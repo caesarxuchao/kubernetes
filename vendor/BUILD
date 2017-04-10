@@ -13520,7 +13520,6 @@ go_library(
         "k8s.io/client-go/pkg/api/field_constants.go",
         "k8s.io/client-go/pkg/api/json.go",
         "k8s.io/client-go/pkg/api/methods.go",
-        "k8s.io/client-go/pkg/api/ref.go",
         "k8s.io/client-go/pkg/api/register.go",
         "k8s.io/client-go/pkg/api/resource_helpers.go",
         "k8s.io/client-go/pkg/api/types.go",
@@ -13528,7 +13527,6 @@ go_library(
     ],
     tags = ["automanaged"],
     deps = [
-        "//vendor:k8s.io/apimachinery/pkg/api/meta",
         "//vendor:k8s.io/apimachinery/pkg/api/resource",
         "//vendor:k8s.io/apimachinery/pkg/apimachinery/announced",
         "//vendor:k8s.io/apimachinery/pkg/apimachinery/registered",
