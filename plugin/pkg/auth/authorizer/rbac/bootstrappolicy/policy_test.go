@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/kubernetes/pkg/api"
 	apiinstall "k8s.io/kubernetes/pkg/api/install"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	rbacinstall "k8s.io/kubernetes/pkg/apis/rbac/install"
@@ -40,8 +41,8 @@ import (
 )
 
 func init() {
-	apiinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	rbacinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	apiinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	rbacinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 // semanticRoles is a few enumerated roles for which the relationships are well established
@@ -285,11 +286,11 @@ func testObjects(t *testing.T, list *api.List, fixtureFilename string) {
 		t.Fatal(err)
 	}
 
-	if err := runtime.EncodeList(api.Codecs.LegacyCodec(v1.SchemeGroupVersion, rbacv1beta1.SchemeGroupVersion), list.Items); err != nil {
+	if err := runtime.EncodeList(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion, rbacv1beta1.SchemeGroupVersion), list.Items); err != nil {
 		t.Fatal(err)
 	}
 
-	jsonData, err := runtime.Encode(api.Codecs.LegacyCodec(v1.SchemeGroupVersion, rbacv1beta1.SchemeGroupVersion), list)
+	jsonData, err := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion, rbacv1beta1.SchemeGroupVersion), list)
 	if err != nil {
 		t.Fatal(err)
 	}

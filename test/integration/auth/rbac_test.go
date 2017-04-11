@@ -41,6 +41,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	rbacapi "k8s.io/kubernetes/pkg/apis/rbac"
 	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -223,7 +224,7 @@ var (
 `
 	podNamespace = `
 {
-  "apiVersion": "` + api.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
+  "apiVersion": "` + scheme.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
   "kind": "Namespace",
   "metadata": {
 	"name": "pod-namespace"%s
@@ -232,7 +233,7 @@ var (
 `
 	jobNamespace = `
 {
-  "apiVersion": "` + api.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
+  "apiVersion": "` + scheme.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
   "kind": "Namespace",
   "metadata": {
 	"name": "job-namespace"%s
@@ -241,7 +242,7 @@ var (
 `
 	forbiddenNamespace = `
 {
-  "apiVersion": "` + api.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
+  "apiVersion": "` + scheme.Registry.GroupOrDie(api.GroupName).GroupVersion.String() + `",
   "kind": "Namespace",
   "metadata": {
 	"name": "forbidden-namespace"%s
@@ -420,7 +421,7 @@ func TestRBAC(t *testing.T) {
 		_, s := framework.RunAMaster(masterConfig)
 		defer s.Close()
 
-		clientConfig := &restclient.Config{Host: s.URL, ContentConfig: restclient.ContentConfig{NegotiatedSerializer: api.Codecs}}
+		clientConfig := &restclient.Config{Host: s.URL, ContentConfig: restclient.ContentConfig{NegotiatedSerializer: scheme.Codecs}}
 
 		// Bootstrap the API Server with the test case's initial roles.
 		if err := tc.bootstrapRoles.bootstrap(clientsetForUser(superUser, clientConfig)); err != nil {
@@ -512,7 +513,7 @@ func TestBootstrapping(t *testing.T) {
 	_, s := framework.RunAMaster(masterConfig)
 	defer s.Close()
 
-	clientset := clientset.NewForConfigOrDie(&restclient.Config{BearerToken: superUser, Host: s.URL, ContentConfig: restclient.ContentConfig{GroupVersion: &api.Registry.GroupOrDie(api.GroupName).GroupVersion}})
+	clientset := clientset.NewForConfigOrDie(&restclient.Config{BearerToken: superUser, Host: s.URL, ContentConfig: restclient.ContentConfig{GroupVersion: &scheme.Registry.GroupOrDie(api.GroupName).GroupVersion}})
 
 	watcher, err := clientset.Rbac().ClusterRoles().Watch(metav1.ListOptions{ResourceVersion: "0"})
 	if err != nil {

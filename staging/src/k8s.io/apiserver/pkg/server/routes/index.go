@@ -54,7 +54,7 @@ func (i Index) Install(pathProvider ListedPathProvider, mux *mux.PathRecorderMux
 	mux.UnlistedHandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		status := http.StatusOK
 		if r.URL.Path != "/" && r.URL.Path != "/index.html" {
-			// Since "/" matches all paths, handleIndex is called for all paths for which there is no handler api.Registry.
+			// Since "/" matches all paths, handleIndex is called for all paths for which there is no handler scheme.Registry.
 			// if we have a delegate, we should call to it and simply return
 			if delegate != nil {
 				delegate.ServeHTTP(w, r)

@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/helper"
 )
@@ -517,7 +518,7 @@ type NodeResources struct {
 // Tries to add a taint to annotations list. Returns a new copy of updated Node and true if something was updated
 // false otherwise.
 func AddOrUpdateTaint(node *Node, taint *Taint) (*Node, bool, error) {
-	objCopy, err := api.Scheme.DeepCopy(node)
+	objCopy, err := scheme.Scheme.DeepCopy(node)
 	if err != nil {
 		return nil, false, err
 	}
@@ -559,7 +560,7 @@ func TaintExists(taints []Taint, taintToFind *Taint) bool {
 // Tries to remove a taint from annotations list. Returns a new copy of updated Node and true if something was updated
 // false otherwise.
 func RemoveTaint(node *Node, taint *Taint) (*Node, bool, error) {
-	objCopy, err := api.Scheme.DeepCopy(node)
+	objCopy, err := scheme.Scheme.DeepCopy(node)
 	if err != nil {
 		return nil, false, err
 	}

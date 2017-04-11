@@ -23,6 +23,7 @@ import (
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 // Registry is an interface for things that know how to store endpoints.
@@ -66,7 +67,7 @@ func (s *storage) GetEndpoints(ctx genericapirequest.Context, name string, optio
 }
 
 func (s *storage) UpdateEndpoints(ctx genericapirequest.Context, endpoints *api.Endpoints) error {
-	_, _, err := s.Update(ctx, endpoints.Name, rest.DefaultUpdatedObjectInfo(endpoints, api.Scheme))
+	_, _, err := s.Update(ctx, endpoints.Name, rest.DefaultUpdatedObjectInfo(endpoints, scheme.Scheme))
 	return err
 }
 

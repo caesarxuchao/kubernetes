@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	"k8s.io/kubernetes/pkg/api/validation"
@@ -502,7 +503,7 @@ func (s *podStorage) MergedState() interface{} {
 	pods := make([]*v1.Pod, 0)
 	for _, sourcePods := range s.pods {
 		for _, podRef := range sourcePods {
-			pod, err := api.Scheme.Copy(podRef)
+			pod, err := scheme.Scheme.Copy(podRef)
 			if err != nil {
 				glog.Errorf("unable to copy pod: %v", err)
 			}
@@ -516,7 +517,7 @@ func copyPods(sourcePods []*v1.Pod) []*v1.Pod {
 	pods := []*v1.Pod{}
 	for _, source := range sourcePods {
 		// Use a deep copy here just in case
-		pod, err := api.Scheme.Copy(source)
+		pod, err := scheme.Scheme.Copy(source)
 		if err != nil {
 			glog.Errorf("unable to copy pod: %v", err)
 		}

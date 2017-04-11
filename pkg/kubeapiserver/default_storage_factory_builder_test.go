@@ -22,16 +22,16 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	serverstorage "k8s.io/apiserver/pkg/server/storage"
-	"k8s.io/kubernetes/pkg/api"
 	apiinstall "k8s.io/kubernetes/pkg/api/install"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiv1 "k8s.io/kubernetes/pkg/api/v1"
 	extensionsinstall "k8s.io/kubernetes/pkg/apis/extensions/install"
 	extensionsapiv1beta1 "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 )
 
 func init() {
-	apiinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	apiinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensionsinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestParseRuntimeConfig(t *testing.T) {
@@ -178,7 +178,7 @@ func TestParseRuntimeConfig(t *testing.T) {
 			},
 			expectedAPIConfig: func() *serverstorage.ResourceConfig {
 				config := serverstorage.NewResourceConfig()
-				config.EnableVersions(api.Registry.RegisteredGroupVersions()...)
+				config.EnableVersions(scheme.Registry.RegisteredGroupVersions()...)
 				return config
 			},
 			err: false,
@@ -193,7 +193,7 @@ func TestParseRuntimeConfig(t *testing.T) {
 			},
 			expectedAPIConfig: func() *serverstorage.ResourceConfig {
 				config := serverstorage.NewResourceConfig()
-				config.DisableVersions(api.Registry.RegisteredGroupVersions()...)
+				config.DisableVersions(scheme.Registry.RegisteredGroupVersions()...)
 				return config
 			},
 			err: false,

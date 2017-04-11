@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metricsapi "k8s.io/heapster/metrics/apis/metrics/v1alpha1"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/printers"
 )
 
@@ -61,7 +62,7 @@ func (printer *TopCmdPrinter) PrintNodeMetrics(metrics []metricsapi.NodeMetrics,
 	printColumnNames(w, NodeColumns)
 	var usage api.ResourceList
 	for _, m := range metrics {
-		err := api.Scheme.Convert(&m.Usage, &usage, nil)
+		err := scheme.Scheme.Convert(&m.Usage, &usage, nil)
 		if err != nil {
 			return err
 		}
@@ -113,7 +114,7 @@ func printSinglePodMetrics(out io.Writer, m *metricsapi.PodMetrics, printContain
 
 	for _, c := range m.Containers {
 		var usage api.ResourceList
-		err := api.Scheme.Convert(&c.Usage, &usage, nil)
+		err := scheme.Scheme.Convert(&c.Usage, &usage, nil)
 		if err != nil {
 			return err
 		}

@@ -36,6 +36,7 @@ import (
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/deletionhelper"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/eventsink"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiv1 "k8s.io/kubernetes/pkg/api/v1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/controller"
@@ -96,7 +97,7 @@ type NamespaceController struct {
 func NewNamespaceController(client federationclientset.Interface, dynamicClientPool dynamic.ClientPool) *NamespaceController {
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartRecordingToSink(eventsink.NewFederatedEventSink(client))
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "federated-namespace-controller"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "federated-namespace-controller"})
 
 	nc := &NamespaceController{
 		federatedApiClient:    client,
@@ -356,7 +357,7 @@ func (nc *NamespaceController) reconcileNamespace(namespace string) {
 	}
 	// Create a copy before modifying the namespace to prevent race condition with
 	// other readers of namespace from store.
-	namespaceObj, err := api.Scheme.DeepCopy(namespaceObjFromStore)
+	namespaceObj, err := scheme.Scheme.DeepCopy(namespaceObjFromStore)
 	baseNamespace, ok := namespaceObj.(*apiv1.Namespace)
 	if err != nil || !ok {
 		glog.Errorf("Error in retrieving obj from store: %v, %v", ok, err)

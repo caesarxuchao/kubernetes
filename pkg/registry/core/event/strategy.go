@@ -28,6 +28,7 @@ import (
 	"k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/names"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/validation"
 )
 
@@ -38,7 +39,7 @@ type eventStrategy struct {
 
 // Strategy is the default logic that pplies when creating and updating
 // Event objects via the REST API.
-var Strategy = eventStrategy{api.Scheme, names.SimpleNameGenerator}
+var Strategy = eventStrategy{scheme.Scheme, names.SimpleNameGenerator}
 
 func (eventStrategy) NamespaceScoped() bool {
 	return true

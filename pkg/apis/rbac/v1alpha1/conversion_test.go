@@ -20,14 +20,14 @@ import (
 	"reflect"
 	"testing"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	rbacapi "k8s.io/kubernetes/pkg/apis/rbac"
 	rbacinstall "k8s.io/kubernetes/pkg/apis/rbac/install"
 	"k8s.io/kubernetes/pkg/apis/rbac/v1alpha1"
 )
 
 func init() {
-	rbacinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	rbacinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestConversion(t *testing.T) {
@@ -100,7 +100,7 @@ func TestConversion(t *testing.T) {
 	}
 	for k, tc := range testcases {
 		internal := &rbacapi.RoleBinding{}
-		if err := api.Scheme.Convert(tc.old, internal, nil); err != nil {
+		if err := scheme.Scheme.Convert(tc.old, internal, nil); err != nil {
 			t.Errorf("%s: unexpected error: %v", k, err)
 		}
 		if !reflect.DeepEqual(internal, tc.expected) {

@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	"k8s.io/kubernetes/pkg/controller"
@@ -240,7 +240,7 @@ func (dc *DeploymentController) getNewReplicaSet(deployment *extensions.Deployme
 	// and maxReplicas) and also update the revision annotation in the deployment with the
 	// latest revision.
 	if existingNewRS != nil {
-		objCopy, err := api.Scheme.Copy(existingNewRS)
+		objCopy, err := scheme.Scheme.Copy(existingNewRS)
 		if err != nil {
 			return nil, err
 		}
@@ -468,7 +468,7 @@ func (dc *DeploymentController) scaleReplicaSetAndRecordEvent(rs *extensions.Rep
 }
 
 func (dc *DeploymentController) scaleReplicaSet(rs *extensions.ReplicaSet, newScale int32, deployment *extensions.Deployment, scalingOperation string) (bool, *extensions.ReplicaSet, error) {
-	objCopy, err := api.Scheme.Copy(rs)
+	objCopy, err := scheme.Scheme.Copy(rs)
 	if err != nil {
 		return false, nil, err
 	}

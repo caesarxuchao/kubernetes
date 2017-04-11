@@ -27,6 +27,7 @@ import (
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 // Registry is an interface for things that know how to store ReplicationControllers.
@@ -82,7 +83,7 @@ func (s *storage) CreateController(ctx genericapirequest.Context, controller *ap
 }
 
 func (s *storage) UpdateController(ctx genericapirequest.Context, controller *api.ReplicationController) (*api.ReplicationController, error) {
-	obj, _, err := s.Update(ctx, controller.Name, rest.DefaultUpdatedObjectInfo(controller, api.Scheme))
+	obj, _, err := s.Update(ctx, controller.Name, rest.DefaultUpdatedObjectInfo(controller, scheme.Scheme))
 	if err != nil {
 		return nil, err
 	}

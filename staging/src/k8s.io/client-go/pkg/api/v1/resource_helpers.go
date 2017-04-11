@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // Returns string version of ResourceName.
@@ -278,7 +278,7 @@ func ExtractResourceValueByContainerNameAndNodeAllocatable(fs *ResourceFieldSele
 		return "", err
 	}
 
-	containerCopy, err := api.Scheme.DeepCopy(realContainer)
+	containerCopy, err := scheme.Scheme.DeepCopy(realContainer)
 	if err != nil {
 		return "", fmt.Errorf("failed to perform a deep copy of container object: %v", err)
 	}

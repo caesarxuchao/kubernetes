@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/util/clock"
 
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset/fake"
 	v1core "k8s.io/kubernetes/pkg/client/clientset_generated/clientset/typed/core/v1"
@@ -356,7 +357,7 @@ func (f *FakeRecorder) PastEventf(obj runtime.Object, timestamp metav1.Time, eve
 func (f *FakeRecorder) generateEvent(obj runtime.Object, timestamp metav1.Time, eventtype, reason, message string) {
 	f.Lock()
 	defer f.Unlock()
-	ref, err := clientv1.GetReference(api.Scheme, obj)
+	ref, err := clientv1.GetReference(scheme.Scheme, obj)
 	if err != nil {
 		glog.Errorf("Encoutered error while getting reference: %v", err)
 		return

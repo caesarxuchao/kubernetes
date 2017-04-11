@@ -32,7 +32,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	storage "k8s.io/kubernetes/pkg/apis/storage/v1beta1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
@@ -73,7 +73,7 @@ func NewController(p ControllerParameters) *PersistentVolumeController {
 	if eventRecorder == nil {
 		broadcaster := record.NewBroadcaster()
 		broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(p.KubeClient.Core().RESTClient()).Events("")})
-		eventRecorder = broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "persistentvolume-controller"})
+		eventRecorder = broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "persistentvolume-controller"})
 	}
 
 	controller := &PersistentVolumeController{
@@ -139,7 +139,7 @@ func (ctrl *PersistentVolumeController) initializeCaches(volumeLister corelister
 		// Ignore template volumes from kubernetes 1.2
 		deleted := ctrl.upgradeVolumeFrom1_2(volume)
 		if !deleted {
-			clone, err := api.Scheme.DeepCopy(volume)
+			clone, err := scheme.Scheme.DeepCopy(volume)
 			if err != nil {
 				glog.Errorf("error cloning volume %q: %v", volume.Name, err)
 				continue
@@ -157,7 +157,7 @@ func (ctrl *PersistentVolumeController) initializeCaches(volumeLister corelister
 		return
 	}
 	for _, claim := range claimList {
-		clone, err := api.Scheme.DeepCopy(claim)
+		clone, err := scheme.Scheme.DeepCopy(claim)
 		if err != nil {
 			glog.Errorf("error cloning claim %q: %v", claimToClaimKey(claim), err)
 			continue
@@ -456,7 +456,7 @@ func (ctrl *PersistentVolumeController) setClaimProvisioner(claim *v1.Persistent
 
 	// The volume from method args can be pointing to watcher cache. We must not
 	// modify these, therefore create a copy.
-	clone, err := api.Scheme.DeepCopy(claim)
+	clone, err := scheme.Scheme.DeepCopy(claim)
 	if err != nil {
 		return nil, fmt.Errorf("Error cloning pv: %v", err)
 	}

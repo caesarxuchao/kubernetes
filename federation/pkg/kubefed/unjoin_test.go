@@ -33,6 +33,7 @@ import (
 	kubefedtesting "k8s.io/kubernetes/federation/pkg/kubefed/testing"
 	"k8s.io/kubernetes/federation/pkg/kubefed/util"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/api/v1"
 	cmdtesting "k8s.io/kubernetes/pkg/kubectl/cmd/testing"
@@ -181,7 +182,7 @@ func testUnjoinFederationFactory(name, server, secret string) cmdutil.Factory {
 	tf.ClientConfig = kubefedtesting.DefaultClientConfig()
 	ns := testapi.Federation.NegotiatedSerializer()
 	tf.Client = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: ns,
 		GroupName:            "federation",
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
@@ -235,7 +236,7 @@ func fakeUnjoinHostFactory(name string) cmdutil.Factory {
 	ns := dynamic.ContentConfig().NegotiatedSerializer
 	tf.ClientConfig = kubefedtesting.DefaultClientConfig()
 	tf.Client = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: ns,
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch p, m := req.URL.Path, req.Method; {

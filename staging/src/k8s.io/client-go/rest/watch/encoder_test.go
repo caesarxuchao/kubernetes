@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/install"
 	"k8s.io/client-go/pkg/api/v1"
@@ -33,7 +34,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestEncodeDecodeRoundTrip(t *testing.T) {
@@ -45,17 +46,17 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 		{
 			watch.Added,
 			&api.Pod{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-			api.Codecs.LegacyCodec(v1.SchemeGroupVersion),
+			scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion),
 		},
 		{
 			watch.Modified,
 			&api.Pod{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-			api.Codecs.LegacyCodec(v1.SchemeGroupVersion),
+			scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion),
 		},
 		{
 			watch.Deleted,
 			&api.Pod{ObjectMeta: metav1.ObjectMeta{Name: "foo"}},
-			api.Codecs.LegacyCodec(v1.SchemeGroupVersion),
+			scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion),
 		},
 	}
 	for i, testCase := range testCases {

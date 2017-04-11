@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	clientfake "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	restclient "k8s.io/client-go/rest"
 	core "k8s.io/client-go/testing"
@@ -56,8 +56,8 @@ import (
 )
 
 func init() {
-	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	autoscalinginstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensionsinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func (w fakeResponseWrapper) DoRaw() ([]byte, error) {

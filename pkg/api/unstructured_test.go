@@ -24,6 +24,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apitesting "k8s.io/apimachinery/pkg/api/testing"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	kapitesting "k8s.io/kubernetes/pkg/api/testing"
 	"k8s.io/kubernetes/pkg/api/v1"
@@ -40,12 +41,12 @@ func doRoundTrip(t *testing.T, group testapi.TestGroup, kind string) {
 	// We do fuzzing on the internal version of the object, and only then
 	// convert to the external version. This is because custom fuzzing
 	// function are only supported for internal objects.
-	internalObj, err := api.Scheme.New(group.InternalGroupVersion().WithKind(kind))
+	internalObj, err := scheme.Scheme.New(group.InternalGroupVersion().WithKind(kind))
 	if err != nil {
 		t.Fatalf("Couldn't create internal object %v: %v", kind, err)
 	}
 	seed := rand.Int63()
-	apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, api.Codecs), rand.NewSource(seed)).
+	apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, scheme.Codecs), rand.NewSource(seed)).
 		// We are explicitly overwriting custom fuzzing functions, to ensure
 		// that InitContainers and their statuses are not generated. This is
 		// because in thise test we are simply doing json operations, in which
@@ -61,11 +62,11 @@ func doRoundTrip(t *testing.T, group testapi.TestGroup, kind string) {
 			},
 		).Fuzz(internalObj)
 
-	item, err := api.Scheme.New(group.GroupVersion().WithKind(kind))
+	item, err := scheme.Scheme.New(group.GroupVersion().WithKind(kind))
 	if err != nil {
 		t.Fatalf("Couldn't create external object %v: %v", kind, err)
 	}
-	if err := api.Scheme.Convert(internalObj, item, nil); err != nil {
+	if err := scheme.Scheme.Convert(internalObj, item, nil); err != nil {
 		t.Fatalf("Conversion for %v failed: %v", kind, err)
 	}
 

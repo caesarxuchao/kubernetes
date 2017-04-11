@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
 	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_clientset"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/test/e2e/common"
@@ -233,7 +233,7 @@ func cleanupServiceShardLoadBalancer(clusterName string, service *v1.Service, ti
 	}
 
 	internalSvc := &v1.Service{}
-	err := api.Scheme.Convert(service, internalSvc, nil)
+	err := scheme.Scheme.Convert(service, internalSvc, nil)
 	if err != nil {
 		return fmt.Errorf("failed to convert versioned service object to internal type: %v", err)
 	}

@@ -20,7 +20,7 @@ package kubernetes
 import (
 	"fmt"
 
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	core "k8s.io/client-go/pkg/api/install"
 	apps "k8s.io/client-go/pkg/apis/apps/install"
 	authentication "k8s.io/client-go/pkg/apis/authentication/install"
@@ -36,20 +36,20 @@ import (
 )
 
 func init() {
-	core.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	apps.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	authentication.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	authorization.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	autoscaling.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	batch.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	certificates.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensions.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	policy.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	rbac.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	settings.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	storage.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	core.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	apps.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	authentication.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	authorization.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	autoscaling.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	batch.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	certificates.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensions.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	policy.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	rbac.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	settings.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	storage.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 
-	if missingVersions := api.Registry.ValidateEnvRequestedVersions(); len(missingVersions) != 0 {
+	if missingVersions := scheme.Registry.ValidateEnvRequestedVersions(); len(missingVersions) != 0 {
 		panic(fmt.Sprintf("KUBE_API_VERSIONS contains versions that are not installed: %q.", missingVersions))
 	}
 }

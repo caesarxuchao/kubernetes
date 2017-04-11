@@ -28,7 +28,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmapiext "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1alpha1"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/validation"
@@ -68,7 +68,7 @@ var (
 // NewCmdInit returns "kubeadm init" command.
 func NewCmdInit(out io.Writer) *cobra.Command {
 	cfg := &kubeadmapiext.MasterConfiguration{}
-	api.Scheme.Default(cfg)
+	scheme.Scheme.Default(cfg)
 
 	var cfgPath string
 	var skipPreFlight bool
@@ -76,9 +76,9 @@ func NewCmdInit(out io.Writer) *cobra.Command {
 		Use:   "init",
 		Short: "Run this in order to set up the Kubernetes master",
 		Run: func(cmd *cobra.Command, args []string) {
-			api.Scheme.Default(cfg)
+			scheme.Scheme.Default(cfg)
 			internalcfg := &kubeadmapi.MasterConfiguration{}
-			api.Scheme.Convert(cfg, internalcfg, nil)
+			scheme.Scheme.Convert(cfg, internalcfg, nil)
 
 			i, err := NewInit(cfgPath, internalcfg, skipPreFlight)
 			kubeadmutil.CheckErr(err)
@@ -147,7 +147,7 @@ func NewInit(cfgPath string, cfg *kubeadmapi.MasterConfiguration, skipPreFlight 
 		if err != nil {
 			return nil, fmt.Errorf("unable to read config from %q [%v]", cfgPath, err)
 		}
-		if err := runtime.DecodeInto(api.Codecs.UniversalDecoder(), b, cfg); err != nil {
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, cfg); err != nil {
 			return nil, fmt.Errorf("unable to decode config from %q [%v]", cfgPath, err)
 		}
 	}

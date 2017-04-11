@@ -132,7 +132,7 @@ type Config struct {
 	// TODO confirm that anyone downstream actually uses this and doesn't just need an accessor
 	RequestContextMapper apirequest.RequestContextMapper
 	// Serializer is required and provides the interface for serializing and converting objects to and from the wire
-	// The default (api.Codecs) usually works fine.
+	// The default (scheme.Codecs) usually works fine.
 	Serializer runtime.NegotiatedSerializer
 	// OpenAPIConfig will be used in generating OpenAPI spec. This is nil by default. Use DefaultOpenAPIConfig for "working" defaults.
 	OpenAPIConfig *openapicommon.Config

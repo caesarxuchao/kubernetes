@@ -46,12 +46,11 @@ import (
 	"golang.org/x/net/context"
 
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/install"
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 var (

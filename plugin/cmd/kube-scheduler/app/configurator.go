@@ -33,7 +33,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 
 	clientv1 "k8s.io/client-go/pkg/api/v1"
@@ -51,7 +51,7 @@ func createRecorder(kubecli *clientset.Clientset, s *options.SchedulerServer) re
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubecli.Core().RESTClient()).Events("")})
-	return eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: s.SchedulerName})
+	return eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: s.SchedulerName})
 }
 
 func createClient(s *options.SchedulerServer) (*clientset.Clientset, error) {

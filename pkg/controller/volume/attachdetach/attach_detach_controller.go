@@ -30,7 +30,7 @@ import (
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	kcache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	coreinformers "k8s.io/kubernetes/pkg/client/informers/informers_generated/externalversions/core/v1"
@@ -110,7 +110,7 @@ func NewAttachDetachController(
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: v1core.New(kubeClient.Core().RESTClient()).Events("")})
-	recorder := eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "attachdetach"})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "attachdetach"})
 
 	adc.desiredStateOfWorld = cache.NewDesiredStateOfWorld(&adc.volumePluginMgr)
 	adc.actualStateOfWorld = cache.NewActualStateOfWorld(&adc.volumePluginMgr)
@@ -455,7 +455,7 @@ func (adc *attachDetachController) createVolumeSpec(
 
 	// Do not return the original volume object, since it's from the shared
 	// informer it may be mutated by another consumer.
-	clonedPodVolumeObj, err := api.Scheme.DeepCopy(&podVolume)
+	clonedPodVolumeObj, err := scheme.Scheme.DeepCopy(&podVolume)
 	if err != nil || clonedPodVolumeObj == nil {
 		return nil, fmt.Errorf(
 			"failed to deep copy %q volume object. err=%v", podVolume.Name, err)
@@ -521,7 +521,7 @@ func (adc *attachDetachController) getPVSpecFromCache(name string, pvcReadOnly b
 
 	// Do not return the object from the informer, since the store is shared it
 	// may be mutated by another consumer.
-	clonedPVObj, err := api.Scheme.DeepCopy(pv)
+	clonedPVObj, err := scheme.Scheme.DeepCopy(pv)
 	if err != nil || clonedPVObj == nil {
 		return nil, fmt.Errorf("failed to deep copy %q PV object. err=%v", name, err)
 	}

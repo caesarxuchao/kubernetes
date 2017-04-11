@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api/v1"
 	core "k8s.io/client-go/testing"
 	kv1 "k8s.io/kubernetes/pkg/api/v1"
@@ -45,8 +45,8 @@ import (
 )
 
 func init() {
-	apiinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	apiinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensionsinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 type restClientTestCase struct {
@@ -138,7 +138,7 @@ func (tc *restClientTestCase) prepareTestClient(t *testing.T) (*metricsfake.Clie
 				return true, &metrics, nil
 			} else {
 				name := getForAction.GetName()
-				mapper := api.Registry.RESTMapper()
+				mapper := scheme.Registry.RESTMapper()
 				assert.NotNil(t, tc.singleObject, "should have only requested a single-object metric when we asked for metrics for a single object")
 				gk := schema.FromAPIVersionAndKind(tc.singleObject.APIVersion, tc.singleObject.Kind).GroupKind()
 				mapping, err := mapper.RESTMapping(gk)

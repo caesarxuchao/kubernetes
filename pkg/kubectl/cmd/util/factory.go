@@ -45,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_internalclientset"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/api/validation"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
@@ -493,7 +494,7 @@ func (c *clientSwaggerSchema) ValidateBytes(data []byte) error {
 	if err != nil {
 		return err
 	}
-	if ok := api.Registry.IsEnabledVersion(gvk.GroupVersion()); !ok {
+	if ok := scheme.Registry.IsEnabledVersion(gvk.GroupVersion()); !ok {
 		// if we don't have this in our scheme, just skip validation because its an object we don't recognize
 		return nil
 	}

@@ -38,6 +38,7 @@ import (
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/deletionhelper"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/eventsink"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	extensionsv1beta1 "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
@@ -122,7 +123,7 @@ func NewIngressController(client federationclientset.Interface) *IngressControll
 	glog.V(4).Infof("->NewIngressController V(4)")
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartRecordingToSink(eventsink.NewFederatedEventSink(client))
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "federated-ingress-controller"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "federated-ingress-controller"})
 	ic := &IngressController{
 		federatedApiClient:    client,
 		ingressReviewDelay:    time.Second * 10,
@@ -648,7 +649,7 @@ func (ic *IngressController) getMasterCluster() (master *federationapi.Cluster, 
 */
 func (ic *IngressController) updateClusterIngressUIDToMasters(cluster *federationapi.Cluster, fallbackUID string) (string, error) {
 	masterCluster, masterUID, err := ic.getMasterCluster()
-	clusterObj, clusterErr := api.Scheme.DeepCopy(cluster) // Make a clone so that we don't clobber our input param
+	clusterObj, clusterErr := scheme.Scheme.DeepCopy(cluster) // Make a clone so that we don't clobber our input param
 	cluster, ok := clusterObj.(*federationapi.Cluster)
 	if clusterErr != nil || !ok {
 		glog.Errorf("Internal error: Failed clone cluster resource while attempting to add master ingress UID annotation (%q = %q) from master cluster %q to cluster %q, will try again later: %v", uidAnnotationKey, masterUID, masterCluster.Name, cluster.Name, err)
@@ -736,7 +737,7 @@ func (ic *IngressController) reconcileIngress(ingress types.NamespacedName) {
 		glog.V(4).Infof("Ingress %q is not federated.  Ignoring.", ingress)
 		return
 	}
-	baseIngressObj, err := api.Scheme.DeepCopy(baseIngressObjFromStore)
+	baseIngressObj, err := scheme.Scheme.DeepCopy(baseIngressObjFromStore)
 	baseIngress, ok := baseIngressObj.(*extensionsv1beta1.Ingress)
 	if err != nil || !ok {
 		glog.Errorf("Internal Error %v : Object retrieved from ingressInformerStore with key %q is not of correct type *extensionsv1beta1.Ingress: %v", err, key, baseIngressObj)
@@ -789,11 +790,11 @@ func (ic *IngressController) reconcileIngress(ingress types.NamespacedName) {
 			return
 		}
 		desiredIngress := &extensionsv1beta1.Ingress{}
-		objMeta, err := api.Scheme.DeepCopy(&baseIngress.ObjectMeta)
+		objMeta, err := scheme.Scheme.DeepCopy(&baseIngress.ObjectMeta)
 		if err != nil {
 			glog.Errorf("Error deep copying ObjectMeta: %v", err)
 		}
-		objSpec, err := api.Scheme.DeepCopy(&baseIngress.Spec)
+		objSpec, err := scheme.Scheme.DeepCopy(&baseIngress.Spec)
 		if err != nil {
 			glog.Errorf("Error deep copying Spec: %v", err)
 		}
@@ -858,7 +859,7 @@ func (ic *IngressController) reconcileIngress(ingress types.NamespacedName) {
 					return
 				}
 				if !baseLBStatusExists && clusterLBStatusExists {
-					lbstatusObj, lbErr := api.Scheme.DeepCopy(&clusterIngress.Status.LoadBalancer)
+					lbstatusObj, lbErr := scheme.Scheme.DeepCopy(&clusterIngress.Status.LoadBalancer)
 					lbstatus, ok := lbstatusObj.(*v1.LoadBalancerStatus)
 					if lbErr != nil || !ok {
 						glog.Errorf("Internal error: Failed to clone LoadBalancerStatus of %q in cluster %q while attempting to update master loadbalancer ingress status, will try again later. error: %v, Object to be cloned: %v", ingress, cluster.Name, lbErr, lbstatusObj)
@@ -885,7 +886,7 @@ func (ic *IngressController) reconcileIngress(ingress types.NamespacedName) {
 				glog.V(4).Infof("Ingress %q in cluster %q does not need an update: cluster ingress is equivalent to federated ingress", ingress, cluster.Name)
 			} else {
 				glog.V(4).Infof("Ingress %s in cluster %s needs an update: cluster ingress %v is not equivalent to federated ingress %v", ingress, cluster.Name, clusterIngress, desiredIngress)
-				objMeta, err := api.Scheme.DeepCopy(&clusterIngress.ObjectMeta)
+				objMeta, err := scheme.Scheme.DeepCopy(&clusterIngress.ObjectMeta)
 				if err != nil {
 					glog.Errorf("Error deep copying ObjectMeta: %v", err)
 					ic.deliverIngress(ingress, ic.ingressReviewDelay, true)

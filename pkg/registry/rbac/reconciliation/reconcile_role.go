@@ -21,7 +21,7 @@ import (
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/registry/rbac/validation"
 )
@@ -165,7 +165,7 @@ func computeReconciledRole(existing, expected RuleOwner, removeExtraPermissions 
 	result.Protected = (existing.GetAnnotations()[rbac.AutoUpdateAnnotationKey] == "false")
 
 	// Start with a copy of the existing object
-	changedObj, err := api.Scheme.DeepCopy(existing)
+	changedObj, err := scheme.Scheme.DeepCopy(existing)
 	if err != nil {
 		return nil, err
 	}

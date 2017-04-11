@@ -27,13 +27,13 @@ import (
 	"k8s.io/apiserver/pkg/util/webhook"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/certificates/install"
 	certificates "k8s.io/kubernetes/pkg/apis/certificates/v1beta1"
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 var (
@@ -51,7 +51,7 @@ type GKESigner struct {
 
 // NewGKESigner will create a new instance of a GKESigner.
 func NewGKESigner(kubeConfigFile string, retryBackoff time.Duration, recorder record.EventRecorder) (*GKESigner, error) {
-	webhook, err := webhook.NewGenericWebhook(api.Registry, api.Codecs, kubeConfigFile, groupVersions, retryBackoff)
+	webhook, err := webhook.NewGenericWebhook(scheme.Registry, scheme.Codecs, kubeConfigFile, groupVersions, retryBackoff)
 	if err != nil {
 		return nil, err
 	}

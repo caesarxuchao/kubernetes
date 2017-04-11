@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	utiltesting "k8s.io/client-go/util/testing"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/util/io"
 	"k8s.io/kubernetes/pkg/volume"
 )
@@ -34,7 +35,7 @@ func TestSavePodToFile(t *testing.T) {
 	pod := volume.NewPersistentVolumeRecyclerPodTemplate()
 
 	// sets all default values on a pod for equality comparison after decoding from file
-	codec := api.Codecs.LegacyCodec(api.Registry.GroupOrDie(api.GroupName).GroupVersion)
+	codec := scheme.Codecs.LegacyCodec(scheme.Registry.GroupOrDie(api.GroupName).GroupVersion)
 	encoded, err := runtime.Encode(codec, pod)
 	runtime.DecodeInto(codec, encoded, pod)
 

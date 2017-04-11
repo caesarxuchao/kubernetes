@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 func NewServiceRegistry() *ServiceRegistry {
@@ -77,7 +78,7 @@ func (r *ServiceRegistry) CreateService(ctx genericapirequest.Context, svc *api.
 	defer r.mu.Unlock()
 
 	r.Service = new(api.Service)
-	clone, err := api.Scheme.DeepCopy(svc)
+	clone, err := scheme.Scheme.DeepCopy(svc)
 	if err != nil {
 		return nil, err
 	}

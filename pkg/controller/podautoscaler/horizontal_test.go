@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	clientfake "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	core "k8s.io/client-go/testing"
 	"k8s.io/kubernetes/pkg/api/v1"
@@ -53,8 +53,8 @@ import (
 )
 
 func init() {
-	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	autoscalinginstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensionsinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func alwaysReady() bool { return true }
@@ -435,7 +435,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 			return true, metrics, nil
 		} else {
 			name := getForAction.GetName()
-			mapper := api.Registry.RESTMapper()
+			mapper := scheme.Registry.RESTMapper()
 			metrics := &cmapi.MetricValueList{}
 			var matchedTarget *autoscalingv2.MetricSpec
 			for i, target := range tc.metricsTarget {

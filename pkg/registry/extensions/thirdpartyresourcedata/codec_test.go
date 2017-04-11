@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 )
@@ -119,7 +119,7 @@ func TestCodec(t *testing.T) {
 			name: "labels",
 		},
 	}
-	api.Registry.AddThirdPartyAPIGroupVersions(schema.GroupVersion{Group: "company.com", Version: "v1"})
+	scheme.Registry.AddThirdPartyAPIGroupVersions(schema.GroupVersion{Group: "company.com", Version: "v1"})
 	for _, test := range tests {
 		d := &thirdPartyResourceDataDecoder{kind: "Foo", delegate: testapi.Extensions.Codec()}
 		e := &thirdPartyResourceDataEncoder{gvk: schema.GroupVersionKind{
@@ -188,7 +188,7 @@ func TestCodec(t *testing.T) {
 }
 
 func TestCreater(t *testing.T) {
-	creater := NewObjectCreator("creater group", "creater version", api.Scheme)
+	creater := NewObjectCreator("creater group", "creater version", scheme.Scheme)
 	tests := []struct {
 		name        string
 		kind        schema.GroupVersionKind

@@ -177,7 +177,7 @@ func buildImpersonationRequests(headers http.Header) ([]api.ObjectReference, err
 					Kind: "UserExtra",
 					// we only parse out a group above, but the parsing will fail if there isn't SOME version
 					// using the internal version will help us fail if anyone starts using it
-					APIVersion: authenticationapi.SchemeGroupVersion.String(),
+					APIVersion: authenticationscheme.SchemeGroupVersion.String(),
 					Name:       value,
 					// ObjectReference doesn't have a subresource field.  FieldPath is close and available, so we'll use that
 					// TODO fight the good fight for ObjectReference to refer to resources and subresources

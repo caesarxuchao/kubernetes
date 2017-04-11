@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	testcore "k8s.io/client-go/testing"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
@@ -202,7 +203,7 @@ func TestReplicationControllerStop(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		copiedForWatch, err := api.Scheme.Copy(test.Objs[0])
+		copiedForWatch, err := scheme.Scheme.Copy(test.Objs[0])
 		if err != nil {
 			t.Fatalf("%s unexpected error: %v", test.Name, err)
 		}

@@ -32,6 +32,7 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/client-go/tools/clientcmd/api/v1"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/imagepolicy/v1alpha1"
 
 	"fmt"
@@ -44,7 +45,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 const defaultConfigTmplJSON = `

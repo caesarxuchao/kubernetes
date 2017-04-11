@@ -25,7 +25,7 @@ import (
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api/v1"
 	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
@@ -76,7 +76,7 @@ func createAndWaitForADummyDeployment(client *clientset.Clientset) error {
 	}
 
 	dummyDeployment := &extensions.Deployment{}
-	if err := kuberuntime.DecodeInto(api.Codecs.UniversalDecoder(), dummyDeploymentBytes, dummyDeployment); err != nil {
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), dummyDeploymentBytes, dummyDeployment); err != nil {
 		return fmt.Errorf("unable to decode dummy deployment %v", err)
 	}
 

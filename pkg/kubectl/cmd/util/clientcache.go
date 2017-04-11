@@ -24,7 +24,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_internalclientset"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	oldclient "k8s.io/kubernetes/pkg/client/unversioned"
 	"k8s.io/kubernetes/pkg/version"
@@ -113,7 +113,7 @@ func (c *ClientCache) ClientConfigForVersion(requiredVersion *schema.GroupVersio
 		return copyConfig(c.noVersionConfig), nil
 	}
 
-	negotiatedVersion, err := discovery.NegotiateVersion(discoveryClient, requiredVersion, api.Registry.EnabledVersions())
+	negotiatedVersion, err := discovery.NegotiateVersion(discoveryClient, requiredVersion, scheme.Registry.EnabledVersions())
 	if err != nil {
 		return nil, err
 	}

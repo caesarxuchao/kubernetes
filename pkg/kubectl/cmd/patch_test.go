@@ -24,6 +24,7 @@ import (
 
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	cmdtesting "k8s.io/kubernetes/pkg/kubectl/cmd/testing"
 	"k8s.io/kubernetes/pkg/printers"
 )
@@ -33,7 +34,7 @@ func TestPatchObject(t *testing.T) {
 
 	f, tf, codec, _ := cmdtesting.NewAPIFactory()
 	tf.UnstructuredClient = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: unstructuredSerializer,
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch p, m := req.URL.Path, req.Method; {
@@ -65,7 +66,7 @@ func TestPatchObjectFromFile(t *testing.T) {
 
 	f, tf, codec, _ := cmdtesting.NewAPIFactory()
 	tf.UnstructuredClient = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: unstructuredSerializer,
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch p, m := req.URL.Path, req.Method; {
@@ -100,7 +101,7 @@ func TestPatchNoop(t *testing.T) {
 
 	f, tf, codec, _ := cmdtesting.NewAPIFactory()
 	tf.UnstructuredClient = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: unstructuredSerializer,
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch p, m := req.URL.Path, req.Method; {
@@ -130,7 +131,7 @@ func TestPatchNoop(t *testing.T) {
 
 	// Patched
 	{
-		copied, _ := api.Scheme.DeepCopy(patchObject)
+		copied, _ := scheme.Scheme.DeepCopy(patchObject)
 		patchObject = copied.(*api.Service)
 		if patchObject.Annotations == nil {
 			patchObject.Annotations = map[string]string{}
@@ -150,7 +151,7 @@ func TestPatchNoop(t *testing.T) {
 func TestPatchObjectFromFileOutput(t *testing.T) {
 	_, svc, _ := testData()
 
-	svcCopyObj, err := api.Scheme.DeepCopy(&svc.Items[0])
+	svcCopyObj, err := scheme.Scheme.DeepCopy(&svc.Items[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +165,7 @@ func TestPatchObjectFromFileOutput(t *testing.T) {
 	tf.CommandPrinter = &printers.YAMLPrinter{}
 	tf.GenericPrinter = true
 	tf.UnstructuredClient = &fake.RESTClient{
-		APIRegistry:          api.Registry,
+		APIRegistry:          scheme.Registry,
 		NegotiatedSerializer: unstructuredSerializer,
 		Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			switch p, m := req.URL.Path, req.Method; {

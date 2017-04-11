@@ -26,12 +26,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/diff"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	kapitesting "k8s.io/kubernetes/pkg/api/testing"
 )
 
 func BenchmarkPodConversion(b *testing.B) {
-	apiObjectFuzzer := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(b, api.Codecs), rand.NewSource(benchmarkSeed))
+	apiObjectFuzzer := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(b, scheme.Codecs), rand.NewSource(benchmarkSeed))
 	items := make([]api.Pod, 4)
 	for i := range items {
 		apiObjectFuzzer.Fuzz(&items[i])
@@ -43,10 +44,10 @@ func BenchmarkPodConversion(b *testing.B) {
 	items = append(items, benchmarkPod)
 	width := len(items)
 
-	scheme := api.Scheme
+	scheme := scheme.Scheme
 	for i := 0; i < b.N; i++ {
 		pod := &items[i%width]
-		versionedObj, err := scheme.UnsafeConvertToVersion(pod, api.Registry.GroupOrDie(api.GroupName).GroupVersion)
+		versionedObj, err := scheme.UnsafeConvertToVersion(pod, scheme.Registry.GroupOrDie(api.GroupName).GroupVersion)
 		if err != nil {
 			b.Fatalf("Conversion error: %v", err)
 		}
@@ -66,11 +67,11 @@ func BenchmarkNodeConversion(b *testing.B) {
 		b.Fatalf("Unexpected error decoding node: %v", err)
 	}
 
-	scheme := api.Scheme
+	scheme := scheme.Scheme
 	var result *api.Node
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		versionedObj, err := scheme.UnsafeConvertToVersion(&node, api.Registry.GroupOrDie(api.GroupName).GroupVersion)
+		versionedObj, err := scheme.UnsafeConvertToVersion(&node, scheme.Registry.GroupOrDie(api.GroupName).GroupVersion)
 		if err != nil {
 			b.Fatalf("Conversion error: %v", err)
 		}
@@ -96,11 +97,11 @@ func BenchmarkReplicationControllerConversion(b *testing.B) {
 		b.Fatalf("Unexpected error decoding node: %v", err)
 	}
 
-	scheme := api.Scheme
+	scheme := scheme.Scheme
 	var result *api.ReplicationController
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		versionedObj, err := scheme.UnsafeConvertToVersion(&replicationController, api.Registry.GroupOrDie(api.GroupName).GroupVersion)
+		versionedObj, err := scheme.UnsafeConvertToVersion(&replicationController, scheme.Registry.GroupOrDie(api.GroupName).GroupVersion)
 		if err != nil {
 			b.Fatalf("Conversion error: %v", err)
 		}

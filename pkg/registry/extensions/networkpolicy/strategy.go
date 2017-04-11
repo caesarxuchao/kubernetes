@@ -28,7 +28,7 @@ import (
 	"k8s.io/apiserver/pkg/registry/generic"
 	"k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/names"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/apis/extensions/validation"
 )
@@ -40,7 +40,7 @@ type networkPolicyStrategy struct {
 }
 
 // Strategy is the default logic that applies when creating and updating NetworkPolicy objects.
-var Strategy = networkPolicyStrategy{api.Scheme, names.SimpleNameGenerator}
+var Strategy = networkPolicyStrategy{scheme.Scheme, names.SimpleNameGenerator}
 
 // NamespaceScoped returns true because all NetworkPolicys need to be within a namespace.
 func (networkPolicyStrategy) NamespaceScoped() bool {

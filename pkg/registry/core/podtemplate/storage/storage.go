@@ -21,6 +21,7 @@ import (
 	"k8s.io/apiserver/pkg/registry/generic"
 	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/registry/cachesize"
 	"k8s.io/kubernetes/pkg/registry/core/podtemplate"
 )
@@ -32,7 +33,7 @@ type REST struct {
 // NewREST returns a RESTStorage object that will work against pod templates.
 func NewREST(optsGetter generic.RESTOptionsGetter) *REST {
 	store := &genericregistry.Store{
-		Copier:      api.Scheme,
+		Copier:      scheme.Scheme,
 		NewFunc:     func() runtime.Object { return &api.PodTemplate{} },
 		NewListFunc: func() runtime.Object { return &api.PodTemplateList{} },
 		ObjectNameFunc: func(obj runtime.Object) (string, error) {

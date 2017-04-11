@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/diff"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	utiltesting "k8s.io/client-go/util/testing"
@@ -41,7 +42,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 type TestParam struct {
@@ -59,7 +60,7 @@ func TestSerializer(t *testing.T) {
 	contentConfig := ContentConfig{
 		ContentType:          "application/json",
 		GroupVersion:         &schema.GroupVersion{Group: "other", Version: runtime.APIVersionInternal},
-		NegotiatedSerializer: api.Codecs,
+		NegotiatedSerializer: scheme.Codecs,
 	}
 
 	serializer, err := createSerializers(contentConfig)
@@ -97,7 +98,7 @@ func TestDoRequestFailed(t *testing.T) {
 		Message: " \"\" not found",
 		Details: &metav1.StatusDetails{},
 	}
-	expectedBody, _ := runtime.Encode(api.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   404,
 		ResponseBody: string(expectedBody),
@@ -136,7 +137,7 @@ func TestDoRawRequestFailed(t *testing.T) {
 			},
 		},
 	}
-	expectedBody, _ := runtime.Encode(api.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   404,
 		ResponseBody: string(expectedBody),
@@ -235,7 +236,7 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 			t.Errorf("Expected object not to be created")
 		}
 	}
-	statusOut, err := runtime.Decode(api.Codecs.LegacyCodec(v1.SchemeGroupVersion), body)
+	statusOut, err := runtime.Decode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), body)
 	if testParam.testBody {
 		if testParam.testBodyErrorIsNotNil {
 			if err == nil {
@@ -249,7 +250,7 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 			t.Errorf("Unexpected mis-match. Expected %#v.  Saw %#v", testParam.expStatus, statusOut)
 		}
 	}
-	fakeHandler.ValidateRequest(t, "/"+api.Registry.GroupOrDie(api.GroupName).GroupVersion.String()+"/test", "GET", nil)
+	fakeHandler.ValidateRequest(t, "/"+scheme.Registry.GroupOrDie(api.GroupName).GroupVersion.String()+"/test", "GET", nil)
 
 }
 
@@ -322,7 +323,7 @@ func TestCreateBackoffManager(t *testing.T) {
 
 func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting.FakeHandler, *metav1.Status) {
 	status := &metav1.Status{Status: fmt.Sprintf("%s", metav1.StatusSuccess)}
-	expectedBody, _ := runtime.Encode(api.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   statusCode,
 		ResponseBody: string(expectedBody),
@@ -336,8 +337,8 @@ func restClient(testServer *httptest.Server) (*RESTClient, error) {
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion:         &api.Registry.GroupOrDie(api.GroupName).GroupVersion,
-			NegotiatedSerializer: api.Codecs,
+			GroupVersion:         &scheme.Registry.GroupOrDie(api.GroupName).GroupVersion,
+			NegotiatedSerializer: scheme.Codecs,
 		},
 		Username: "user",
 		Password: "pass",

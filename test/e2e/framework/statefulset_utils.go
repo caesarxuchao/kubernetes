@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	apps "k8s.io/kubernetes/pkg/apis/apps/v1beta1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
@@ -74,7 +74,7 @@ func StatefulSetFromManifest(fileName, ns string) *apps.StatefulSet {
 	json, err := utilyaml.ToJSON(data)
 	Expect(err).NotTo(HaveOccurred())
 
-	Expect(runtime.DecodeInto(api.Codecs.UniversalDecoder(), json, &ss)).NotTo(HaveOccurred())
+	Expect(runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), json, &ss)).NotTo(HaveOccurred())
 	ss.Namespace = ns
 	if ss.Spec.Selector == nil {
 		ss.Spec.Selector = &metav1.LabelSelector{

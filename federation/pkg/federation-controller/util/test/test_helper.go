@@ -31,7 +31,7 @@ import (
 	core "k8s.io/client-go/testing"
 	federationapi "k8s.io/kubernetes/federation/apis/federation/v1beta1"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiv1 "k8s.io/kubernetes/pkg/api/v1"
 
 	"github.com/golang/glog"
@@ -70,7 +70,7 @@ func (wd *WatcherDispatcher) Stop() {
 }
 
 func copy(obj runtime.Object) runtime.Object {
-	objCopy, err := api.Scheme.DeepCopy(obj)
+	objCopy, err := scheme.Scheme.DeepCopy(obj)
 	if err != nil {
 		panic(err)
 	}

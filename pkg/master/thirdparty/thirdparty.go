@@ -36,6 +36,7 @@ import (
 	serverstorgage "k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/apiserver/pkg/storage/storagebackend"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	extensionsrest "k8s.io/kubernetes/pkg/registry/extensions/rest"
 	"k8s.io/kubernetes/pkg/registry/extensions/thirdpartyresourcedata"
@@ -284,10 +285,10 @@ func (m *ThirdPartyResourceServer) InstallThirdPartyResource(rsrc *extensions.Th
 	if err := thirdparty.InstallREST(m.genericAPIServer.HandlerContainer.Container); err != nil {
 		glog.Errorf("Unable to setup thirdparty api: %v", err)
 	}
-	m.genericAPIServer.HandlerContainer.Add(genericapi.NewGroupWebService(api.Codecs, path, apiGroup))
+	m.genericAPIServer.HandlerContainer.Add(genericapi.NewGroupWebService(scheme.Codecs, path, apiGroup))
 
 	m.addThirdPartyResourceStorage(path, plural.Resource, thirdparty.Storage[plural.Resource].(*thirdpartyresourcedatastore.REST), apiGroup)
-	api.Registry.AddThirdPartyAPIGroupVersions(schema.GroupVersion{Group: group, Version: rsrc.Versions[0].Name})
+	scheme.Registry.AddThirdPartyAPIGroupVersions(schema.GroupVersion{Group: group, Version: rsrc.Versions[0].Name})
 	return nil
 }
 
@@ -306,7 +307,7 @@ func (m *ThirdPartyResourceServer) thirdpartyapi(group, kind, version, pluralRes
 		pluralResource: resourceStorage,
 	}
 
-	optionsExternalVersion := api.Registry.GroupOrDie(api.GroupName).GroupVersion
+	optionsExternalVersion := scheme.Registry.GroupOrDie(api.GroupName).GroupVersion
 	internalVersion := schema.GroupVersion{Group: group, Version: runtime.APIVersionInternal}
 	externalVersion := schema.GroupVersion{Group: group, Version: version}
 
@@ -315,19 +316,19 @@ func (m *ThirdPartyResourceServer) thirdpartyapi(group, kind, version, pluralRes
 		Root:         apiRoot,
 		GroupVersion: externalVersion,
 
-		Creater:   thirdpartyresourcedata.NewObjectCreator(group, version, api.Scheme),
-		Convertor: api.Scheme,
-		Copier:    api.Scheme,
-		Defaulter: api.Scheme,
-		Typer:     api.Scheme,
+		Creater:   thirdpartyresourcedata.NewObjectCreator(group, version, scheme.Scheme),
+		Convertor: scheme.Scheme,
+		Copier:    scheme.Scheme,
+		Defaulter: scheme.Scheme,
+		Typer:     scheme.Scheme,
 
-		Mapper:                 thirdpartyresourcedata.NewMapper(api.Registry.GroupOrDie(extensions.GroupName).RESTMapper, kind, version, group),
-		Linker:                 api.Registry.GroupOrDie(extensions.GroupName).SelfLinker,
+		Mapper:                 thirdpartyresourcedata.NewMapper(scheme.Registry.GroupOrDie(extensions.GroupName).RESTMapper, kind, version, group),
+		Linker:                 scheme.Registry.GroupOrDie(extensions.GroupName).SelfLinker,
 		Storage:                storage,
 		OptionsExternalVersion: &optionsExternalVersion,
 
-		Serializer:     thirdpartyresourcedata.NewNegotiatedSerializer(api.Codecs, kind, externalVersion, internalVersion),
-		ParameterCodec: thirdpartyresourcedata.NewThirdPartyParameterCodec(api.ParameterCodec),
+		Serializer:     thirdpartyresourcedata.NewNegotiatedSerializer(scheme.Codecs, kind, externalVersion, internalVersion),
+		ParameterCodec: thirdpartyresourcedata.NewThirdPartyParameterCodec(scheme.ParameterCodec),
 
 		Context: m.genericAPIServer.RequestContextMapper(),
 

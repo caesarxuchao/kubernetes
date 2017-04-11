@@ -25,7 +25,7 @@ import (
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	informers "k8s.io/kubernetes/pkg/client/informers/informers_generated/externalversions"
@@ -54,7 +54,7 @@ func mustSetupScheduler() (schedulerConfigurator scheduler.Configurator, destroy
 
 	clientSet := clientset.NewForConfigOrDie(&restclient.Config{
 		Host:          s.URL,
-		ContentConfig: restclient.ContentConfig{GroupVersion: &api.Registry.GroupOrDie(v1.GroupName).GroupVersion},
+		ContentConfig: restclient.ContentConfig{GroupVersion: &scheme.Registry.GroupOrDie(v1.GroupName).GroupVersion},
 		QPS:           5000.0,
 		Burst:         5000,
 	})
@@ -78,7 +78,7 @@ func mustSetupScheduler() (schedulerConfigurator scheduler.Configurator, destroy
 	eventBroadcaster.StartRecordingToSink(&clientv1core.EventSinkImpl{Interface: clientv1core.New(clientSet.Core().RESTClient()).Events("")})
 
 	sched, err := scheduler.NewFromConfigurator(schedulerConfigurator, func(conf *scheduler.Config) {
-		conf.Recorder = eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "scheduler"})
+		conf.Recorder = eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "scheduler"})
 	})
 	if err != nil {
 		glog.Fatalf("Error creating scheduler: %v", err)

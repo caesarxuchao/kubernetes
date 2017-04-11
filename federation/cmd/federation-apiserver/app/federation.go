@@ -27,6 +27,7 @@ import (
 	fedv1beta1 "k8s.io/kubernetes/federation/apis/federation/v1beta1"
 	clusteretcd "k8s.io/kubernetes/federation/registry/cluster/etcd"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 func installFederationAPIs(g *genericapiserver.GenericAPIServer, optsGetter generic.RESTOptionsGetter, apiResourceConfigSource storage.APIResourceConfigSource) {
@@ -45,16 +46,16 @@ func installFederationAPIs(g *genericapiserver.GenericAPIServer, optsGetter gene
 	if !shouldInstallGroup {
 		return
 	}
-	federationGroupMeta := api.Registry.GroupOrDie(groupName)
+	federationGroupMeta := scheme.Registry.GroupOrDie(groupName)
 	apiGroupInfo := genericapiserver.APIGroupInfo{
 		GroupMeta: *federationGroupMeta,
 		VersionedResourcesStorageMap: map[string]map[string]rest.Storage{
 			"v1beta1": resources,
 		},
-		OptionsExternalVersion: &api.Registry.GroupOrDie(api.GroupName).GroupVersion,
-		Scheme:                 api.Scheme,
-		ParameterCodec:         api.ParameterCodec,
-		NegotiatedSerializer:   api.Codecs,
+		OptionsExternalVersion: &scheme.Registry.GroupOrDie(api.GroupName).GroupVersion,
+		Scheme:                 scheme.Scheme,
+		ParameterCodec:         scheme.ParameterCodec,
+		NegotiatedSerializer:   scheme.Codecs,
 	}
 	if err := g.InstallAPIGroup(&apiGroupInfo); err != nil {
 		glog.Fatalf("Error in registering group versions: %v", err)

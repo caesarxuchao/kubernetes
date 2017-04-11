@@ -25,7 +25,7 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	corelisters "k8s.io/kubernetes/pkg/client/listers/core/v1"
@@ -76,7 +76,7 @@ func (nsu *nodeStatusUpdater) UpdateNodeStatuses() error {
 			continue
 		}
 
-		clonedNode, err := api.Scheme.DeepCopy(nodeObj)
+		clonedNode, err := scheme.Scheme.DeepCopy(nodeObj)
 		if err != nil {
 			return fmt.Errorf("error cloning node %q: %v",
 				nodeName,

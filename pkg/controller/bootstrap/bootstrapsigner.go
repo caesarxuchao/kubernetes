@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/cache"
@@ -291,7 +292,7 @@ func (e *BootstrapSigner) getTokens() map[string]string {
 }
 
 func copyConfigMap(orig *v1.ConfigMap) (*v1.ConfigMap, error) {
-	newCMObj, err := api.Scheme.DeepCopy(orig)
+	newCMObj, err := scheme.Scheme.DeepCopy(orig)
 	if err != nil {
 		return nil, err
 	}

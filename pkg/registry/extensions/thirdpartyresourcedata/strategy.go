@@ -27,7 +27,7 @@ import (
 	"k8s.io/apiserver/pkg/registry/rest"
 	apistorage "k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/names"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/apis/extensions/validation"
 )
@@ -40,7 +40,7 @@ type strategy struct {
 
 // Strategy is the default logic that applies when creating and updating ThirdPartyResource
 // objects via the REST API.
-var Strategy = strategy{api.Scheme, names.SimpleNameGenerator}
+var Strategy = strategy{scheme.Scheme, names.SimpleNameGenerator}
 
 var _ = rest.RESTCreateStrategy(Strategy)
 

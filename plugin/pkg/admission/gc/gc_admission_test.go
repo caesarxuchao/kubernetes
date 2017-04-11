@@ -26,6 +26,7 @@ import (
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/authorization/authorizer"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 type fakeAuthorizer struct{}
@@ -63,49 +64,49 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "super-user, create, no objectref change",
 			username:        "super",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
 		},
 		{
 			name:            "super-user, create, objectref change",
 			username:        "super",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,
 		},
 		{
 			name:            "non-deleter, create, no objectref change",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
 		},
 		{
 			name:            "non-deleter, create, objectref change",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: false,
 		},
 		{
 			name:            "non-pod-deleter, create, no objectref change",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
 		},
 		{
 			name:            "non-pod-deleter, create, objectref change",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: false,
 		},
 		{
 			name:            "non-pod-deleter, create, objectref change, but not a pod",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("not-pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("not-pods"),
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,
 		},
@@ -113,7 +114,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "super-user, update, no objectref change",
 			username:        "super",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
@@ -121,7 +122,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "super-user, update, no objectref change two",
 			username:        "super",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,
@@ -129,7 +130,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "super-user, update, objectref change",
 			username:        "super",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,
@@ -137,7 +138,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-deleter, update, no objectref change",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
@@ -145,7 +146,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-deleter, update, no objectref change two",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,
@@ -153,7 +154,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-deleter, update, objectref change",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: false,
@@ -161,7 +162,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-deleter, update, objectref change two",
 			username:        "non-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}, {Name: "second"}}}},
 			expectedAllowed: false,
@@ -169,7 +170,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-pod-deleter, update, no objectref change",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{},
 			expectedAllowed: true,
@@ -177,7 +178,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-pod-deleter, update, objectref change",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: false,
@@ -185,7 +186,7 @@ func TestGCAdmission(t *testing.T) {
 		{
 			name:            "non-pod-deleter, update, objectref change, but not a pod",
 			username:        "non-pod-deleter",
-			resource:        api.SchemeGroupVersion.WithResource("not-pods"),
+			resource:        scheme.SchemeGroupVersion.WithResource("not-pods"),
 			oldObj:          &api.Pod{},
 			newObj:          &api.Pod{ObjectMeta: metav1.ObjectMeta{OwnerReferences: []metav1.OwnerReference{{Name: "first"}}}},
 			expectedAllowed: true,

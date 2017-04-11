@@ -30,13 +30,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/protobuf"
 	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/install"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 type testObject struct {
@@ -329,7 +329,7 @@ func TestDecodeObjects(t *testing.T) {
 	}
 
 	for i, test := range testCases {
-		s := protobuf.NewSerializer(api.Scheme, api.Scheme, "application/protobuf")
+		s := protobuf.NewSerializer(scheme.Scheme, scheme.Scheme, "application/protobuf")
 		obj, err := runtime.Decode(s, test.data)
 
 		switch {

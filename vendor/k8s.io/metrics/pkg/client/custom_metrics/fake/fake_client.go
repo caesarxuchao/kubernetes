@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/testing"
 	"k8s.io/metrics/pkg/apis/custom_metrics/v1alpha1"
 	cmclient "k8s.io/metrics/pkg/client/custom_metrics"
@@ -52,7 +52,7 @@ func (i GetForActionImpl) GetSubresource() string {
 }
 
 func NewGetForAction(groupKind schema.GroupKind, namespace, name string, metricName string, labelSelector labels.Selector) GetForActionImpl {
-	mapping, err := api.Registry.RESTMapper().RESTMapping(groupKind)
+	mapping, err := scheme.Registry.RESTMapper().RESTMapping(groupKind)
 	if err != nil {
 		panic(fmt.Sprintf("unable to get REST mapping for groupKind %s while building GetFor action: %v", groupKind.String, err))
 	}
@@ -72,7 +72,7 @@ func NewGetForAction(groupKind schema.GroupKind, namespace, name string, metricN
 }
 
 func NewRootGetForAction(groupKind schema.GroupKind, name string, metricName string, labelSelector labels.Selector) GetForActionImpl {
-	mapping, err := api.Registry.RESTMapper().RESTMapping(groupKind)
+	mapping, err := scheme.Registry.RESTMapper().RESTMapping(groupKind)
 	if err != nil {
 		panic(fmt.Sprintf("unable to get REST mapping for groupKind %s while building GetFor action: %v", groupKind.String, err))
 	}

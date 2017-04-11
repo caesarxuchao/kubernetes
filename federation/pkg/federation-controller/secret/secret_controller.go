@@ -39,6 +39,7 @@ import (
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/eventsink"
 	"k8s.io/kubernetes/federation/pkg/typeadapters"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiv1 "k8s.io/kubernetes/pkg/api/v1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/controller"
@@ -120,7 +121,7 @@ func startFederationSyncController(adapter typeadapters.FederatedTypeAdapter, co
 func newFederationSyncController(client federationclientset.Interface, adapter typeadapters.FederatedTypeAdapter) *FederationSyncController {
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartRecordingToSink(eventsink.NewFederatedEventSink(client))
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: fmt.Sprintf("federated-%v-controller", adapter.Kind())})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: fmt.Sprintf("federated-%v-controller", adapter.Kind())})
 
 	s := &FederationSyncController{
 		reviewDelay:           time.Second * 10,
@@ -355,7 +356,7 @@ func (s *FederationSyncController) reconcile(namespacedName types.NamespacedName
 
 	// Create a copy before modifying the resource to prevent racing
 	// with other readers.
-	copiedObj, err := api.Scheme.DeepCopy(cachedObj)
+	copiedObj, err := scheme.Scheme.DeepCopy(cachedObj)
 	if err != nil {
 		glog.Errorf("Error in retrieving %s from store: %v", kind, err)
 		s.deliver(namespacedName, 0, true)

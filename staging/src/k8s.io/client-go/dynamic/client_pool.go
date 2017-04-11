@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	restclient "k8s.io/client-go/rest"
 )
 
@@ -74,7 +74,7 @@ func NewClientPool(config *restclient.Config, mapper meta.RESTMapper, apiPathRes
 // Instantiates a new dynamic client pool with the given config.
 func NewDynamicClientPool(cfg *restclient.Config) ClientPool {
 	// TODO: should use a dynamic RESTMapper built from the discovery results.
-	restMapper := api.Registry.RESTMapper()
+	restMapper := scheme.Registry.RESTMapper()
 	return NewClientPool(cfg, restMapper, LegacyAPIPathResolverFunc)
 }
 

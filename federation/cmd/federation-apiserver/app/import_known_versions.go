@@ -21,7 +21,7 @@ import (
 	"k8s.io/kubernetes/federation/apis/core"
 	coreinstall "k8s.io/kubernetes/federation/apis/core/install"
 	federationinstall "k8s.io/kubernetes/federation/apis/federation/install"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	autoscalinginstall "k8s.io/kubernetes/pkg/apis/autoscaling/install"
 	batchinstall "k8s.io/kubernetes/pkg/apis/batch/install"
 	extensionsinstall "k8s.io/kubernetes/pkg/apis/extensions/install"
@@ -29,8 +29,8 @@ import (
 
 func init() {
 	coreinstall.Install(core.GroupFactoryRegistry, core.Registry, core.Scheme)
-	federationinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	batchinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	federationinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	extensionsinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	autoscalinginstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	batchinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }

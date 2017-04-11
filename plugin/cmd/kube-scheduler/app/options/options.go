@@ -20,6 +20,7 @@ package options
 import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/apis/componentconfig/v1alpha1"
 	"k8s.io/kubernetes/pkg/client/leaderelection"
@@ -34,7 +35,7 @@ import (
 )
 
 func init() {
-	componentconfiginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	componentconfiginstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 // SchedulerServer has all the context and params needed to run a Scheduler
@@ -52,9 +53,9 @@ type SchedulerServer struct {
 // NewSchedulerServer creates a new SchedulerServer with default parameters
 func NewSchedulerServer() *SchedulerServer {
 	versioned := &v1alpha1.KubeSchedulerConfiguration{}
-	api.Scheme.Default(versioned)
+	scheme.Scheme.Default(versioned)
 	cfg := componentconfig.KubeSchedulerConfiguration{}
-	api.Scheme.Convert(versioned, &cfg, nil)
+	scheme.Scheme.Convert(versioned, &cfg, nil)
 	cfg.LeaderElection.LeaderElect = true
 	s := SchedulerServer{
 		KubeSchedulerConfiguration: cfg,

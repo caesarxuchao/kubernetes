@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiutil "k8s.io/kubernetes/pkg/api/util"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -142,7 +143,7 @@ func (t *thirdPartyResourceDataMapper) RESTMapping(gk schema.GroupKind, versions
 	// TODO figure out why we're doing this rewriting
 	extensionGK := schema.GroupKind{Group: extensions.GroupName, Kind: "ThirdPartyResourceData"}
 
-	mapping, err := t.mapper.RESTMapping(extensionGK, api.Registry.GroupOrDie(extensions.GroupName).GroupVersion.Version)
+	mapping, err := t.mapper.RESTMapping(extensionGK, scheme.Registry.GroupOrDie(extensions.GroupName).GroupVersion.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +330,7 @@ func IsThirdPartyObject(rawData []byte, gvk *schema.GroupVersionKind) (isThirdPa
 		gv = gvk.GroupVersion()
 		gvkOut = gvk
 	}
-	return api.Registry.IsThirdPartyAPIGroupVersion(gv), gvkOut, nil
+	return scheme.Registry.IsThirdPartyAPIGroupVersion(gv), gvkOut, nil
 }
 
 func (t *thirdPartyResourceDataDecoder) Decode(data []byte, gvk *schema.GroupVersionKind, into runtime.Object) (runtime.Object, *schema.GroupVersionKind, error) {
@@ -364,7 +365,7 @@ func (t *thirdPartyResourceDataDecoder) Decode(data []byte, gvk *schema.GroupVer
 		}
 		return o, outGVK, nil
 	default:
-		if gvk != nil && api.Registry.IsThirdPartyAPIGroupVersion(gvk.GroupVersion()) {
+		if gvk != nil && scheme.Registry.IsThirdPartyAPIGroupVersion(gvk.GroupVersion()) {
 			// delegate won't recognize a thirdparty group version
 			gvk = nil
 		}
@@ -570,7 +571,7 @@ func (t *thirdPartyResourceDataCreator) New(kind schema.GroupVersionKind) (out r
 	case "ListOptions", "WatchEvent":
 		if apiutil.GetGroupVersion(t.group, t.version) == kind.GroupVersion().String() {
 			// Translate third party group to external group.
-			gvk := api.Registry.EnabledVersionsForGroup(api.GroupName)[0].WithKind(kind.Kind)
+			gvk := scheme.Registry.EnabledVersionsForGroup(api.GroupName)[0].WithKind(kind.Kind)
 			return t.delegate.New(gvk)
 		}
 		return t.delegate.New(kind)

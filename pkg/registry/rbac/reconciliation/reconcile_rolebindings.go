@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 )
 
@@ -184,7 +184,7 @@ func computeReconciledRoleBinding(existing, expected RoleBinding, removeExtraSub
 	}
 
 	// Start with a copy of the existing object
-	changedObj, err := api.Scheme.DeepCopy(existing)
+	changedObj, err := scheme.Scheme.DeepCopy(existing)
 	if err != nil {
 		return nil, err
 	}

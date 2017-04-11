@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	clientset "k8s.io/client-go/kubernetes"
-	certsapi "k8s.io/client-go/pkg/apis/certificates/v1beta1"
 )
 
 // ValidateAPIServer makes sure the server we're connecting to supports the Beta Certificates API
@@ -37,15 +36,15 @@ func ValidateAPIServer(client *clientset.Clientset) error {
 		return fmt.Errorf("certificate API check failed: failed to retrieve a list of supported API objects [%v]", err)
 	}
 	for _, group := range serverGroups.Groups {
-		if group.Name == certsapi.SchemeGroupVersion.Group {
+		if group.Name == certsscheme.SchemeGroupVersion.Group {
 			for _, version := range group.Versions {
-				if version.Version == certsapi.SchemeGroupVersion.Version {
-					fmt.Printf("[bootstrap] The server supports the Certificates API (%s/%s)\n", certsapi.SchemeGroupVersion.Group, certsapi.SchemeGroupVersion.Version)
+				if version.Version == certsscheme.SchemeGroupVersion.Version {
+					fmt.Printf("[bootstrap] The server supports the Certificates API (%s/%s)\n", certsscheme.SchemeGroupVersion.Group, certsscheme.SchemeGroupVersion.Version)
 					return nil
 				}
 			}
 		}
 	}
 	return fmt.Errorf("certificate API check failed: API server with version %s doesn't support Certificates API (%s/%s), use v1.6.0 or newer",
-		version.String(), certsapi.SchemeGroupVersion.Group, certsapi.SchemeGroupVersion.Version)
+		version.String(), certsscheme.SchemeGroupVersion.Group, certsscheme.SchemeGroupVersion.Version)
 }

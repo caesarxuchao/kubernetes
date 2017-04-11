@@ -25,11 +25,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/kubernetes/federation/apis/federation"
 	"k8s.io/kubernetes/federation/apis/federation/v1beta1"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 func init() {
-	Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestResourceVersioner(t *testing.T) {
@@ -57,7 +57,7 @@ func TestCodec(t *testing.T) {
 	cluster := federation.Cluster{}
 	// We do want to use package registered rather than testapi here, because we
 	// want to test if the package install and package registered work as expected.
-	data, err := runtime.Encode(api.Codecs.LegacyCodec(api.Registry.GroupOrDie(federation.GroupName).GroupVersion), &cluster)
+	data, err := runtime.Encode(scheme.Codecs.LegacyCodec(scheme.Registry.GroupOrDie(federation.GroupName).GroupVersion), &cluster)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -65,17 +65,17 @@ func TestCodec(t *testing.T) {
 	if err := json.Unmarshal(data, &other); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if other.APIVersion != api.Registry.GroupOrDie(federation.GroupName).GroupVersion.String() || other.Kind != "Cluster" {
+	if other.APIVersion != scheme.Registry.GroupOrDie(federation.GroupName).GroupVersion.String() || other.Kind != "Cluster" {
 		t.Errorf("unexpected unmarshalled object %#v", other)
 	}
 }
 
 func TestInterfacesFor(t *testing.T) {
-	if _, err := api.Registry.GroupOrDie(federation.GroupName).InterfacesFor(federation.SchemeGroupVersion); err == nil {
+	if _, err := scheme.Registry.GroupOrDie(federation.GroupName).InterfacesFor(federation.SchemeGroupVersion); err == nil {
 		t.Fatalf("unexpected non-error: %v", err)
 	}
-	for i, version := range api.Registry.GroupOrDie(federation.GroupName).GroupVersions {
-		if vi, err := api.Registry.GroupOrDie(federation.GroupName).InterfacesFor(version); err != nil || vi == nil {
+	for i, version := range scheme.Registry.GroupOrDie(federation.GroupName).GroupVersions {
+		if vi, err := scheme.Registry.GroupOrDie(federation.GroupName).InterfacesFor(version); err != nil || vi == nil {
 			t.Fatalf("%d: unexpected result: %v", i, err)
 		}
 	}
@@ -85,16 +85,16 @@ func TestRESTMapper(t *testing.T) {
 	gv := v1beta1.SchemeGroupVersion
 	clusterGVK := gv.WithKind("Cluster")
 
-	if gvk, err := api.Registry.GroupOrDie(federation.GroupName).RESTMapper.KindFor(gv.WithResource("clusters")); err != nil || gvk != clusterGVK {
+	if gvk, err := scheme.Registry.GroupOrDie(federation.GroupName).RESTMapper.KindFor(gv.WithResource("clusters")); err != nil || gvk != clusterGVK {
 		t.Errorf("unexpected version mapping: %v %v", gvk, err)
 	}
 
-	if m, err := api.Registry.GroupOrDie(federation.GroupName).RESTMapper.RESTMapping(clusterGVK.GroupKind(), ""); err != nil || m.GroupVersionKind != clusterGVK || m.Resource != "clusters" {
+	if m, err := scheme.Registry.GroupOrDie(federation.GroupName).RESTMapper.RESTMapping(clusterGVK.GroupKind(), ""); err != nil || m.GroupVersionKind != clusterGVK || m.Resource != "clusters" {
 		t.Errorf("unexpected version mapping: %#v %v", m, err)
 	}
 
-	for _, version := range api.Registry.GroupOrDie(federation.GroupName).GroupVersions {
-		mapping, err := api.Registry.GroupOrDie(federation.GroupName).RESTMapper.RESTMapping(clusterGVK.GroupKind(), version.Version)
+	for _, version := range scheme.Registry.GroupOrDie(federation.GroupName).GroupVersions {
+		mapping, err := scheme.Registry.GroupOrDie(federation.GroupName).RESTMapper.RESTMapping(clusterGVK.GroupKind(), version.Version)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
@@ -106,7 +106,7 @@ func TestRESTMapper(t *testing.T) {
 			t.Errorf("incorrect groupVersion: %v", mapping)
 		}
 
-		interfaces, _ := api.Registry.GroupOrDie(federation.GroupName).InterfacesFor(version)
+		interfaces, _ := scheme.Registry.GroupOrDie(federation.GroupName).InterfacesFor(version)
 		if mapping.ObjectConvertor != interfaces.ObjectConvertor {
 			t.Errorf("unexpected: %#v, expected: %#v", mapping, interfaces)
 		}

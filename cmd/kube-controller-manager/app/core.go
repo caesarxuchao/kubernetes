@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/extensions"
 	"k8s.io/kubernetes/pkg/controller"
@@ -100,7 +101,7 @@ func startResourceQuotaController(ctx ControllerContext) (bool, error) {
 
 func startNamespaceController(ctx ControllerContext) (bool, error) {
 	// TODO: should use a dynamic RESTMapper built from the discovery results.
-	restMapper := api.Registry.RESTMapper()
+	restMapper := scheme.Registry.RESTMapper()
 
 	// Find the list of namespaced resources via discovery that the namespace controller must manage
 	namespaceKubeClient := ctx.ClientBuilder.ClientOrDie("namespace-controller")
@@ -163,7 +164,7 @@ func startGarbageCollectorController(ctx ControllerContext) (bool, error) {
 	}
 
 	// TODO: should use a dynamic RESTMapper built from the discovery results.
-	restMapper := api.Registry.RESTMapper()
+	restMapper := scheme.Registry.RESTMapper()
 
 	gcClientset := ctx.ClientBuilder.ClientOrDie("generic-garbage-collector")
 	preferredResources, err := gcClientset.Discovery().ServerPreferredResources()

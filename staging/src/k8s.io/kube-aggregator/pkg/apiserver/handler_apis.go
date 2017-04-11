@@ -29,7 +29,6 @@ import (
 	v1listers "k8s.io/client-go/listers/core/v1"
 
 	apiregistrationapi "k8s.io/kube-aggregator/pkg/apis/apiregistration"
-	apiregistrationv1alpha1api "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1alpha1"
 	informers "k8s.io/kube-aggregator/pkg/client/informers/internalversion/apiregistration/internalversion"
 	listers "k8s.io/kube-aggregator/pkg/client/listers/apiregistration/internalversion"
 )
@@ -64,13 +63,13 @@ var discoveryGroup = metav1.APIGroup{
 	Name: apiregistrationapi.GroupName,
 	Versions: []metav1.GroupVersionForDiscovery{
 		{
-			GroupVersion: apiregistrationv1alpha1api.SchemeGroupVersion.String(),
-			Version:      apiregistrationv1alpha1api.SchemeGroupVersion.Version,
+			GroupVersion: apiregistrationv1alpha1scheme.SchemeGroupVersion.String(),
+			Version:      apiregistrationv1alpha1scheme.SchemeGroupVersion.Version,
 		},
 	},
 	PreferredVersion: metav1.GroupVersionForDiscovery{
-		GroupVersion: apiregistrationv1alpha1api.SchemeGroupVersion.String(),
-		Version:      apiregistrationv1alpha1api.SchemeGroupVersion.Version,
+		GroupVersion: apiregistrationv1alpha1scheme.SchemeGroupVersion.String(),
+		Version:      apiregistrationv1alpha1scheme.SchemeGroupVersion.Version,
 	},
 }
 

@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/flowcontrol"
 	"k8s.io/metrics/pkg/apis/custom_metrics/v1alpha1"
@@ -35,7 +35,7 @@ type customMetricsClient struct {
 }
 
 func New(client rest.Interface) CustomMetricsClient {
-	return NewForMapper(client, api.Registry.RESTMapper())
+	return NewForMapper(client, scheme.Registry.RESTMapper())
 }
 
 func NewForConfig(c *rest.Config) (CustomMetricsClient, error) {
@@ -48,7 +48,7 @@ func NewForConfig(c *rest.Config) (CustomMetricsClient, error) {
 		configShallowCopy.UserAgent = rest.DefaultKubernetesUserAgent()
 	}
 	configShallowCopy.GroupVersion = &v1alpha1.SchemeGroupVersion
-	configShallowCopy.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
+	configShallowCopy.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
 
 	client, err := rest.RESTClientFor(&configShallowCopy)
 	if err != nil {

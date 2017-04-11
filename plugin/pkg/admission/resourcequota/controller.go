@@ -33,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/quota"
 	_ "k8s.io/kubernetes/pkg/util/workqueue/prometheus" // for workqueue metric registration
 	resourcequotaapi "k8s.io/kubernetes/plugin/pkg/admission/resourcequota/apis/resourcequota"
@@ -319,7 +320,7 @@ func (e *quotaEvaluator) checkQuotas(quotas []api.ResourceQuota, admissionAttrib
 func copyQuotas(in []api.ResourceQuota) ([]api.ResourceQuota, error) {
 	out := make([]api.ResourceQuota, 0, len(in))
 	for _, quota := range in {
-		copied, err := api.Scheme.Copy(&quota)
+		copied, err := scheme.Scheme.Copy(&quota)
 		if err != nil {
 			return nil, err
 		}

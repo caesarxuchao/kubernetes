@@ -23,7 +23,7 @@ import (
 
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/apis/componentconfig/install"
 	"k8s.io/kubernetes/pkg/apis/componentconfig/v1alpha1"
@@ -38,7 +38,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 // ProxyServerConfig configures and runs a Kubernetes proxy server
@@ -57,9 +57,9 @@ type ProxyServerConfig struct {
 
 func NewProxyConfig() *ProxyServerConfig {
 	versioned := &v1alpha1.KubeProxyConfiguration{}
-	api.Scheme.Default(versioned)
+	scheme.Scheme.Default(versioned)
 	cfg := componentconfig.KubeProxyConfiguration{}
-	api.Scheme.Convert(versioned, &cfg, nil)
+	scheme.Scheme.Convert(versioned, &cfg, nil)
 	return &ProxyServerConfig{
 		KubeProxyConfiguration: cfg,
 		ContentType:            "application/vnd.kubernetes.protobuf",

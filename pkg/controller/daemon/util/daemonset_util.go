@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	labelsutil "k8s.io/kubernetes/pkg/util/labels"
@@ -29,7 +29,7 @@ import (
 // GetPodTemplateWithHash returns copy of provided template with additional
 // label which contains hash of provided template
 func GetPodTemplateWithGeneration(template v1.PodTemplateSpec, generation int64) v1.PodTemplateSpec {
-	obj, _ := api.Scheme.DeepCopy(template)
+	obj, _ := scheme.Scheme.DeepCopy(template)
 	newTemplate := obj.(v1.PodTemplateSpec)
 	templateGenerationStr := fmt.Sprint(generation)
 	newTemplate.ObjectMeta.Labels = labelsutil.CloneAndAddLabel(

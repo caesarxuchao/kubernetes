@@ -38,7 +38,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
 
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	coreinformers "k8s.io/kubernetes/pkg/client/informers/informers_generated/externalversions/core/v1"
@@ -213,7 +213,7 @@ func NewNodeController(
 	runTaintManager bool,
 	useTaintBasedEvictions bool) (*NodeController, error) {
 	eventBroadcaster := record.NewBroadcaster()
-	recorder := eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "controllermanager"})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "controllermanager"})
 	eventBroadcaster.StartLogging(glog.Infof)
 	if kubeClient != nil {
 		glog.V(0).Infof("Sending events to api server.")
@@ -335,7 +335,7 @@ func NewNodeController(
 
 		nodeEventHandlerFuncs = cache.ResourceEventHandlerFuncs{
 			AddFunc: func(originalObj interface{}) {
-				obj, err := api.Scheme.DeepCopy(originalObj)
+				obj, err := scheme.Scheme.DeepCopy(originalObj)
 				if err != nil {
 					utilruntime.HandleError(err)
 					return
@@ -372,7 +372,7 @@ func NewNodeController(
 				// state is correct.
 				// Restart of NC fixes the issue.
 				if node.Spec.PodCIDR == "" {
-					nodeCopy, err := api.Scheme.Copy(node)
+					nodeCopy, err := scheme.Scheme.Copy(node)
 					if err != nil {
 						utilruntime.HandleError(err)
 						return
@@ -387,7 +387,7 @@ func NewNodeController(
 				}
 			},
 			DeleteFunc: func(originalObj interface{}) {
-				obj, err := api.Scheme.DeepCopy(originalObj)
+				obj, err := scheme.Scheme.DeepCopy(originalObj)
 				if err != nil {
 					utilruntime.HandleError(err)
 					return
@@ -418,7 +418,7 @@ func NewNodeController(
 	} else {
 		nodeEventHandlerFuncs = cache.ResourceEventHandlerFuncs{
 			AddFunc: func(originalObj interface{}) {
-				obj, err := api.Scheme.DeepCopy(originalObj)
+				obj, err := scheme.Scheme.DeepCopy(originalObj)
 				if err != nil {
 					utilruntime.HandleError(err)
 					return
@@ -437,7 +437,7 @@ func NewNodeController(
 				}
 			},
 			DeleteFunc: func(originalObj interface{}) {
-				obj, err := api.Scheme.DeepCopy(originalObj)
+				obj, err := scheme.Scheme.DeepCopy(originalObj)
 				if err != nil {
 					utilruntime.HandleError(err)
 					return
@@ -630,7 +630,7 @@ func (nc *NodeController) monitorNodeStatus() error {
 		var gracePeriod time.Duration
 		var observedReadyCondition v1.NodeCondition
 		var currentReadyCondition *v1.NodeCondition
-		nodeCopy, err := api.Scheme.DeepCopy(nodes[i])
+		nodeCopy, err := scheme.Scheme.DeepCopy(nodes[i])
 		if err != nil {
 			utilruntime.HandleError(err)
 			continue

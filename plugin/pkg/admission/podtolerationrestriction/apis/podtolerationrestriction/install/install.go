@@ -31,12 +31,12 @@ func Install(groupFactoryRegistry announced.APIGroupFactoryRegistry, registry *r
 	if err := announced.NewGroupMetaFactory(
 		&announced.GroupMetaFactoryArgs{
 			GroupName:                  internalapi.GroupName,
-			VersionPreferenceOrder:     []string{versionedapi.SchemeGroupVersion.Version},
+			VersionPreferenceOrder:     []string{versionedscheme.SchemeGroupVersion.Version},
 			ImportPrefix:               "k8s.io/kubernetes/plugin/pkg/admission/podtolerationrestriction/apis/podtolerationrestriction",
 			AddInternalObjectsToScheme: internalapi.AddToScheme,
 		},
 		announced.VersionToSchemeFunc{
-			versionedapi.SchemeGroupVersion.Version: versionedapi.AddToScheme,
+			versionedscheme.SchemeGroupVersion.Version: versionedapi.AddToScheme,
 		},
 	).Announce(groupFactoryRegistry).RegisterAndEnable(registry, scheme); err != nil {
 		panic(err)

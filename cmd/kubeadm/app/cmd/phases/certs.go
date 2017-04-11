@@ -24,7 +24,7 @@ import (
 
 	netutil "k8s.io/apimachinery/pkg/util/net"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmapiext "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1alpha1"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/validation"
@@ -48,7 +48,7 @@ func NewCmdSelfSign() *cobra.Command {
 	// TODO: Move this into a dedicated Certificates Phase API object
 	cfg := &kubeadmapiext.MasterConfiguration{}
 	// Default values for the cobra help text
-	api.Scheme.Default(cfg)
+	scheme.Scheme.Default(cfg)
 
 	cmd := &cobra.Command{
 		Use:   "selfsign",
@@ -56,9 +56,9 @@ func NewCmdSelfSign() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// Run the defaulting once again to take passed flags into account
-			api.Scheme.Default(cfg)
+			scheme.Scheme.Default(cfg)
 			internalcfg := &kubeadmapi.MasterConfiguration{}
-			api.Scheme.Convert(cfg, internalcfg, nil)
+			scheme.Scheme.Convert(cfg, internalcfg, nil)
 
 			err := RunSelfSign(internalcfg)
 			kubeadmutil.CheckErr(err)

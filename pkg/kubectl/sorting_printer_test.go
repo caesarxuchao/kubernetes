@@ -29,7 +29,7 @@ import (
 )
 
 func encodeOrDie(obj runtime.Object) []byte {
-	data, err := runtime.Encode(internal.Codecs.LegacyCodec(api.SchemeGroupVersion), obj)
+	data, err := runtime.Encode(internal.Codecs.LegacyCodec(scheme.SchemeGroupVersion), obj)
 	if err != nil {
 		panic(err.Error())
 	}

@@ -44,10 +44,10 @@ func gvkToMetadataOnlyObject(gvk schema.GroupVersionKind) runtime.Object {
 }
 
 func NewMetadataCodecFactory() serializer.CodecFactory {
-	// populating another scheme from api.Scheme, registering every kind with
+	// populating another scheme from scheme.Scheme, registering every kind with
 	// MetadataOnlyObject (or MetadataOnlyObjectList).
 	scheme := runtime.NewScheme()
-	allTypes := api.Scheme.AllKnownTypes()
+	allTypes := scheme.Scheme.AllKnownTypes()
 	for kind := range allTypes {
 		if kind.Version == runtime.APIVersionInternal {
 			continue

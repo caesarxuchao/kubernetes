@@ -24,7 +24,7 @@ import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/apiserver/pkg/util/flag"
 	utilflag "k8s.io/apiserver/pkg/util/flag"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	// Need to make sure the componentconfig api is installed so defaulting funcs work
 	"k8s.io/kubernetes/pkg/apis/componentconfig/install"
@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 const (
@@ -89,9 +89,9 @@ type KubeletServer struct {
 // NewKubeletServer will create a new KubeletServer with default values.
 func NewKubeletServer() *KubeletServer {
 	versioned := &v1alpha1.KubeletConfiguration{}
-	api.Scheme.Default(versioned)
+	scheme.Scheme.Default(versioned)
 	config := componentconfig.KubeletConfiguration{}
-	api.Scheme.Convert(versioned, &config, nil)
+	scheme.Scheme.Convert(versioned, &config, nil)
 	return &KubeletServer{
 		KubeletFlags: KubeletFlags{
 			KubeConfig:        flag.NewStringFlag("/var/lib/kubelet/kubeconfig"),

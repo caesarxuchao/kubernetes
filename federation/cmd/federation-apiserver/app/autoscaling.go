@@ -23,6 +23,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/autoscaling"
 	autoscalingv1 "k8s.io/kubernetes/pkg/apis/autoscaling/v1"
 	hpastorage "k8s.io/kubernetes/pkg/registry/autoscaling/horizontalpodautoscaler/storage"
@@ -43,16 +44,16 @@ func installAutoscalingAPIs(g *genericapiserver.GenericAPIServer, optsGetter gen
 	if !shouldInstallGroup {
 		return
 	}
-	autoscalingGroupMeta := api.Registry.GroupOrDie(autoscaling.GroupName)
+	autoscalingGroupMeta := scheme.Registry.GroupOrDie(autoscaling.GroupName)
 	apiGroupInfo := genericapiserver.APIGroupInfo{
 		GroupMeta: *autoscalingGroupMeta,
 		VersionedResourcesStorageMap: map[string]map[string]rest.Storage{
 			"v1": resources,
 		},
-		OptionsExternalVersion: &api.Registry.GroupOrDie(api.GroupName).GroupVersion,
-		Scheme:                 api.Scheme,
-		ParameterCodec:         api.ParameterCodec,
-		NegotiatedSerializer:   api.Codecs,
+		OptionsExternalVersion: &scheme.Registry.GroupOrDie(api.GroupName).GroupVersion,
+		Scheme:                 scheme.Scheme,
+		ParameterCodec:         scheme.ParameterCodec,
+		NegotiatedSerializer:   scheme.Codecs,
 	}
 	if err := g.InstallAPIGroup(&apiGroupInfo); err != nil {
 		glog.Fatalf("Error in registering group versions: %v", err)

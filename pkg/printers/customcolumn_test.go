@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/printers"
 )
@@ -112,7 +113,7 @@ func TestNewColumnPrinterFromSpec(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		printer, err := printers.NewCustomColumnsPrinterFromSpec(test.spec, api.Codecs.UniversalDecoder(), test.noHeaders)
+		printer, err := printers.NewCustomColumnsPrinterFromSpec(test.spec, scheme.Codecs.UniversalDecoder(), test.noHeaders)
 		if test.expectErr {
 			if err == nil {
 				t.Errorf("[%s] unexpected non-error", test.name)
@@ -215,7 +216,7 @@ func TestNewColumnPrinterFromTemplate(t *testing.T) {
 	}
 	for _, test := range tests {
 		reader := bytes.NewBufferString(test.spec)
-		printer, err := printers.NewCustomColumnsPrinterFromTemplate(reader, api.Codecs.UniversalDecoder())
+		printer, err := printers.NewCustomColumnsPrinterFromTemplate(reader, scheme.Codecs.UniversalDecoder())
 		if test.expectErr {
 			if err == nil {
 				t.Errorf("[%s] unexpected non-error", test.name)
@@ -291,7 +292,7 @@ foo       baz
 	for _, test := range tests {
 		printer := &printers.CustomColumnsPrinter{
 			Columns: test.columns,
-			Decoder: api.Codecs.UniversalDecoder(),
+			Decoder: scheme.Codecs.UniversalDecoder(),
 		}
 		buffer := &bytes.Buffer{}
 		if err := printer.PrintObj(test.obj, buffer); err != nil {

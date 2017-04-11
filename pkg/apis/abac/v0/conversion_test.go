@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"k8s.io/apiserver/pkg/authentication/user"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	api "k8s.io/kubernetes/pkg/apis/abac"
 	"k8s.io/kubernetes/pkg/apis/abac/v0"
 )
@@ -78,7 +79,7 @@ func TestV0Conversion(t *testing.T) {
 	}
 	for k, tc := range testcases {
 		internal := &api.Policy{}
-		if err := api.Scheme.Convert(tc.old, internal, nil); err != nil {
+		if err := scheme.Scheme.Convert(tc.old, internal, nil); err != nil {
 			t.Errorf("%s: unexpected error: %v", k, err)
 		}
 		if !reflect.DeepEqual(internal, tc.expected) {

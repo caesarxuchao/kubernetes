@@ -21,15 +21,15 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/kubernetes/pkg/api"
 	apiinstall "k8s.io/kubernetes/pkg/api/install"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	autoscalinginstall "k8s.io/kubernetes/pkg/apis/autoscaling/install"
 	. "k8s.io/kubernetes/pkg/apis/autoscaling/v1"
 )
 
 func init() {
-	apiinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	apiinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	autoscalinginstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestSetDefaultHPA(t *testing.T) {
@@ -70,18 +70,18 @@ func TestSetDefaultHPA(t *testing.T) {
 }
 
 func roundTrip(t *testing.T, obj runtime.Object) runtime.Object {
-	data, err := runtime.Encode(api.Codecs.LegacyCodec(SchemeGroupVersion), obj)
+	data, err := runtime.Encode(scheme.Codecs.LegacyCodec(SchemeGroupVersion), obj)
 	if err != nil {
 		t.Errorf("%v\n %#v", err, obj)
 		return nil
 	}
-	obj2, err := runtime.Decode(api.Codecs.UniversalDecoder(), data)
+	obj2, err := runtime.Decode(scheme.Codecs.UniversalDecoder(), data)
 	if err != nil {
 		t.Errorf("%v\nData: %s\nSource: %#v", err, string(data), obj)
 		return nil
 	}
 	obj3 := reflect.New(reflect.TypeOf(obj).Elem()).Interface().(runtime.Object)
-	err = api.Scheme.Convert(obj2, obj3, nil)
+	err = scheme.Scheme.Convert(obj2, obj3, nil)
 	if err != nil {
 		t.Errorf("%v\nSource: %#v", err, obj2)
 		return nil

@@ -41,7 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	informers "k8s.io/kubernetes/pkg/client/informers/informers_generated/externalversions/core/v1"
@@ -287,7 +287,7 @@ func (ttlc *TTLController) updateNodeIfNeeded(key string) error {
 		return nil
 	}
 
-	objCopy, err := api.Scheme.DeepCopy(node)
+	objCopy, err := scheme.Scheme.DeepCopy(node)
 	if err != nil {
 		return err
 	}

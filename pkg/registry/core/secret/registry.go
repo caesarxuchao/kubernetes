@@ -23,6 +23,7 @@ import (
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 // Registry is an interface implemented by things that know how to store Secret objects.
@@ -72,7 +73,7 @@ func (s *storage) CreateSecret(ctx genericapirequest.Context, secret *api.Secret
 }
 
 func (s *storage) UpdateSecret(ctx genericapirequest.Context, secret *api.Secret) (*api.Secret, error) {
-	obj, _, err := s.Update(ctx, secret.Name, rest.DefaultUpdatedObjectInfo(secret, api.Scheme))
+	obj, _, err := s.Update(ctx, secret.Name, rest.DefaultUpdatedObjectInfo(secret, scheme.Scheme))
 	return obj.(*api.Secret), err
 }
 

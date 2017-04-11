@@ -37,6 +37,7 @@ import (
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/deletionhelper"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/eventsink"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	extensionsv1 "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/controller"
@@ -93,7 +94,7 @@ type DaemonSetController struct {
 func NewDaemonSetController(client federationclientset.Interface) *DaemonSetController {
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartRecordingToSink(eventsink.NewFederatedEventSink(client))
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "federated-daemonset-controller"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "federated-daemonset-controller"})
 
 	daemonsetcontroller := &DaemonSetController{
 		federatedApiClient:    client,
@@ -357,7 +358,7 @@ func (daemonsetcontroller *DaemonSetController) reconcileDaemonSet(namespace str
 		// Not federated daemonset, ignoring.
 		return
 	}
-	baseDaemonSetObj, err := api.Scheme.DeepCopy(baseDaemonSetObjFromStore)
+	baseDaemonSetObj, err := scheme.Scheme.DeepCopy(baseDaemonSetObjFromStore)
 	baseDaemonSet, ok := baseDaemonSetObj.(*extensionsv1.DaemonSet)
 	if err != nil || !ok {
 		glog.Errorf("Error in retrieving obj %s from store: %v, %v", daemonsetName, ok, err)

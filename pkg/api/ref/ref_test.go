@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 type FakeAPIObject struct{}
@@ -42,8 +43,8 @@ func TestGetReference(t *testing.T) {
 	// when vendoring kube, if you don't force the set of registered versions (like make test does)
 	// then you run into trouble because the types aren't registered in the scheme by anything.  This does the
 	// register manually to allow unit test execution
-	if _, _, err := api.Scheme.ObjectKinds(&api.Pod{}); err != nil {
-		api.AddToScheme(api.Scheme)
+	if _, _, err := scheme.Scheme.ObjectKinds(&api.Pod{}); err != nil {
+		api.AddToScheme(scheme.Scheme)
 	}
 
 	table := map[string]struct {
@@ -126,7 +127,7 @@ func TestGetReference(t *testing.T) {
 	}
 
 	for name, item := range table {
-		ref, err := GetPartialReference(api.Scheme, item.obj, item.fieldPath)
+		ref, err := GetPartialReference(scheme.Scheme, item.obj, item.fieldPath)
 		if e, a := item.shouldErr, (err != nil); e != a {
 			t.Errorf("%v: expected %v, got %v, err %v", name, e, a, err)
 			continue

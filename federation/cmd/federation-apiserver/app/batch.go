@@ -23,6 +23,7 @@ import (
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	batchv1 "k8s.io/kubernetes/pkg/apis/batch/v1"
 	jobstorage "k8s.io/kubernetes/pkg/registry/batch/job/storage"
@@ -43,16 +44,16 @@ func installBatchAPIs(g *genericapiserver.GenericAPIServer, optsGetter generic.R
 	if !shouldInstallGroup {
 		return
 	}
-	batchGroupMeta := api.Registry.GroupOrDie(batch.GroupName)
+	batchGroupMeta := scheme.Registry.GroupOrDie(batch.GroupName)
 	apiGroupInfo := genericapiserver.APIGroupInfo{
 		GroupMeta: *batchGroupMeta,
 		VersionedResourcesStorageMap: map[string]map[string]rest.Storage{
 			"v1": resources,
 		},
-		OptionsExternalVersion: &api.Registry.GroupOrDie(api.GroupName).GroupVersion,
-		Scheme:                 api.Scheme,
-		ParameterCodec:         api.ParameterCodec,
-		NegotiatedSerializer:   api.Codecs,
+		OptionsExternalVersion: &scheme.Registry.GroupOrDie(api.GroupName).GroupVersion,
+		Scheme:                 scheme.Scheme,
+		ParameterCodec:         scheme.ParameterCodec,
+		NegotiatedSerializer:   scheme.Codecs,
 	}
 	if err := g.InstallAPIGroup(&apiGroupInfo); err != nil {
 		glog.Fatalf("Error in registering group versions: %v", err)

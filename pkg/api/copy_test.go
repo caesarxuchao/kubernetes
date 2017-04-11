@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/diff"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	kapitesting "k8s.io/kubernetes/pkg/api/testing"
 
@@ -34,9 +35,9 @@ import (
 
 func TestDeepCopyApiObjects(t *testing.T) {
 	for i := 0; i < *apitesting.FuzzIters; i++ {
-		for _, version := range []schema.GroupVersion{testapi.Default.InternalGroupVersion(), api.Registry.GroupOrDie(api.GroupName).GroupVersion} {
-			f := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, api.Codecs), rand.NewSource(rand.Int63()))
-			for kind := range api.Scheme.KnownTypes(version) {
+		for _, version := range []schema.GroupVersion{testapi.Default.InternalGroupVersion(), scheme.Registry.GroupOrDie(api.GroupName).GroupVersion} {
+			f := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, scheme.Codecs), rand.NewSource(rand.Int63()))
+			for kind := range scheme.Scheme.KnownTypes(version) {
 				doDeepCopyTest(t, version.WithKind(kind), f)
 			}
 		}
@@ -44,12 +45,12 @@ func TestDeepCopyApiObjects(t *testing.T) {
 }
 
 func doDeepCopyTest(t *testing.T, kind schema.GroupVersionKind, f *fuzz.Fuzzer) {
-	item, err := api.Scheme.New(kind)
+	item, err := scheme.Scheme.New(kind)
 	if err != nil {
 		t.Fatalf("Could not create a %v: %s", kind, err)
 	}
 	f.Fuzz(item)
-	itemCopy, err := api.Scheme.DeepCopy(item)
+	itemCopy, err := scheme.Scheme.DeepCopy(item)
 	if err != nil {
 		t.Errorf("Could not deep copy a %v: %s", kind, err)
 		return
@@ -60,7 +61,7 @@ func doDeepCopyTest(t *testing.T, kind schema.GroupVersionKind, f *fuzz.Fuzzer) 
 	}
 
 	prefuzzData := &bytes.Buffer{}
-	if err := api.Codecs.LegacyCodec(kind.GroupVersion()).Encode(item, prefuzzData); err != nil {
+	if err := scheme.Codecs.LegacyCodec(kind.GroupVersion()).Encode(item, prefuzzData); err != nil {
 		t.Errorf("Could not encode a %v: %s", kind, err)
 		return
 	}
@@ -69,7 +70,7 @@ func doDeepCopyTest(t *testing.T, kind schema.GroupVersionKind, f *fuzz.Fuzzer) 
 	f.Fuzz(itemCopy)
 
 	postfuzzData := &bytes.Buffer{}
-	if err := api.Codecs.LegacyCodec(kind.GroupVersion()).Encode(item, postfuzzData); err != nil {
+	if err := scheme.Codecs.LegacyCodec(kind.GroupVersion()).Encode(item, postfuzzData); err != nil {
 		t.Errorf("Could not encode a %v: %s", kind, err)
 		return
 	}
@@ -83,8 +84,8 @@ func doDeepCopyTest(t *testing.T, kind schema.GroupVersionKind, f *fuzz.Fuzzer) 
 
 func TestDeepCopySingleType(t *testing.T) {
 	for i := 0; i < *apitesting.FuzzIters; i++ {
-		for _, version := range []schema.GroupVersion{testapi.Default.InternalGroupVersion(), api.Registry.GroupOrDie(api.GroupName).GroupVersion} {
-			f := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, api.Codecs), rand.NewSource(rand.Int63()))
+		for _, version := range []schema.GroupVersion{testapi.Default.InternalGroupVersion(), scheme.Registry.GroupOrDie(api.GroupName).GroupVersion} {
+			f := apitesting.FuzzerFor(kapitesting.FuzzerFuncs(t, scheme.Codecs), rand.NewSource(rand.Int63()))
 			doDeepCopyTest(t, version.WithKind("Pod"), f)
 		}
 	}

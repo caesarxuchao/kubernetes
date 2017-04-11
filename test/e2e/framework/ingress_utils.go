@@ -47,7 +47,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
@@ -1003,7 +1003,7 @@ func createIngressFromManifest(fileName string) *extensions.Ingress {
 	json, err := utilyaml.ToJSON(data)
 	ExpectNoError(err)
 
-	ExpectNoError(runtime.DecodeInto(api.Codecs.UniversalDecoder(), json, &ing))
+	ExpectNoError(runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), json, &ing))
 	return &ing
 }
 

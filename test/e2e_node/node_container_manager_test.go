@@ -28,7 +28,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/kubelet/cm"
@@ -161,7 +161,7 @@ func runTest(f *framework.Framework) error {
 	if err := createTemporaryCgroupsForReservation(cgroupManager); err != nil {
 		return err
 	}
-	clone, err := api.Scheme.DeepCopy(oldCfg)
+	clone, err := scheme.Scheme.DeepCopy(oldCfg)
 	if err != nil {
 		return err
 	}

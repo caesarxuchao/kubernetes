@@ -45,7 +45,7 @@ import (
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	batchv1 "k8s.io/kubernetes/pkg/apis/batch/v1"
 	batchv2alpha1 "k8s.io/kubernetes/pkg/apis/batch/v2alpha1"
@@ -78,7 +78,7 @@ func NewCronJobController(kubeClient clientset.Interface) *CronJobController {
 		jobControl: realJobControl{KubeClient: kubeClient},
 		sjControl:  &realSJControl{KubeClient: kubeClient},
 		podControl: &realPodControl{KubeClient: kubeClient},
-		recorder:   eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "cronjob-controller"}),
+		recorder:   eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "cronjob-controller"}),
 	}
 
 	return jm
@@ -393,5 +393,5 @@ func deleteJob(sj *batchv2alpha1.CronJob, job *batchv1.Job, jc jobControlInterfa
 }
 
 func getRef(object runtime.Object) (*v1.ObjectReference, error) {
-	return v1.GetReference(api.Scheme, object)
+	return v1.GetReference(scheme.Scheme, object)
 }

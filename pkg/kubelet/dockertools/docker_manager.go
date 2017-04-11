@@ -50,7 +50,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/kubelet/cm"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
@@ -654,7 +654,7 @@ func (dm *DockerManager) runContainer(
 		// TODO: This is kind of hacky, we should really just encode the bits we need.
 		// TODO: This is hacky because the Kubelet should be parameterized to encode a specific version
 		//   and needs to be able to migrate this whenever we deprecate v1. Should be a member of DockerManager.
-		if data, err := kruntime.Encode(api.Codecs.LegacyCodec(schema.GroupVersion{Group: v1.GroupName, Version: "v1"}), pod); err == nil {
+		if data, err := kruntime.Encode(scheme.Codecs.LegacyCodec(schema.GroupVersion{Group: v1.GroupName, Version: "v1"}), pod); err == nil {
 			labels[kubernetesPodLabel] = string(data)
 		} else {
 			glog.Errorf("Failed to encode pod: %s for prestop hook", pod.Name)
@@ -1675,7 +1675,7 @@ func containerAndPodFromLabels(inspect *dockertypes.ContainerJSON) (pod *v1.Pod,
 	// the pod data may not be set
 	if body, found := labels[kubernetesPodLabel]; found {
 		pod = &v1.Pod{}
-		if err = kruntime.DecodeInto(api.Codecs.UniversalDecoder(), []byte(body), pod); err == nil {
+		if err = kruntime.DecodeInto(scheme.Codecs.UniversalDecoder(), []byte(body), pod); err == nil {
 			name := labels[types.KubernetesContainerNameLabel]
 			for ix := range pod.Spec.Containers {
 				if pod.Spec.Containers[ix].Name == name {

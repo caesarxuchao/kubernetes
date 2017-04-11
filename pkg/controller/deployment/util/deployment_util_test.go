@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	core "k8s.io/client-go/testing"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	extensions "k8s.io/kubernetes/pkg/apis/extensions/v1beta1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset/fake"
@@ -447,11 +447,11 @@ func TestEqualIgnoreHash(t *testing.T) {
 	for _, test := range tests {
 		runTest := func(t1, t2 *v1.PodTemplateSpec, reversed bool) {
 			// Set up
-			t1Copy, err := api.Scheme.DeepCopy(t1)
+			t1Copy, err := scheme.Scheme.DeepCopy(t1)
 			if err != nil {
 				t.Errorf("Failed setting up the test: %v", err)
 			}
-			t2Copy, err := api.Scheme.DeepCopy(t2)
+			t2Copy, err := scheme.Scheme.DeepCopy(t2)
 			if err != nil {
 				t.Errorf("Failed setting up the test: %v", err)
 			}

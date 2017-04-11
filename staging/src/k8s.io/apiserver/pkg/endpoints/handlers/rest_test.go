@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/v1"
 
@@ -44,7 +45,7 @@ import (
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 type testPatchType struct {
@@ -63,9 +64,9 @@ func (obj *testPatchType) GetObjectKind() schema.ObjectKind { return &obj.TypeMe
 
 func TestPatchAnonymousField(t *testing.T) {
 	testGV := schema.GroupVersion{Group: "", Version: "v"}
-	api.Scheme.AddKnownTypes(testGV, &testPatchType{})
-	codec := api.Codecs.LegacyCodec(testGV)
-	defaulter := runtime.ObjectDefaulter(api.Scheme)
+	scheme.Scheme.AddKnownTypes(testGV, &testPatchType{})
+	codec := scheme.Codecs.LegacyCodec(testGV)
+	defaulter := runtime.ObjectDefaulter(scheme.Scheme)
 
 	original := &testPatchType{
 		TypeMeta:         metav1.TypeMeta{Kind: "testPatchType", APIVersion: "v"},
@@ -189,7 +190,7 @@ func (tc *patchTestCase) Run(t *testing.T) {
 	namespace := tc.startingPod.Namespace
 	name := tc.startingPod.Name
 
-	codec := api.Codecs.LegacyCodec(schema.GroupVersion{Version: "v1"})
+	codec := scheme.Codecs.LegacyCodec(schema.GroupVersion{Version: "v1"})
 	admit := tc.admit
 	if admit == nil {
 		admit = func(updatedObject runtime.Object, currentObject runtime.Object) error {
@@ -206,10 +207,10 @@ func (tc *patchTestCase) Run(t *testing.T) {
 	ctx = request.WithNamespace(ctx, namespace)
 
 	namer := &testNamer{namespace, name}
-	copier := runtime.ObjectCopier(api.Scheme)
-	creater := runtime.ObjectCreater(api.Scheme)
-	defaulter := runtime.ObjectDefaulter(api.Scheme)
-	convertor := runtime.UnsafeObjectConvertor(api.Scheme)
+	copier := runtime.ObjectCopier(scheme.Scheme)
+	creater := runtime.ObjectCreater(scheme.Scheme)
+	defaulter := runtime.ObjectDefaulter(scheme.Scheme)
+	convertor := runtime.UnsafeObjectConvertor(scheme.Scheme)
 	kind := schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"}
 	resource := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
 	versionedObj := &v1.Pod{}
@@ -297,8 +298,8 @@ func (tc *patchTestCase) Run(t *testing.T) {
 }
 
 func TestNumberConversion(t *testing.T) {
-	codec := api.Codecs.LegacyCodec(schema.GroupVersion{Version: "v1"})
-	defaulter := runtime.ObjectDefaulter(api.Scheme)
+	codec := scheme.Codecs.LegacyCodec(schema.GroupVersion{Version: "v1"})
+	defaulter := runtime.ObjectDefaulter(scheme.Scheme)
 
 	currentVersionedObject := &v1.Service{
 		TypeMeta:   metav1.TypeMeta{Kind: "Service", APIVersion: "v1"},

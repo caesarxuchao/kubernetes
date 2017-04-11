@@ -35,7 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	e2e "k8s.io/kubernetes/test/e2e/framework"
@@ -278,7 +278,7 @@ func main() {
 			continue
 		}
 		var r metav1.Status
-		if err := runtime.DecodeInto(api.Codecs.UniversalDecoder(), hostname, &r); err != nil {
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), hostname, &r); err != nil {
 			break
 		}
 		if r.Status == metav1.StatusFailure {

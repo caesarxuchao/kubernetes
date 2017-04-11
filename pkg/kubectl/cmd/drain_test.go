@@ -42,6 +42,7 @@ import (
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/ref"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 	"k8s.io/kubernetes/pkg/apis/batch"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -70,7 +71,7 @@ func TestMain(m *testing.M) {
 		},
 		Status: api.NodeStatus{},
 	}
-	clone, _ := api.Scheme.DeepCopy(node)
+	clone, _ := scheme.Scheme.DeepCopy(node)
 
 	// A copy of the same node, but cordoned.
 	cordoned_node = clone.(*api.Node)
@@ -150,7 +151,7 @@ func TestCordon(t *testing.T) {
 		new_node := &api.Node{}
 		updated := false
 		tf.Client = &fake.RESTClient{
-			APIRegistry:          api.Registry,
+			APIRegistry:          scheme.Registry,
 			NegotiatedSerializer: ns,
 			Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 				m := &MyReq{req}
@@ -534,7 +535,7 @@ func TestDrain(t *testing.T) {
 			evicted := false
 			f, tf, codec, ns := cmdtesting.NewAPIFactory()
 			tf.Client = &fake.RESTClient{
-				APIRegistry:          api.Registry,
+				APIRegistry:          scheme.Registry,
 				NegotiatedSerializer: ns,
 				Client: fake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 					m := &MyReq{req}
@@ -796,7 +797,7 @@ func (m *MyReq) isFor(method string, path string) bool {
 }
 
 func refJson(t *testing.T, o runtime.Object) string {
-	ref, err := ref.GetReference(api.Scheme, o)
+	ref, err := ref.GetReference(scheme.Scheme, o)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 )
 
@@ -131,7 +132,7 @@ var benchmarkPod api.Pod = api.Pod{
 func BenchmarkPodCopy(b *testing.B) {
 	var result *api.Pod
 	for i := 0; i < b.N; i++ {
-		obj, err := api.Scheme.DeepCopy(&benchmarkPod)
+		obj, err := scheme.Scheme.DeepCopy(&benchmarkPod)
 		if err != nil {
 			b.Fatalf("Unexpected error copying pod: %v", err)
 		}
@@ -154,7 +155,7 @@ func BenchmarkNodeCopy(b *testing.B) {
 
 	var result *api.Node
 	for i := 0; i < b.N; i++ {
-		obj, err := api.Scheme.DeepCopy(&node)
+		obj, err := scheme.Scheme.DeepCopy(&node)
 		if err != nil {
 			b.Fatalf("Unexpected error copying node: %v", err)
 		}
@@ -177,7 +178,7 @@ func BenchmarkReplicationControllerCopy(b *testing.B) {
 
 	var result *api.ReplicationController
 	for i := 0; i < b.N; i++ {
-		obj, err := api.Scheme.DeepCopy(&replicationController)
+		obj, err := scheme.Scheme.DeepCopy(&replicationController)
 		if err != nil {
 			b.Fatalf("Unexpected error copying replication controller: %v", err)
 		}

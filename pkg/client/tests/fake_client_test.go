@@ -21,6 +21,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	clientsetfake "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
 
 	clientgoinstall "k8s.io/client-go/pkg/api/install"
@@ -28,8 +29,8 @@ import (
 )
 
 func init() {
-	clientgoinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	kubernetesinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	clientgoinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
+	kubernetesinstall.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func TestFakeClientSetFiltering(t *testing.T) {

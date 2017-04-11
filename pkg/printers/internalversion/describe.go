@@ -50,6 +50,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/helper"
 	"k8s.io/kubernetes/pkg/api/ref"
 	resourcehelper "k8s.io/kubernetes/pkg/api/resource"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/apps"
 	"k8s.io/kubernetes/pkg/apis/autoscaling"
 	"k8s.io/kubernetes/pkg/apis/batch"
@@ -189,7 +190,7 @@ func (g *genericDescriber) Describe(namespace, name string, describerSettings pr
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = g.events.Events(namespace).Search(api.Scheme, obj)
+		events, _ = g.events.Events(namespace).Search(scheme.Scheme, obj)
 	}
 
 	return tabbedString(func(out io.Writer) error {
@@ -522,11 +523,11 @@ func (d *PodDescriber) Describe(namespace, name string, describerSettings printe
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		if ref, err := ref.GetReference(api.Scheme, pod); err != nil {
+		if ref, err := ref.GetReference(scheme.Scheme, pod); err != nil {
 			glog.Errorf("Unable to construct reference to '%#v': %v", pod, err)
 		} else {
 			ref.Kind = ""
-			events, _ = d.Core().Events(namespace).Search(api.Scheme, ref)
+			events, _ = d.Core().Events(namespace).Search(scheme.Scheme, ref)
 		}
 	}
 
@@ -842,7 +843,7 @@ func (d *PersistentVolumeDescriber) Describe(namespace, name string, describerSe
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, pv)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, pv)
 	}
 
 	return tabbedString(func(out io.Writer) error {
@@ -923,7 +924,7 @@ func (d *PersistentVolumeClaimDescriber) Describe(namespace, name string, descri
 		capacity = storage.String()
 	}
 
-	events, _ := d.Core().Events(namespace).Search(api.Scheme, pvc)
+	events, _ := d.Core().Events(namespace).Search(scheme.Scheme, pvc)
 
 	return tabbedString(func(out io.Writer) error {
 		w := NewPrefixWriter(out)
@@ -1177,7 +1178,7 @@ type EnvVarResolverFunc func(e api.EnvVar) string
 // EnvValueFrom is exported for use by describers in other packages
 func EnvValueRetriever(pod *api.Pod) EnvVarResolverFunc {
 	return func(e api.EnvVar) string {
-		internalFieldPath, _, err := api.Scheme.ConvertFieldLabel(e.ValueFrom.FieldRef.APIVersion, "Pod", e.ValueFrom.FieldRef.FieldPath, "")
+		internalFieldPath, _, err := scheme.Scheme.ConvertFieldLabel(e.ValueFrom.FieldRef.APIVersion, "Pod", e.ValueFrom.FieldRef.FieldPath, "")
 		if err != nil {
 			return "" // pod validation should catch this on create
 		}
@@ -1278,7 +1279,7 @@ func (d *ReplicationControllerDescriber) Describe(namespace, name string, descri
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, controller)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, controller)
 	}
 
 	return describeReplicationController(controller, events, running, waiting, succeeded, failed)
@@ -1346,7 +1347,7 @@ func (d *ReplicaSetDescriber) Describe(namespace, name string, describerSettings
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, rs)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, rs)
 	}
 
 	return describeReplicaSet(rs, events, running, waiting, succeeded, failed, getPodErr)
@@ -1388,7 +1389,7 @@ func (d *JobDescriber) Describe(namespace, name string, describerSettings printe
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, job)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, job)
 	}
 
 	return describeJob(job, events)
@@ -1437,7 +1438,7 @@ func (d *CronJobDescriber) Describe(namespace, name string, describerSettings pr
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, scheduledJob)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, scheduledJob)
 	}
 
 	return describeCronJob(scheduledJob, events)
@@ -1536,7 +1537,7 @@ func (d *DaemonSetDescriber) Describe(namespace, name string, describerSettings 
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, daemon)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, daemon)
 	}
 
 	return describeDaemonSet(daemon, events, running, waiting, succeeded, failed)
@@ -1687,7 +1688,7 @@ func (i *IngressDescriber) describeIngress(ing *extensions.Ingress, describerSet
 		describeIngressAnnotations(w, ing.Annotations)
 
 		if describerSettings.ShowEvents {
-			events, _ := i.Core().Events(ing.Namespace).Search(api.Scheme, ing)
+			events, _ := i.Core().Events(ing.Namespace).Search(scheme.Scheme, ing)
 			if events != nil {
 				DescribeEvents(events, w)
 			}
@@ -1738,7 +1739,7 @@ func (d *ServiceDescriber) Describe(namespace, name string, describerSettings pr
 	endpoints, _ := d.Core().Endpoints(namespace).Get(name, metav1.GetOptions{})
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, service)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, service)
 	}
 	return describeService(service, endpoints, events)
 }
@@ -1818,7 +1819,7 @@ func (d *EndpointsDescriber) Describe(namespace, name string, describerSettings 
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		events, _ = d.Core().Events(namespace).Search(api.Scheme, ep)
+		events, _ = d.Core().Events(namespace).Search(scheme.Scheme, ep)
 	}
 
 	return describeEndpoints(ep, events)
@@ -2016,12 +2017,12 @@ func (d *NodeDescriber) Describe(namespace, name string, describerSettings print
 
 	var events *api.EventList
 	if describerSettings.ShowEvents {
-		if ref, err := ref.GetReference(api.Scheme, node); err != nil {
+		if ref, err := ref.GetReference(scheme.Scheme, node); err != nil {
 			glog.Errorf("Unable to construct reference to '%#v': %v", node, err)
 		} else {
 			// TODO: We haven't decided the namespace for Node object yet.
 			ref.UID = types.UID(ref.Name)
-			events, _ = d.Core().Events("").Search(api.Scheme, ref)
+			events, _ = d.Core().Events("").Search(scheme.Scheme, ref)
 		}
 	}
 
@@ -2144,7 +2145,7 @@ func (p *StatefulSetDescriber) Describe(namespace, name string, describerSetting
 		DescribePodTemplate(&ps.Spec.Template, w)
 		describeVolumeClaimTemplates(ps.Spec.VolumeClaimTemplates, w)
 		if describerSettings.ShowEvents {
-			events, _ := p.client.Core().Events(namespace).Search(api.Scheme, ps)
+			events, _ := p.client.Core().Events(namespace).Search(scheme.Scheme, ps)
 			if events != nil {
 				DescribeEvents(events, w)
 			}
@@ -2213,7 +2214,7 @@ func (p *CertificateSigningRequestDescriber) Describe(namespace, name string, de
 		}
 
 		if describerSettings.ShowEvents {
-			events, _ := p.client.Core().Events(namespace).Search(api.Scheme, csr)
+			events, _ := p.client.Core().Events(namespace).Search(scheme.Scheme, csr)
 			if events != nil {
 				DescribeEvents(events, w)
 			}
@@ -2300,7 +2301,7 @@ func (d *HorizontalPodAutoscalerDescriber) Describe(namespace, name string, desc
 		}
 
 		if describerSettings.ShowEvents {
-			events, _ := d.client.Core().Events(namespace).Search(api.Scheme, hpa)
+			events, _ := d.client.Core().Events(namespace).Search(scheme.Scheme, hpa)
 			if events != nil {
 				DescribeEvents(events, w)
 			}
@@ -2428,7 +2429,7 @@ func (dd *DeploymentDescriber) Describe(namespace, name string, describerSetting
 		return "", err
 	}
 	internalDeployment := &extensions.Deployment{}
-	if err := api.Scheme.Convert(d, internalDeployment, extensions.SchemeGroupVersion); err != nil {
+	if err := scheme.Scheme.Convert(d, internalDeployment, extensions.SchemeGroupVersion); err != nil {
 		return "", err
 	}
 	return tabbedString(func(out io.Writer) error {
@@ -2468,7 +2469,7 @@ func (dd *DeploymentDescriber) Describe(namespace, name string, describerSetting
 			w.Write(LEVEL_0, "!!!WARNING!!! This deployment has overlapping label selector with deployment %q and won't behave as expected. Please fix it before continuing.\n", overlapWith)
 		}
 		if describerSettings.ShowEvents {
-			events, err := dd.Core().Events(namespace).Search(api.Scheme, d)
+			events, err := dd.Core().Events(namespace).Search(scheme.Scheme, d)
 			if err == nil && events != nil {
 				DescribeEvents(events, w)
 			}
@@ -2580,7 +2581,7 @@ func (d *ConfigMapDescriber) Describe(namespace, name string, describerSettings 
 			w.Write(LEVEL_0, "%s\n", string(v))
 		}
 		if describerSettings.ShowEvents {
-			events, err := d.Core().Events(namespace).Search(api.Scheme, configMap)
+			events, err := d.Core().Events(namespace).Search(scheme.Scheme, configMap)
 			if err != nil {
 				return err
 			}
@@ -2678,7 +2679,7 @@ func (s *StorageClassDescriber) Describe(namespace, name string, describerSettin
 		w.Write(LEVEL_0, "Provisioner:\t%s\n", sc.Provisioner)
 		w.Write(LEVEL_0, "Parameters:\t%s\n", labels.FormatLabels(sc.Parameters))
 		if describerSettings.ShowEvents {
-			events, err := s.Core().Events(namespace).Search(api.Scheme, sc)
+			events, err := s.Core().Events(namespace).Search(scheme.Scheme, sc)
 			if err != nil {
 				return err
 			}
@@ -2714,7 +2715,7 @@ func (p *PodDisruptionBudgetDescriber) Describe(namespace, name string, describe
 		w.Write(LEVEL_2, "Desired:\t%d\n", pdb.Status.DesiredHealthy)
 		w.Write(LEVEL_2, "Total:\t%d\n", pdb.Status.ExpectedPods)
 		if describerSettings.ShowEvents {
-			events, err := p.Core().Events(namespace).Search(api.Scheme, pdb)
+			events, err := p.Core().Events(namespace).Search(scheme.Scheme, pdb)
 			if err != nil {
 				return err
 			}

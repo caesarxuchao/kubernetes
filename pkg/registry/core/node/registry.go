@@ -23,6 +23,7 @@ import (
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 // Registry is an interface for things that know how to store node.
@@ -61,7 +62,7 @@ func (s *storage) CreateNode(ctx genericapirequest.Context, node *api.Node) erro
 }
 
 func (s *storage) UpdateNode(ctx genericapirequest.Context, node *api.Node) error {
-	_, _, err := s.Update(ctx, node.Name, rest.DefaultUpdatedObjectInfo(node, api.Scheme))
+	_, _, err := s.Update(ctx, node.Name, rest.DefaultUpdatedObjectInfo(node, scheme.Scheme))
 	return err
 }
 

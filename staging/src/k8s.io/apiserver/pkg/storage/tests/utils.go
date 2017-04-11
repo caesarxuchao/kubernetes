@@ -19,12 +19,12 @@ package tests
 import (
 	"k8s.io/apiserver/pkg/apis/example"
 
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/pkg/api/install"
 )
 
 func init() {
-	install.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	install.Install(scheme.GroupFactoryRegistry, scheme.Registry, scheme.Scheme)
 }
 
 func DeepEqualSafePodSpec() example.PodSpec {

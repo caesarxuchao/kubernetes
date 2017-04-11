@@ -35,7 +35,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	autoscalingv1 "k8s.io/kubernetes/pkg/apis/autoscaling/v1"
 	autoscalingv2 "k8s.io/kubernetes/pkg/apis/autoscaling/v2alpha1"
@@ -60,17 +60,17 @@ func calculateScaleUpLimit(currentReplicas int32) int32 {
 	return int32(math.Max(scaleUpLimitFactor*float64(currentReplicas), scaleUpLimitMinimum))
 }
 
-// UnsafeConvertToVersionVia is like api.Scheme.UnsafeConvertToVersion, but it does so via an internal version first.
+// UnsafeConvertToVersionVia is like scheme.Scheme.UnsafeConvertToVersion, but it does so via an internal version first.
 // We use it since working with v2alpha1 is convenient here, but we want to use the v1 client (and
 // can't just use the internal version).  Note that conversion mutates the object, so you need to deepcopy
 // *before* you call this if the input object came out of a shared cache.
 func UnsafeConvertToVersionVia(obj runtime.Object, externalVersion schema.GroupVersion) (runtime.Object, error) {
-	objInt, err := api.Scheme.UnsafeConvertToVersion(obj, schema.GroupVersion{Group: externalVersion.Group, Version: runtime.APIVersionInternal})
+	objInt, err := scheme.Scheme.UnsafeConvertToVersion(obj, schema.GroupVersion{Group: externalVersion.Group, Version: runtime.APIVersionInternal})
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert the given object to the internal version: %v", err)
 	}
 
-	objExt, err := api.Scheme.UnsafeConvertToVersion(objInt, externalVersion)
+	objExt, err := scheme.Scheme.UnsafeConvertToVersion(objInt, externalVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert the given object back to the external version: %v", err)
 	}
@@ -108,7 +108,7 @@ func NewHorizontalController(
 	broadcaster := record.NewBroadcaster()
 	// TODO: remove the wrapper when every clients have moved to use the clientset.
 	broadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: evtNamespacer.Events("")})
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "horizontal-pod-autoscaler"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "horizontal-pod-autoscaler"})
 
 	hpaController := &HorizontalController{
 		replicaCalc:     replicaCalc,
@@ -344,7 +344,7 @@ func (a *HorizontalController) reconcileKey(key string) error {
 
 func (a *HorizontalController) reconcileAutoscaler(hpav1Shared *autoscalingv1.HorizontalPodAutoscaler) error {
 	// make a copy so that we never mutate the shared informer cache (conversion can mutate the object)
-	hpav1Raw, err := api.Scheme.DeepCopy(hpav1Shared)
+	hpav1Raw, err := scheme.Scheme.DeepCopy(hpav1Shared)
 	if err != nil {
 		a.eventRecorder.Event(hpav1Shared, v1.EventTypeWarning, "FailedConvertHPA", err.Error())
 		return fmt.Errorf("failed to deep-copy the HPA: %v", err)

@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeletapp "k8s.io/kubernetes/cmd/kubelet/app"
 	"k8s.io/kubernetes/cmd/kubelet/app/options"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	"k8s.io/kubernetes/pkg/apis/componentconfig/v1alpha1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
@@ -116,9 +116,9 @@ func GetHollowKubeletConfig(
 	// Do the external -> internal conversion to make sure that defaults
 	// are set for fields not overridden in NewHollowKubelet.
 	tmp := &v1alpha1.KubeletConfiguration{}
-	api.Scheme.Default(tmp)
+	scheme.Scheme.Default(tmp)
 	c := &componentconfig.KubeletConfiguration{}
-	api.Scheme.Convert(tmp, c, nil)
+	scheme.Scheme.Convert(tmp, c, nil)
 
 	c.RootDirectory = testRootDir
 	c.ManifestURL = ""

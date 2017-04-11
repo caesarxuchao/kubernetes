@@ -27,7 +27,7 @@ import (
 	"k8s.io/apiserver/pkg/registry/generic"
 	apistorage "k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/names"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/apis/settings"
 	"k8s.io/kubernetes/pkg/apis/settings/validation"
 )
@@ -39,7 +39,7 @@ type podPresetStrategy struct {
 }
 
 // Strategy is the default logic that applies when creating and updating Pod Injection Policy objects.
-var Strategy = podPresetStrategy{api.Scheme, names.SimpleNameGenerator}
+var Strategy = podPresetStrategy{scheme.Scheme, names.SimpleNameGenerator}
 
 // NamespaceScoped returns true because all Pod Injection Policies need to be within a namespace.
 func (podPresetStrategy) NamespaceScoped() bool {

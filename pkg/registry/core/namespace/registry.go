@@ -23,6 +23,7 @@ import (
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 )
 
 // Registry is an interface implemented by things that know how to store Namespace objects.
@@ -72,7 +73,7 @@ func (s *storage) CreateNamespace(ctx genericapirequest.Context, namespace *api.
 }
 
 func (s *storage) UpdateNamespace(ctx genericapirequest.Context, namespace *api.Namespace) error {
-	_, _, err := s.Update(ctx, namespace.Name, rest.DefaultUpdatedObjectInfo(namespace, api.Scheme))
+	_, _, err := s.Update(ctx, namespace.Name, rest.DefaultUpdatedObjectInfo(namespace, scheme.Scheme))
 	return err
 }
 

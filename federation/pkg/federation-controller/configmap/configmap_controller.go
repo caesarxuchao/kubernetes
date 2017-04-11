@@ -36,6 +36,7 @@ import (
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/deletionhelper"
 	"k8s.io/kubernetes/federation/pkg/federation-controller/util/eventsink"
 	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	apiv1 "k8s.io/kubernetes/pkg/api/v1"
 	kubeclientset "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/controller"
@@ -93,7 +94,7 @@ type ConfigMapController struct {
 func NewConfigMapController(client federationclientset.Interface) *ConfigMapController {
 	broadcaster := record.NewBroadcaster()
 	broadcaster.StartRecordingToSink(eventsink.NewFederatedEventSink(client))
-	recorder := broadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "federated-configmaps-controller"})
+	recorder := broadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "federated-configmaps-controller"})
 
 	configmapcontroller := &ConfigMapController{
 		federatedApiClient:    client,
@@ -324,7 +325,7 @@ func (configmapcontroller *ConfigMapController) reconcileConfigMap(configmap typ
 		glog.V(8).Infof("Skipping not federated config map: %s", key)
 		return
 	}
-	obj, err := api.Scheme.DeepCopy(baseConfigMapObj)
+	obj, err := scheme.Scheme.DeepCopy(baseConfigMapObj)
 	configMap, ok := obj.(*apiv1.ConfigMap)
 	if err != nil || !ok {
 		glog.Errorf("Error in retrieving obj from store: %v, %v", ok, err)

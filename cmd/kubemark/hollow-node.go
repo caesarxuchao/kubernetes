@@ -27,7 +27,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
 	informers "k8s.io/kubernetes/pkg/client/informers/informers_generated/internalversion"
@@ -134,7 +134,7 @@ func main() {
 
 	if config.Morph == "proxy" {
 		eventBroadcaster := record.NewBroadcaster()
-		recorder := eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: "kube-proxy", Host: config.NodeName})
+		recorder := eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: "kube-proxy", Host: config.NodeName})
 
 		iptInterface := fakeiptables.NewFake()
 

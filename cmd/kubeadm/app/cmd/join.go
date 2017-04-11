@@ -27,7 +27,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	certutil "k8s.io/client-go/util/cert"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmapiext "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1alpha1"
@@ -54,7 +54,7 @@ var (
 // NewCmdJoin returns "kubeadm join" command.
 func NewCmdJoin(out io.Writer) *cobra.Command {
 	cfg := &kubeadmapiext.NodeConfiguration{}
-	api.Scheme.Default(cfg)
+	scheme.Scheme.Default(cfg)
 
 	var skipPreFlight bool
 	var cfgPath string
@@ -91,9 +91,9 @@ func NewCmdJoin(out io.Writer) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg.DiscoveryTokenAPIServers = args
 
-			api.Scheme.Default(cfg)
+			scheme.Scheme.Default(cfg)
 			internalcfg := &kubeadmapi.NodeConfiguration{}
-			api.Scheme.Convert(cfg, internalcfg, nil)
+			scheme.Scheme.Convert(cfg, internalcfg, nil)
 
 			j, err := NewJoin(cfgPath, args, internalcfg, skipPreFlight)
 			kubeadmutil.CheckErr(err)
@@ -139,7 +139,7 @@ func NewJoin(cfgPath string, args []string, cfg *kubeadmapi.NodeConfiguration, s
 		if err != nil {
 			return nil, fmt.Errorf("unable to read config from %q [%v]", cfgPath, err)
 		}
-		if err := runtime.DecodeInto(api.Codecs.UniversalDecoder(), b, cfg); err != nil {
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, cfg); err != nil {
 			return nil, fmt.Errorf("unable to decode config from %q [%v]", cfgPath, err)
 		}
 	}

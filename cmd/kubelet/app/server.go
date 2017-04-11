@@ -56,7 +56,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/kubernetes/cmd/kubelet/app/options"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/componentconfig"
 	componentconfigv1alpha1 "k8s.io/kubernetes/pkg/apis/componentconfig/v1alpha1"
@@ -262,13 +262,13 @@ func initKubeletConfigSync(s *options.KubeletServer) (*componentconfig.KubeletCo
 
 		// Convert json from API server to external type struct, and convert that to internal type struct
 		extKC := componentconfigv1alpha1.KubeletConfiguration{}
-		err := runtime.DecodeInto(api.Codecs.UniversalDecoder(), []byte(jsonstr), &extKC)
+		err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), []byte(jsonstr), &extKC)
 		if err != nil {
 			return nil, err
 		}
-		api.Scheme.Default(&extKC)
+		scheme.Scheme.Default(&extKC)
 		kc := componentconfig.KubeletConfiguration{}
-		err = api.Scheme.Convert(&extKC, &kc, nil)
+		err = scheme.Scheme.Convert(&extKC, &kc, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +304,7 @@ func checkPermissions() error {
 
 func setConfigz(cz *configz.Config, kc *componentconfig.KubeletConfiguration) {
 	tmp := componentconfigv1alpha1.KubeletConfiguration{}
-	api.Scheme.Convert(kc, &tmp, nil)
+	scheme.Scheme.Convert(kc, &tmp, nil)
 	cz.Set(tmp)
 }
 
@@ -345,7 +345,7 @@ func makeEventRecorder(s *componentconfig.KubeletConfiguration, kubeDeps *kubele
 		return
 	}
 	eventBroadcaster := record.NewBroadcaster()
-	kubeDeps.Recorder = eventBroadcaster.NewRecorder(api.Scheme, clientv1.EventSource{Component: componentKubelet, Host: string(nodeName)})
+	kubeDeps.Recorder = eventBroadcaster.NewRecorder(scheme.Scheme, clientv1.EventSource{Component: componentKubelet, Host: string(nodeName)})
 	eventBroadcaster.StartLogging(glog.V(3).Infof)
 	if kubeDeps.EventClient != nil {
 		glog.V(4).Infof("Sending events to api server.")

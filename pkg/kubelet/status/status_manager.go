@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/diff"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/kubernetes/pkg/api"
+	"k8s.io/kubernetes/pkg/api/scheme"
 	"k8s.io/kubernetes/pkg/api/v1"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
@@ -582,7 +582,7 @@ func normalizeStatus(pod *v1.Pod, status *v1.PodStatus) *v1.PodStatus {
 }
 
 func copyStatus(source *v1.PodStatus) (v1.PodStatus, error) {
-	clone, err := api.Scheme.DeepCopy(source)
+	clone, err := scheme.Scheme.DeepCopy(source)
 	if err != nil {
 		glog.Errorf("Failed to clone status %+v: %v", source, err)
 		return v1.PodStatus{}, err
