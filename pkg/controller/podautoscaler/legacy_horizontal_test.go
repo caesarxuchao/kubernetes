@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	clientfake "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	restclient "k8s.io/client-go/rest"
 	core "k8s.io/client-go/testing"
@@ -50,14 +49,11 @@ import (
 	metricsapi "k8s.io/heapster/metrics/apis/metrics/v1alpha1"
 
 	"github.com/stretchr/testify/assert"
-
-	autoscalinginstall "k8s.io/kubernetes/pkg/apis/autoscaling/install"
-	extensionsinstall "k8s.io/kubernetes/pkg/apis/extensions/install"
 )
 
 func init() {
-	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
-	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	//	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	// extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
 }
 
 func (w fakeResponseWrapper) DoRaw() ([]byte, error) {

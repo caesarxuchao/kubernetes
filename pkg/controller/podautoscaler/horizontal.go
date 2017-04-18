@@ -19,6 +19,7 @@ package podautoscaler
 import (
 	"fmt"
 	"math"
+	"runtime/debug"
 	"time"
 
 	"github.com/golang/glog"
@@ -67,6 +68,7 @@ func calculateScaleUpLimit(currentReplicas int32) int32 {
 func UnsafeConvertToVersionVia(obj runtime.Object, externalVersion schema.GroupVersion) (runtime.Object, error) {
 	objInt, err := api.Scheme.UnsafeConvertToVersion(obj, schema.GroupVersion{Group: externalVersion.Group, Version: runtime.APIVersionInternal})
 	if err != nil {
+		debug.PrintStack()
 		return nil, fmt.Errorf("failed to convert the given object to the internal version: %v", err)
 	}
 

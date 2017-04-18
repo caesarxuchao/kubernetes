@@ -29,9 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	clientfake "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api"
+	clientgoapi "k8s.io/client-go/pkg/api"
 	clientv1 "k8s.io/client-go/pkg/api/v1"
 	core "k8s.io/client-go/testing"
+	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/v1"
 	autoscalingv1 "k8s.io/kubernetes/pkg/apis/autoscaling/v1"
 	autoscalingv2 "k8s.io/kubernetes/pkg/apis/autoscaling/v2alpha1"
@@ -48,6 +49,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	apiinstall "k8s.io/kubernetes/pkg/api/install"
 	autoscalinginstall "k8s.io/kubernetes/pkg/apis/autoscaling/install"
 	extensionsinstall "k8s.io/kubernetes/pkg/apis/extensions/install"
 )
@@ -55,6 +57,8 @@ import (
 func init() {
 	autoscalinginstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
 	extensionsinstall.Install(api.GroupFactoryRegistry, api.Registry, api.Scheme)
+	extensionsinstall.Install(clientgoapi.GroupFactoryRegistry, clientgoapi.Registry, clientgoapi.Scheme)
+	apiinstall.Install(clientgoapi.GroupFactoryRegistry, clientgoapi.Registry, clientgoapi.Scheme)
 }
 
 func alwaysReady() bool { return true }
