@@ -37,7 +37,7 @@ import (
 )
 
 func readPod(filename string) ([]byte, error) {
-	data, err := ioutil.ReadFile("testdata/" + api.Registry.GroupOrDie(api.GroupName).GroupVersion.Version + "/" + filename)
+	data, err := ioutil.ReadFile("testdata/" + testapi.Default.GroupVersion().Version + "/" + filename)
 	if err != nil {
 		return nil, err
 	}

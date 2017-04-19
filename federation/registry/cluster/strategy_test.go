@@ -156,7 +156,7 @@ func TestMatchCluster(t *testing.T) {
 
 func TestSelectableFieldLabelConversions(t *testing.T) {
 	apitesting.TestSelectableFieldLabelConversionsOfKind(t,
-		api.Registry.GroupOrDie(federation.GroupName).GroupVersion.String(),
+		federation.SchemeGroupVersion.String(),
 		"Cluster",
 		ClusterToSelectableFields(&federation.Cluster{}),
 		nil,

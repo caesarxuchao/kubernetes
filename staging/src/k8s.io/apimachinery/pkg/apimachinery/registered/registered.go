@@ -19,6 +19,7 @@ package registered
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sort"
 	"strings"
 
@@ -262,6 +263,7 @@ func (m *APIRegistrationManager) GroupOrDie(group string) *apimachinery.GroupMet
 	groupMeta, found := m.groupMetaMap[group]
 	if !found {
 		if group == "" {
+			debug.PrintStack()
 			panic("The legacy v1 API is not registered.")
 		} else {
 			panic(fmt.Sprintf("Group %s is not registered.", group))

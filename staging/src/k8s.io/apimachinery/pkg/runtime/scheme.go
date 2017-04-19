@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"runtime/debug"
 
 	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -243,6 +244,7 @@ func (s *Scheme) ObjectKinds(obj Object) ([]schema.GroupVersionKind, bool, error
 
 	gvks, ok := s.typeToGVK[t]
 	if !ok {
+		debug.PrintStack()
 		return nil, false, NewNotRegisteredErr(schema.GroupVersionKind{}, t)
 	}
 	_, unversionedType := s.unversionedTypes[t]
@@ -281,6 +283,7 @@ func (s *Scheme) New(kind schema.GroupVersionKind) (Object, error) {
 	if t, exists := s.unversionedKinds[kind.Kind]; exists {
 		return reflect.New(t).Interface().(Object), nil
 	}
+	debug.PrintStack()
 	return nil, NewNotRegisteredErr(kind, nil)
 }
 
@@ -492,6 +495,7 @@ func (s *Scheme) convertToVersion(copy bool, in Object, target GroupVersioner) (
 	}
 	kinds, ok := s.typeToGVK[t]
 	if !ok || len(kinds) == 0 {
+		debug.PrintStack()
 		return nil, NewNotRegisteredErr(schema.GroupVersionKind{}, t)
 	}
 

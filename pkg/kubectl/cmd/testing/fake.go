@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/pkg/api/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/rest/fake"
 	fedclientset "k8s.io/kubernetes/federation/client/clientset_generated/federation_internalclientset"
@@ -159,7 +160,7 @@ func versionErrIfFalse(b bool) error {
 	return versionErr
 }
 
-var ValidVersion = api.Registry.GroupOrDie(api.GroupName).GroupVersion.Version
+var ValidVersion = v1.SchemeGroupVersion.Version
 var InternalGV = schema.GroupVersion{Group: "apitest", Version: runtime.APIVersionInternal}
 var UnlikelyGV = schema.GroupVersion{Group: "apitest", Version: "unlikelyversion"}
 var ValidVersionGV = schema.GroupVersion{Group: "apitest", Version: ValidVersion}

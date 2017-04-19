@@ -42,6 +42,10 @@ import (
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 )
 
+func init() {
+	testapi.InstallGlobally()
+}
+
 // testFederationName is a name to use for the federation in tests. Since the federation
 // name is recovered from the federation itself, this constant is an appropriate
 // functional replica.
