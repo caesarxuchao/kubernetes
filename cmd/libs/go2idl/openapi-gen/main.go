@@ -20,6 +20,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"k8s.io/gengo/args"
@@ -34,6 +35,7 @@ func main() {
 	// Override defaults.
 	arguments.OutputFileBaseName = "openapi_generated"
 	arguments.GoHeaderFilePath = filepath.Join(args.DefaultSourceTree(), "k8s.io/kubernetes/hack/boilerplate/boilerplate.go.txt")
+	fmt.Printf("CHAO: arguments=%#v", arguments)
 
 	// Run it.
 	if err := arguments.Execute(

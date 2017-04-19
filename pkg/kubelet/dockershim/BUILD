@@ -27,7 +27,6 @@ go_library(
     ],
     tags = ["automanaged"],
     deps = [
-        "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/helper:go_default_library",
         "//pkg/apis/componentconfig:go_default_library",
         "//pkg/client/unversioned/remotecommand:go_default_library",
@@ -57,6 +56,7 @@ go_library(
         "//vendor/github.com/docker/engine-api/types/strslice:go_default_library",
         "//vendor/github.com/docker/go-connections/nat:go_default_library",
         "//vendor/github.com/golang/glog:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/errors:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/sets:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/wait:go_default_library",
@@ -81,7 +81,6 @@ go_test(
     library = ":go_default_library",
     tags = ["automanaged"],
     deps = [
-        "//pkg/api/v1:go_default_library",
         "//pkg/kubelet/api/v1alpha1/runtime:go_default_library",
         "//pkg/kubelet/container:go_default_library",
         "//pkg/kubelet/container/testing:go_default_library",
@@ -101,6 +100,7 @@ go_test(
         "//vendor/github.com/golang/mock/gomock:go_default_library",
         "//vendor/github.com/stretchr/testify/assert:go_default_library",
         "//vendor/github.com/stretchr/testify/require:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/client-go/util/clock:go_default_library",
     ],
 )

@@ -20,6 +20,7 @@ filegroup(
         "//third_party/forked/golang/expansion:all-srcs",
         "//third_party/forked/golang/reflect:all-srcs",
         "//third_party/forked/golang/template:all-srcs",
+        "//third_party/forked/heapster/metrics/apis/metrics/v1alpha1:all-srcs",
         "//third_party/htpasswd:all-srcs",
     ],
     tags = ["automanaged"],

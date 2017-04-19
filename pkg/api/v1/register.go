@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,57 +35,57 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
-	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes, addDefaultingFuncs, addConversionFuncs, addFastPathConversionFuncs)
+	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes, v1.AddDefaultingFuncs, addConversionFuncs, addFastPathConversionFuncs)
 	AddToScheme   = SchemeBuilder.AddToScheme
 )
 
 // Adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Pod{},
-		&PodList{},
-		&PodStatusResult{},
-		&PodTemplate{},
-		&PodTemplateList{},
-		&ReplicationController{},
-		&ReplicationControllerList{},
-		&Service{},
-		&ServiceProxyOptions{},
-		&ServiceList{},
-		&Endpoints{},
-		&EndpointsList{},
-		&Node{},
-		&NodeList{},
-		&NodeProxyOptions{},
-		&Binding{},
-		&Event{},
-		&EventList{},
-		&List{},
-		&LimitRange{},
-		&LimitRangeList{},
-		&ResourceQuota{},
-		&ResourceQuotaList{},
-		&Namespace{},
-		&NamespaceList{},
-		&Secret{},
-		&SecretList{},
-		&ServiceAccount{},
-		&ServiceAccountList{},
-		&PersistentVolume{},
-		&PersistentVolumeList{},
-		&PersistentVolumeClaim{},
-		&PersistentVolumeClaimList{},
-		&PodAttachOptions{},
-		&PodLogOptions{},
-		&PodExecOptions{},
-		&PodPortForwardOptions{},
-		&PodProxyOptions{},
-		&ComponentStatus{},
-		&ComponentStatusList{},
-		&SerializedReference{},
-		&RangeAllocation{},
-		&ConfigMap{},
-		&ConfigMapList{},
+		&v1.Pod{},
+		&v1.PodList{},
+		&v1.PodStatusResult{},
+		&v1.PodTemplate{},
+		&v1.PodTemplateList{},
+		&v1.ReplicationController{},
+		&v1.ReplicationControllerList{},
+		&v1.Service{},
+		&v1.ServiceProxyOptions{},
+		&v1.ServiceList{},
+		&v1.Endpoints{},
+		&v1.EndpointsList{},
+		&v1.Node{},
+		&v1.NodeList{},
+		&v1.NodeProxyOptions{},
+		&v1.Binding{},
+		&v1.Event{},
+		&v1.EventList{},
+		&v1.List{},
+		&v1.LimitRange{},
+		&v1.LimitRangeList{},
+		&v1.ResourceQuota{},
+		&v1.ResourceQuotaList{},
+		&v1.Namespace{},
+		&v1.NamespaceList{},
+		&v1.Secret{},
+		&v1.SecretList{},
+		&v1.ServiceAccount{},
+		&v1.ServiceAccountList{},
+		&v1.PersistentVolume{},
+		&v1.PersistentVolumeList{},
+		&v1.PersistentVolumeClaim{},
+		&v1.PersistentVolumeClaimList{},
+		&v1.PodAttachOptions{},
+		&v1.PodLogOptions{},
+		&v1.PodExecOptions{},
+		&v1.PodPortForwardOptions{},
+		&v1.PodProxyOptions{},
+		&v1.ComponentStatus{},
+		&v1.ComponentStatusList{},
+		&v1.SerializedReference{},
+		&v1.RangeAllocation{},
+		&v1.ConfigMap{},
+		&v1.ConfigMapList{},
 	)
 
 	// Add common types

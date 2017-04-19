@@ -24,7 +24,6 @@ go_library(
     tags = ["automanaged"],
     deps = [
         "//pkg/api:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/node:go_default_library",
         "//pkg/api/v1/pod:go_default_library",
         "//pkg/apis/componentconfig:go_default_library",
@@ -45,6 +44,7 @@ go_library(
         "//vendor/github.com/onsi/ginkgo:go_default_library",
         "//vendor/github.com/onsi/gomega:go_default_library",
         "//vendor/github.com/opencontainers/runc/libcontainer/cgroups:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
@@ -94,7 +94,6 @@ go_test(
     ],
     deps = [
         "//pkg/api:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/node:go_default_library",
         "//pkg/apis/componentconfig:go_default_library",
         "//pkg/client/clientset_generated/clientset:go_default_library",
@@ -124,6 +123,7 @@ go_test(
         "//vendor/github.com/onsi/gomega/gstruct:go_default_library",
         "//vendor/github.com/onsi/gomega/types:go_default_library",
         "//vendor/github.com/spf13/pflag:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",

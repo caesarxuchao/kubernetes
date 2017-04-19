@@ -28,7 +28,6 @@ go_library(
     tags = ["automanaged"],
     deps = [
         "//pkg/api:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/helper:go_default_library",
         "//pkg/apis/rbac/v1beta1:go_default_library",
         "//pkg/apis/storage/v1:go_default_library",
@@ -48,6 +47,7 @@ go_library(
         "//vendor/github.com/vmware/govmomi/vim25/types:go_default_library",
         "//vendor/golang.org/x/net/context:go_default_library",
         "//vendor/google.golang.org/api/googleapi:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",

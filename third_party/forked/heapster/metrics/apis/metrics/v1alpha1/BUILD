@@ -12,8 +12,8 @@ go_library(
     srcs = ["types.go"],
     tags = ["automanaged"],
     deps = [
-        "//pkg/api/unversioned:go_default_library",
-        "//pkg/api/v1:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
+        "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
     ],
 )
 

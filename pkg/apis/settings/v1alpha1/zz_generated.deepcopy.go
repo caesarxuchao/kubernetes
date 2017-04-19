@@ -21,11 +21,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	reflect "reflect"
+
+	api_v1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	api_v1 "k8s.io/kubernetes/pkg/api/v1"
-	reflect "reflect"
+	k8s_api_v1 "k8s.io/kubernetes/pkg/api/v1"
 )
 
 func init() {
@@ -91,7 +93,7 @@ func DeepCopy_v1alpha1_PodPresetSpec(in interface{}, out interface{}, c *convers
 			in, out := &in.Env, &out.Env
 			*out = make([]api_v1.EnvVar, len(*in))
 			for i := range *in {
-				if err := api_v1.DeepCopy_v1_EnvVar(&(*in)[i], &(*out)[i], c); err != nil {
+				if err := k8s_api_v1.DeepCopy_v1_EnvVar(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
 				}
 			}
@@ -100,7 +102,7 @@ func DeepCopy_v1alpha1_PodPresetSpec(in interface{}, out interface{}, c *convers
 			in, out := &in.EnvFrom, &out.EnvFrom
 			*out = make([]api_v1.EnvFromSource, len(*in))
 			for i := range *in {
-				if err := api_v1.DeepCopy_v1_EnvFromSource(&(*in)[i], &(*out)[i], c); err != nil {
+				if err := k8s_api_v1.DeepCopy_v1_EnvFromSource(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
 				}
 			}
@@ -109,7 +111,7 @@ func DeepCopy_v1alpha1_PodPresetSpec(in interface{}, out interface{}, c *convers
 			in, out := &in.Volumes, &out.Volumes
 			*out = make([]api_v1.Volume, len(*in))
 			for i := range *in {
-				if err := api_v1.DeepCopy_v1_Volume(&(*in)[i], &(*out)[i], c); err != nil {
+				if err := k8s_api_v1.DeepCopy_v1_Volume(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
 				}
 			}

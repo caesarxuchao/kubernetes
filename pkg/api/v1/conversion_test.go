@@ -22,13 +22,13 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/diff"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/v1"
 )
 
 func TestPodLogOptions(t *testing.T) {
@@ -117,7 +117,7 @@ func TestPodLogOptions(t *testing.T) {
 	}
 }
 
-// TestPodSpecConversion tests that ServiceAccount is an alias for
+// TestPodSpecConversion tests that v1.ServiceAccount is an alias for
 // ServiceAccountName.
 func TestPodSpecConversion(t *testing.T) {
 	name, other := "foo", "bar"

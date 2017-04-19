@@ -25,18 +25,17 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	restclient "k8s.io/client-go/rest"
 	core "k8s.io/client-go/testing"
-	"k8s.io/kubernetes/pkg/api/unversioned"
-	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset/fake"
 	"k8s.io/kubernetes/pkg/controller/podautoscaler/metrics"
 
 	heapster "k8s.io/heapster/metrics/api/v1/types"
-	metricsapi "k8s.io/heapster/metrics/apis/metrics/v1alpha1"
+	metricsapi "k8s.io/kubernetes/third_party/forked/heapster/metrics/apis/metrics/v1alpha1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -120,7 +119,7 @@ func (tc *legacyReplicaCalcTestCase) prepareTestClient(t *testing.T) *fake.Clien
 						Name:      podName,
 						Namespace: testNamespace,
 					},
-					Timestamp:  unversioned.Time{Time: tc.timestamp},
+					Timestamp:  metav1.Time{Time: tc.timestamp},
 					Containers: make([]metricsapi.ContainerMetrics, numContainersPerPod),
 				}
 

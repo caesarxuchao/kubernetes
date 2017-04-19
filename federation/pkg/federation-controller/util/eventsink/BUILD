@@ -14,7 +14,7 @@ go_library(
     tags = ["automanaged"],
     deps = [
         "//federation/client/clientset_generated/federation_clientset:go_default_library",
-        "//pkg/api/v1:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/conversion:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
@@ -33,8 +33,8 @@ go_test(
     deps = [
         "//federation/client/clientset_generated/federation_clientset/fake:go_default_library",
         "//federation/pkg/federation-controller/util/test:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//vendor/github.com/stretchr/testify/assert:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
         "//vendor/k8s.io/client-go/pkg/api/v1:go_default_library",

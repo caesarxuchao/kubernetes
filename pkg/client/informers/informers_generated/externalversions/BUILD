@@ -15,7 +15,6 @@ go_library(
     ],
     tags = ["automanaged"],
     deps = [
-        "//pkg/api/v1:go_default_library",
         "//pkg/apis/apps/v1beta1:go_default_library",
         "//pkg/apis/autoscaling/v1:go_default_library",
         "//pkg/apis/autoscaling/v2alpha1:go_default_library",
@@ -41,6 +40,7 @@ go_library(
         "//pkg/client/informers/informers_generated/externalversions/rbac:go_default_library",
         "//pkg/client/informers/informers_generated/externalversions/settings:go_default_library",
         "//pkg/client/informers/informers_generated/externalversions/storage:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime/schema:go_default_library",
         "//vendor/k8s.io/client-go/tools/cache:go_default_library",

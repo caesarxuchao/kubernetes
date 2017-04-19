@@ -23,7 +23,7 @@ import (
 	"k8s.io/kubernetes/pkg/util/parsers"
 )
 
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
+func AddDefaultingFuncs(scheme *runtime.Scheme) error {
 	return RegisterDefaults(scheme)
 }
 

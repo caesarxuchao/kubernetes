@@ -41,7 +41,6 @@ go_library(
     deps = [
         "//federation/apis/federation/v1beta1:go_default_library",
         "//pkg/api:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//pkg/api/v1/helper:go_default_library",
         "//pkg/api/v1/node:go_default_library",
         "//pkg/api/v1/pod:go_default_library",
@@ -105,6 +104,7 @@ go_library(
         "//vendor/golang.org/x/net/websocket:go_default_library",
         "//vendor/google.golang.org/api/compute/v1:go_default_library",
         "//vendor/google.golang.org/api/googleapi:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/errors:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",

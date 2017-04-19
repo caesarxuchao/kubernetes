@@ -24,11 +24,11 @@ import (
 
 	"github.com/golang/glog"
 	heapster "k8s.io/heapster/metrics/api/v1/types"
-	metricsapi "k8s.io/heapster/metrics/apis/metrics/v1alpha1"
+	metricsapi "k8s.io/kubernetes/third_party/forked/heapster/metrics/apis/metrics/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/kubernetes/pkg/api/v1"
+	"k8s.io/api/core/v1"
 	autoscaling "k8s.io/kubernetes/pkg/apis/autoscaling/v2alpha1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
 	v1core "k8s.io/kubernetes/pkg/client/clientset_generated/clientset/typed/core/v1"

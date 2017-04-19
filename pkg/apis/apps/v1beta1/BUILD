@@ -32,6 +32,7 @@ go_library(
         "//vendor/github.com/gogo/protobuf/proto:go_default_library",
         "//vendor/github.com/gogo/protobuf/sortkeys:go_default_library",
         "//vendor/github.com/ugorji/go/codec:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/conversion:go_default_library",
@@ -62,9 +63,9 @@ go_test(
     deps = [
         "//pkg/api:go_default_library",
         "//pkg/api/install:go_default_library",
-        "//pkg/api/v1:go_default_library",
         "//pkg/apis/apps/install:go_default_library",
         "//pkg/apis/apps/v1beta1:go_default_library",
+        "//vendor/k8s.io/api/core/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/api/equality:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/runtime:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/intstr:go_default_library",
