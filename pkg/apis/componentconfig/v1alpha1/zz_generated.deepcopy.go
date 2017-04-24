@@ -21,12 +21,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	reflect "reflect"
-
 	v1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	k8s_api_v1 "k8s.io/kubernetes/pkg/api/v1"
+	api_v1 "k8s.io/kubernetes/pkg/api/v1"
+	reflect "reflect"
 )
 
 func init() {
@@ -231,7 +230,7 @@ func DeepCopy_v1alpha1_KubeletConfiguration(in interface{}, out interface{}, c *
 			in, out := &in.RegisterWithTaints, &out.RegisterWithTaints
 			*out = make([]v1.Taint, len(*in))
 			for i := range *in {
-				if err := k8s_api_v1.DeepCopy_v1_Taint(&(*in)[i], &(*out)[i], c); err != nil {
+				if err := api_v1.DeepCopy_v1_Taint(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
 				}
 			}
