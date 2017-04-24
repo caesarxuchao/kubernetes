@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:deepcopy-gen=package,register
+// +k8s:deepcopy-gen=package,register,types=../../../vendor/k8s.io/api/core/v1
 // +k8s:conversion-gen=k8s.io/kubernetes/pkg/api
 // +k8s:openapi-gen=true
 // +k8s:defaulter-gen=TypeMeta
