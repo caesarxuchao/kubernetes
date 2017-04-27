@@ -19,6 +19,7 @@ package v1
 import (
 	"k8s.io/api/core/v1"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/kubernetes/pkg/api/v1"
 	policy "k8s.io/kubernetes/pkg/apis/policy/v1beta1"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/clientset/scheme"
 )
