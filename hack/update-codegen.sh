@@ -108,3 +108,4 @@ ${informergen} \
 # call generation on sub-project for now
 vendor/k8s.io/kube-aggregator/hack/update-codegen.sh
 vendor/k8s.io/sample-apiserver/hack/update-codegen.sh
+vendor/k8s.io/metrics/hack/update-codegen.sh
