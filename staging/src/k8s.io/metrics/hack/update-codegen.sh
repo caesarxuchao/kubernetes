@@ -41,7 +41,7 @@ metrics/v1alpha1
 INPUT="--input ${INPUT_APIS[@]}"
 CLIENTSET_PATH="--clientset-path k8s.io/metrics/pkg/client/clientset_generated"
 
-${CLIENTGEN} ${INPUT_BASE} ${INPUT} ${CLIENTSET_PATH} --output-base ${KUBE_ROOT}/vendor
+#${CLIENTGEN} ${INPUT_BASE} ${INPUT} ${CLIENTSET_PATH} --output-base ${KUBE_ROOT}/vendor
 ${CLIENTGEN} --clientset-name="clientset" ${INPUT_BASE} --input metrics/v1alpha1 ${CLIENTSET_PATH} --output-base ${KUBE_ROOT}/vendor
 
 # we skip informers and listers for metrics, because we don't quite support the requisite operations yet
