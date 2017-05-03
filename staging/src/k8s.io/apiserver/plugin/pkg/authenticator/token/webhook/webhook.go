@@ -28,8 +28,6 @@ import (
 	authenticationclient "k8s.io/client-go/kubernetes/typed/authentication/v1beta1"
 	"k8s.io/client-go/pkg/api"
 	authentication "k8s.io/client-go/pkg/apis/authentication/v1beta1"
-
-	_ "k8s.io/client-go/pkg/apis/authentication/install"
 )
 
 var (
