@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 // +k8s:conversion-gen=k8s.io/kubernetes/pkg/api,external_types=../../../vendor/k8s.io/api/core/v1
-// +k8s:openapi-gen=true
 // +k8s:defaulter-gen=TypeMeta
 // +k8s:defaulter-gen-input=../../../vendor/k8s.io/api/core/v1
 
