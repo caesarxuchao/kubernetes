@@ -344,7 +344,7 @@ kube::util::group-version-to-pkg-path() {
       echo "pkg/apis/${group_version/.*k8s.io/}"
       ;;
     *)
-      echo "pkg/apis/${group_version%__internal}"
+      echo "vendor/k8s.io/api/${group_version%__internal}"
       ;;
   esac
 }
