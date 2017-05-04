@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:conversion-gen=k8s.io/kubernetes/pkg/apis/storage,external_types=../../../vendor/k8s.io/api/storage/v1beta1
+// +k8s:conversion-gen=k8s.io/kubernetes/pkg/apis/storage,external_types=../../../../vendor/k8s.io/api/storage/v1beta1
 // +groupName=storage.k8s.io
 // +k8s:defaulter-gen=TypeMeta
-// +k8s:defaulter-gen-input=../../../vendor/k8s.io/api/storage/v1beta1
+// +k8s:defaulter-gen-input=../../../../vendor/k8s.io/api/storage/v1beta1
 package v1beta1 // import "k8s.io/kubernetes/pkg/apis/storage/v1beta1"

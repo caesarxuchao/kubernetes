@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:conversion-gen=k8s.io/kubernetes/pkg/apis/authorization,external_types=../../../vendor/k8s.io/api/authorization/v1
+// +k8s:conversion-gen=k8s.io/kubernetes/pkg/apis/authorization,external_types=../../../../vendor/k8s.io/api/authorization/v1
 // +k8s:defaulter-gen=TypeMeta
-// +k8s:defaulter-gen-input=../../../vendor/k8s.io/api/authorization/v1
+// +k8s:defaulter-gen-input=../../../../vendor/k8s.io/api/authorization/v1
 
 // +groupName=authorization.k8s.io
 package v1 // import "k8s.io/kubernetes/pkg/apis/authorization/v1"
