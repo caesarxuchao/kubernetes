@@ -21,11 +21,13 @@ limitations under the License.
 package v1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/batch/v1"
 	core_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -36,18 +38,18 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_Job, InType: reflect.TypeOf(&Job{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobCondition, InType: reflect.TypeOf(&JobCondition{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobList, InType: reflect.TypeOf(&JobList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobSpec, InType: reflect.TypeOf(&JobSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobStatus, InType: reflect.TypeOf(&JobStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_Job, InType: reflect.TypeOf(&v1.Job{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobCondition, InType: reflect.TypeOf(&v1.JobCondition{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobList, InType: reflect.TypeOf(&v1.JobList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobSpec, InType: reflect.TypeOf(&v1.JobSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_JobStatus, InType: reflect.TypeOf(&v1.JobStatus{})},
 	)
 }
 
 func DeepCopy_v1_Job(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Job)
-		out := out.(*Job)
+		in := in.(*v1.Job)
+		out := out.(*v1.Job)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -66,8 +68,8 @@ func DeepCopy_v1_Job(in interface{}, out interface{}, c *conversion.Cloner) erro
 
 func DeepCopy_v1_JobCondition(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobCondition)
-		out := out.(*JobCondition)
+		in := in.(*v1.JobCondition)
+		out := out.(*v1.JobCondition)
 		*out = *in
 		out.LastProbeTime = in.LastProbeTime.DeepCopy()
 		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
@@ -77,12 +79,12 @@ func DeepCopy_v1_JobCondition(in interface{}, out interface{}, c *conversion.Clo
 
 func DeepCopy_v1_JobList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobList)
-		out := out.(*JobList)
+		in := in.(*v1.JobList)
+		out := out.(*v1.JobList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]Job, len(*in))
+			*out = make([]v1.Job, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1_Job(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -95,8 +97,8 @@ func DeepCopy_v1_JobList(in interface{}, out interface{}, c *conversion.Cloner) 
 
 func DeepCopy_v1_JobSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobSpec)
-		out := out.(*JobSpec)
+		in := in.(*v1.JobSpec)
+		out := out.(*v1.JobSpec)
 		*out = *in
 		if in.Parallelism != nil {
 			in, out := &in.Parallelism, &out.Parallelism
@@ -135,12 +137,12 @@ func DeepCopy_v1_JobSpec(in interface{}, out interface{}, c *conversion.Cloner) 
 
 func DeepCopy_v1_JobStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobStatus)
-		out := out.(*JobStatus)
+		in := in.(*v1.JobStatus)
+		out := out.(*v1.JobStatus)
 		*out = *in
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
-			*out = make([]JobCondition, len(*in))
+			*out = make([]v1.JobCondition, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1_JobCondition(&(*in)[i], &(*out)[i], c); err != nil {
 					return err

@@ -21,11 +21,13 @@ limitations under the License.
 package v1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/autoscaling/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -36,29 +38,29 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_CrossVersionObjectReference, InType: reflect.TypeOf(&CrossVersionObjectReference{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscaler, InType: reflect.TypeOf(&HorizontalPodAutoscaler{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerList, InType: reflect.TypeOf(&HorizontalPodAutoscalerList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerSpec, InType: reflect.TypeOf(&HorizontalPodAutoscalerSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerStatus, InType: reflect.TypeOf(&HorizontalPodAutoscalerStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_MetricSpec, InType: reflect.TypeOf(&MetricSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_MetricStatus, InType: reflect.TypeOf(&MetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ObjectMetricSource, InType: reflect.TypeOf(&ObjectMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ObjectMetricStatus, InType: reflect.TypeOf(&ObjectMetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_PodsMetricSource, InType: reflect.TypeOf(&PodsMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_PodsMetricStatus, InType: reflect.TypeOf(&PodsMetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ResourceMetricSource, InType: reflect.TypeOf(&ResourceMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ResourceMetricStatus, InType: reflect.TypeOf(&ResourceMetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_Scale, InType: reflect.TypeOf(&Scale{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ScaleSpec, InType: reflect.TypeOf(&ScaleSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ScaleStatus, InType: reflect.TypeOf(&ScaleStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_CrossVersionObjectReference, InType: reflect.TypeOf(&v1.CrossVersionObjectReference{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscaler, InType: reflect.TypeOf(&v1.HorizontalPodAutoscaler{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerList, InType: reflect.TypeOf(&v1.HorizontalPodAutoscalerList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerSpec, InType: reflect.TypeOf(&v1.HorizontalPodAutoscalerSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_HorizontalPodAutoscalerStatus, InType: reflect.TypeOf(&v1.HorizontalPodAutoscalerStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_MetricSpec, InType: reflect.TypeOf(&v1.MetricSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_MetricStatus, InType: reflect.TypeOf(&v1.MetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ObjectMetricSource, InType: reflect.TypeOf(&v1.ObjectMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ObjectMetricStatus, InType: reflect.TypeOf(&v1.ObjectMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_PodsMetricSource, InType: reflect.TypeOf(&v1.PodsMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_PodsMetricStatus, InType: reflect.TypeOf(&v1.PodsMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ResourceMetricSource, InType: reflect.TypeOf(&v1.ResourceMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ResourceMetricStatus, InType: reflect.TypeOf(&v1.ResourceMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_Scale, InType: reflect.TypeOf(&v1.Scale{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ScaleSpec, InType: reflect.TypeOf(&v1.ScaleSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1_ScaleStatus, InType: reflect.TypeOf(&v1.ScaleStatus{})},
 	)
 }
 
 func DeepCopy_v1_CrossVersionObjectReference(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CrossVersionObjectReference)
-		out := out.(*CrossVersionObjectReference)
+		in := in.(*v1.CrossVersionObjectReference)
+		out := out.(*v1.CrossVersionObjectReference)
 		*out = *in
 		return nil
 	}
@@ -66,8 +68,8 @@ func DeepCopy_v1_CrossVersionObjectReference(in interface{}, out interface{}, c 
 
 func DeepCopy_v1_HorizontalPodAutoscaler(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscaler)
-		out := out.(*HorizontalPodAutoscaler)
+		in := in.(*v1.HorizontalPodAutoscaler)
+		out := out.(*v1.HorizontalPodAutoscaler)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -86,12 +88,12 @@ func DeepCopy_v1_HorizontalPodAutoscaler(in interface{}, out interface{}, c *con
 
 func DeepCopy_v1_HorizontalPodAutoscalerList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerList)
-		out := out.(*HorizontalPodAutoscalerList)
+		in := in.(*v1.HorizontalPodAutoscalerList)
+		out := out.(*v1.HorizontalPodAutoscalerList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]HorizontalPodAutoscaler, len(*in))
+			*out = make([]v1.HorizontalPodAutoscaler, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1_HorizontalPodAutoscaler(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -104,8 +106,8 @@ func DeepCopy_v1_HorizontalPodAutoscalerList(in interface{}, out interface{}, c 
 
 func DeepCopy_v1_HorizontalPodAutoscalerSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerSpec)
-		out := out.(*HorizontalPodAutoscalerSpec)
+		in := in.(*v1.HorizontalPodAutoscalerSpec)
+		out := out.(*v1.HorizontalPodAutoscalerSpec)
 		*out = *in
 		if in.MinReplicas != nil {
 			in, out := &in.MinReplicas, &out.MinReplicas
@@ -123,8 +125,8 @@ func DeepCopy_v1_HorizontalPodAutoscalerSpec(in interface{}, out interface{}, c 
 
 func DeepCopy_v1_HorizontalPodAutoscalerStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerStatus)
-		out := out.(*HorizontalPodAutoscalerStatus)
+		in := in.(*v1.HorizontalPodAutoscalerStatus)
+		out := out.(*v1.HorizontalPodAutoscalerStatus)
 		*out = *in
 		if in.ObservedGeneration != nil {
 			in, out := &in.ObservedGeneration, &out.ObservedGeneration
@@ -147,26 +149,26 @@ func DeepCopy_v1_HorizontalPodAutoscalerStatus(in interface{}, out interface{}, 
 
 func DeepCopy_v1_MetricSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*MetricSpec)
-		out := out.(*MetricSpec)
+		in := in.(*v1.MetricSpec)
+		out := out.(*v1.MetricSpec)
 		*out = *in
 		if in.Object != nil {
 			in, out := &in.Object, &out.Object
-			*out = new(ObjectMetricSource)
+			*out = new(v1.ObjectMetricSource)
 			if err := DeepCopy_v1_ObjectMetricSource(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Pods != nil {
 			in, out := &in.Pods, &out.Pods
-			*out = new(PodsMetricSource)
+			*out = new(v1.PodsMetricSource)
 			if err := DeepCopy_v1_PodsMetricSource(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Resource != nil {
 			in, out := &in.Resource, &out.Resource
-			*out = new(ResourceMetricSource)
+			*out = new(v1.ResourceMetricSource)
 			if err := DeepCopy_v1_ResourceMetricSource(*in, *out, c); err != nil {
 				return err
 			}
@@ -177,26 +179,26 @@ func DeepCopy_v1_MetricSpec(in interface{}, out interface{}, c *conversion.Clone
 
 func DeepCopy_v1_MetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*MetricStatus)
-		out := out.(*MetricStatus)
+		in := in.(*v1.MetricStatus)
+		out := out.(*v1.MetricStatus)
 		*out = *in
 		if in.Object != nil {
 			in, out := &in.Object, &out.Object
-			*out = new(ObjectMetricStatus)
+			*out = new(v1.ObjectMetricStatus)
 			if err := DeepCopy_v1_ObjectMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Pods != nil {
 			in, out := &in.Pods, &out.Pods
-			*out = new(PodsMetricStatus)
+			*out = new(v1.PodsMetricStatus)
 			if err := DeepCopy_v1_PodsMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Resource != nil {
 			in, out := &in.Resource, &out.Resource
-			*out = new(ResourceMetricStatus)
+			*out = new(v1.ResourceMetricStatus)
 			if err := DeepCopy_v1_ResourceMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
@@ -207,8 +209,8 @@ func DeepCopy_v1_MetricStatus(in interface{}, out interface{}, c *conversion.Clo
 
 func DeepCopy_v1_ObjectMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ObjectMetricSource)
-		out := out.(*ObjectMetricSource)
+		in := in.(*v1.ObjectMetricSource)
+		out := out.(*v1.ObjectMetricSource)
 		*out = *in
 		out.TargetValue = in.TargetValue.DeepCopy()
 		return nil
@@ -217,8 +219,8 @@ func DeepCopy_v1_ObjectMetricSource(in interface{}, out interface{}, c *conversi
 
 func DeepCopy_v1_ObjectMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ObjectMetricStatus)
-		out := out.(*ObjectMetricStatus)
+		in := in.(*v1.ObjectMetricStatus)
+		out := out.(*v1.ObjectMetricStatus)
 		*out = *in
 		out.CurrentValue = in.CurrentValue.DeepCopy()
 		return nil
@@ -227,8 +229,8 @@ func DeepCopy_v1_ObjectMetricStatus(in interface{}, out interface{}, c *conversi
 
 func DeepCopy_v1_PodsMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodsMetricSource)
-		out := out.(*PodsMetricSource)
+		in := in.(*v1.PodsMetricSource)
+		out := out.(*v1.PodsMetricSource)
 		*out = *in
 		out.TargetAverageValue = in.TargetAverageValue.DeepCopy()
 		return nil
@@ -237,8 +239,8 @@ func DeepCopy_v1_PodsMetricSource(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1_PodsMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodsMetricStatus)
-		out := out.(*PodsMetricStatus)
+		in := in.(*v1.PodsMetricStatus)
+		out := out.(*v1.PodsMetricStatus)
 		*out = *in
 		out.CurrentAverageValue = in.CurrentAverageValue.DeepCopy()
 		return nil
@@ -247,8 +249,8 @@ func DeepCopy_v1_PodsMetricStatus(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1_ResourceMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ResourceMetricSource)
-		out := out.(*ResourceMetricSource)
+		in := in.(*v1.ResourceMetricSource)
+		out := out.(*v1.ResourceMetricSource)
 		*out = *in
 		if in.TargetAverageUtilization != nil {
 			in, out := &in.TargetAverageUtilization, &out.TargetAverageUtilization
@@ -266,8 +268,8 @@ func DeepCopy_v1_ResourceMetricSource(in interface{}, out interface{}, c *conver
 
 func DeepCopy_v1_ResourceMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ResourceMetricStatus)
-		out := out.(*ResourceMetricStatus)
+		in := in.(*v1.ResourceMetricStatus)
+		out := out.(*v1.ResourceMetricStatus)
 		*out = *in
 		if in.CurrentAverageUtilization != nil {
 			in, out := &in.CurrentAverageUtilization, &out.CurrentAverageUtilization
@@ -281,8 +283,8 @@ func DeepCopy_v1_ResourceMetricStatus(in interface{}, out interface{}, c *conver
 
 func DeepCopy_v1_Scale(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Scale)
-		out := out.(*Scale)
+		in := in.(*v1.Scale)
+		out := out.(*v1.Scale)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -295,8 +297,8 @@ func DeepCopy_v1_Scale(in interface{}, out interface{}, c *conversion.Cloner) er
 
 func DeepCopy_v1_ScaleSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ScaleSpec)
-		out := out.(*ScaleSpec)
+		in := in.(*v1.ScaleSpec)
+		out := out.(*v1.ScaleSpec)
 		*out = *in
 		return nil
 	}
@@ -304,8 +306,8 @@ func DeepCopy_v1_ScaleSpec(in interface{}, out interface{}, c *conversion.Cloner
 
 func DeepCopy_v1_ScaleStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ScaleStatus)
-		out := out.(*ScaleStatus)
+		in := in.(*v1.ScaleStatus)
+		out := out.(*v1.ScaleStatus)
 		*out = *in
 		return nil
 	}

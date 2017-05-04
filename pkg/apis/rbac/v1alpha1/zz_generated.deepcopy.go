@@ -21,10 +21,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/rbac/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,24 +37,24 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRole, InType: reflect.TypeOf(&ClusterRole{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleBinding, InType: reflect.TypeOf(&ClusterRoleBinding{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleBindingList, InType: reflect.TypeOf(&ClusterRoleBindingList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleList, InType: reflect.TypeOf(&ClusterRoleList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PolicyRule, InType: reflect.TypeOf(&PolicyRule{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_Role, InType: reflect.TypeOf(&Role{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleBinding, InType: reflect.TypeOf(&RoleBinding{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleBindingList, InType: reflect.TypeOf(&RoleBindingList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleList, InType: reflect.TypeOf(&RoleList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleRef, InType: reflect.TypeOf(&RoleRef{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_Subject, InType: reflect.TypeOf(&Subject{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRole, InType: reflect.TypeOf(&v1alpha1.ClusterRole{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleBinding, InType: reflect.TypeOf(&v1alpha1.ClusterRoleBinding{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleBindingList, InType: reflect.TypeOf(&v1alpha1.ClusterRoleBindingList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ClusterRoleList, InType: reflect.TypeOf(&v1alpha1.ClusterRoleList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PolicyRule, InType: reflect.TypeOf(&v1alpha1.PolicyRule{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_Role, InType: reflect.TypeOf(&v1alpha1.Role{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleBinding, InType: reflect.TypeOf(&v1alpha1.RoleBinding{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleBindingList, InType: reflect.TypeOf(&v1alpha1.RoleBindingList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleList, InType: reflect.TypeOf(&v1alpha1.RoleList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_RoleRef, InType: reflect.TypeOf(&v1alpha1.RoleRef{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_Subject, InType: reflect.TypeOf(&v1alpha1.Subject{})},
 	)
 }
 
 func DeepCopy_v1alpha1_ClusterRole(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ClusterRole)
-		out := out.(*ClusterRole)
+		in := in.(*v1alpha1.ClusterRole)
+		out := out.(*v1alpha1.ClusterRole)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -61,7 +63,7 @@ func DeepCopy_v1alpha1_ClusterRole(in interface{}, out interface{}, c *conversio
 		}
 		if in.Rules != nil {
 			in, out := &in.Rules, &out.Rules
-			*out = make([]PolicyRule, len(*in))
+			*out = make([]v1alpha1.PolicyRule, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_PolicyRule(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -74,8 +76,8 @@ func DeepCopy_v1alpha1_ClusterRole(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v1alpha1_ClusterRoleBinding(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ClusterRoleBinding)
-		out := out.(*ClusterRoleBinding)
+		in := in.(*v1alpha1.ClusterRoleBinding)
+		out := out.(*v1alpha1.ClusterRoleBinding)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -84,7 +86,7 @@ func DeepCopy_v1alpha1_ClusterRoleBinding(in interface{}, out interface{}, c *co
 		}
 		if in.Subjects != nil {
 			in, out := &in.Subjects, &out.Subjects
-			*out = make([]Subject, len(*in))
+			*out = make([]v1alpha1.Subject, len(*in))
 			copy(*out, *in)
 		}
 		return nil
@@ -93,12 +95,12 @@ func DeepCopy_v1alpha1_ClusterRoleBinding(in interface{}, out interface{}, c *co
 
 func DeepCopy_v1alpha1_ClusterRoleBindingList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ClusterRoleBindingList)
-		out := out.(*ClusterRoleBindingList)
+		in := in.(*v1alpha1.ClusterRoleBindingList)
+		out := out.(*v1alpha1.ClusterRoleBindingList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]ClusterRoleBinding, len(*in))
+			*out = make([]v1alpha1.ClusterRoleBinding, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_ClusterRoleBinding(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -111,12 +113,12 @@ func DeepCopy_v1alpha1_ClusterRoleBindingList(in interface{}, out interface{}, c
 
 func DeepCopy_v1alpha1_ClusterRoleList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ClusterRoleList)
-		out := out.(*ClusterRoleList)
+		in := in.(*v1alpha1.ClusterRoleList)
+		out := out.(*v1alpha1.ClusterRoleList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]ClusterRole, len(*in))
+			*out = make([]v1alpha1.ClusterRole, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_ClusterRole(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -129,8 +131,8 @@ func DeepCopy_v1alpha1_ClusterRoleList(in interface{}, out interface{}, c *conve
 
 func DeepCopy_v1alpha1_PolicyRule(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PolicyRule)
-		out := out.(*PolicyRule)
+		in := in.(*v1alpha1.PolicyRule)
+		out := out.(*v1alpha1.PolicyRule)
 		*out = *in
 		if in.Verbs != nil {
 			in, out := &in.Verbs, &out.Verbs
@@ -163,8 +165,8 @@ func DeepCopy_v1alpha1_PolicyRule(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1alpha1_Role(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Role)
-		out := out.(*Role)
+		in := in.(*v1alpha1.Role)
+		out := out.(*v1alpha1.Role)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -173,7 +175,7 @@ func DeepCopy_v1alpha1_Role(in interface{}, out interface{}, c *conversion.Clone
 		}
 		if in.Rules != nil {
 			in, out := &in.Rules, &out.Rules
-			*out = make([]PolicyRule, len(*in))
+			*out = make([]v1alpha1.PolicyRule, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_PolicyRule(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -186,8 +188,8 @@ func DeepCopy_v1alpha1_Role(in interface{}, out interface{}, c *conversion.Clone
 
 func DeepCopy_v1alpha1_RoleBinding(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RoleBinding)
-		out := out.(*RoleBinding)
+		in := in.(*v1alpha1.RoleBinding)
+		out := out.(*v1alpha1.RoleBinding)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -196,7 +198,7 @@ func DeepCopy_v1alpha1_RoleBinding(in interface{}, out interface{}, c *conversio
 		}
 		if in.Subjects != nil {
 			in, out := &in.Subjects, &out.Subjects
-			*out = make([]Subject, len(*in))
+			*out = make([]v1alpha1.Subject, len(*in))
 			copy(*out, *in)
 		}
 		return nil
@@ -205,12 +207,12 @@ func DeepCopy_v1alpha1_RoleBinding(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v1alpha1_RoleBindingList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RoleBindingList)
-		out := out.(*RoleBindingList)
+		in := in.(*v1alpha1.RoleBindingList)
+		out := out.(*v1alpha1.RoleBindingList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]RoleBinding, len(*in))
+			*out = make([]v1alpha1.RoleBinding, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_RoleBinding(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -223,12 +225,12 @@ func DeepCopy_v1alpha1_RoleBindingList(in interface{}, out interface{}, c *conve
 
 func DeepCopy_v1alpha1_RoleList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RoleList)
-		out := out.(*RoleList)
+		in := in.(*v1alpha1.RoleList)
+		out := out.(*v1alpha1.RoleList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]Role, len(*in))
+			*out = make([]v1alpha1.Role, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_Role(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -241,8 +243,8 @@ func DeepCopy_v1alpha1_RoleList(in interface{}, out interface{}, c *conversion.C
 
 func DeepCopy_v1alpha1_RoleRef(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RoleRef)
-		out := out.(*RoleRef)
+		in := in.(*v1alpha1.RoleRef)
+		out := out.(*v1alpha1.RoleRef)
 		*out = *in
 		return nil
 	}
@@ -250,8 +252,8 @@ func DeepCopy_v1alpha1_RoleRef(in interface{}, out interface{}, c *conversion.Cl
 
 func DeepCopy_v1alpha1_Subject(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Subject)
-		out := out.(*Subject)
+		in := in.(*v1alpha1.Subject)
+		out := out.(*v1alpha1.Subject)
 		*out = *in
 		return nil
 	}

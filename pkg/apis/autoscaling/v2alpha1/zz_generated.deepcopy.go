@@ -21,11 +21,13 @@ limitations under the License.
 package v2alpha1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/autoscaling/v2alpha1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -36,26 +38,26 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CrossVersionObjectReference, InType: reflect.TypeOf(&CrossVersionObjectReference{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscaler, InType: reflect.TypeOf(&HorizontalPodAutoscaler{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerList, InType: reflect.TypeOf(&HorizontalPodAutoscalerList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerSpec, InType: reflect.TypeOf(&HorizontalPodAutoscalerSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerStatus, InType: reflect.TypeOf(&HorizontalPodAutoscalerStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_MetricSpec, InType: reflect.TypeOf(&MetricSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_MetricStatus, InType: reflect.TypeOf(&MetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ObjectMetricSource, InType: reflect.TypeOf(&ObjectMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ObjectMetricStatus, InType: reflect.TypeOf(&ObjectMetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_PodsMetricSource, InType: reflect.TypeOf(&PodsMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_PodsMetricStatus, InType: reflect.TypeOf(&PodsMetricStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ResourceMetricSource, InType: reflect.TypeOf(&ResourceMetricSource{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ResourceMetricStatus, InType: reflect.TypeOf(&ResourceMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CrossVersionObjectReference, InType: reflect.TypeOf(&v2alpha1.CrossVersionObjectReference{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscaler, InType: reflect.TypeOf(&v2alpha1.HorizontalPodAutoscaler{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerList, InType: reflect.TypeOf(&v2alpha1.HorizontalPodAutoscalerList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerSpec, InType: reflect.TypeOf(&v2alpha1.HorizontalPodAutoscalerSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_HorizontalPodAutoscalerStatus, InType: reflect.TypeOf(&v2alpha1.HorizontalPodAutoscalerStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_MetricSpec, InType: reflect.TypeOf(&v2alpha1.MetricSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_MetricStatus, InType: reflect.TypeOf(&v2alpha1.MetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ObjectMetricSource, InType: reflect.TypeOf(&v2alpha1.ObjectMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ObjectMetricStatus, InType: reflect.TypeOf(&v2alpha1.ObjectMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_PodsMetricSource, InType: reflect.TypeOf(&v2alpha1.PodsMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_PodsMetricStatus, InType: reflect.TypeOf(&v2alpha1.PodsMetricStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ResourceMetricSource, InType: reflect.TypeOf(&v2alpha1.ResourceMetricSource{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_ResourceMetricStatus, InType: reflect.TypeOf(&v2alpha1.ResourceMetricStatus{})},
 	)
 }
 
 func DeepCopy_v2alpha1_CrossVersionObjectReference(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CrossVersionObjectReference)
-		out := out.(*CrossVersionObjectReference)
+		in := in.(*v2alpha1.CrossVersionObjectReference)
+		out := out.(*v2alpha1.CrossVersionObjectReference)
 		*out = *in
 		return nil
 	}
@@ -63,8 +65,8 @@ func DeepCopy_v2alpha1_CrossVersionObjectReference(in interface{}, out interface
 
 func DeepCopy_v2alpha1_HorizontalPodAutoscaler(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscaler)
-		out := out.(*HorizontalPodAutoscaler)
+		in := in.(*v2alpha1.HorizontalPodAutoscaler)
+		out := out.(*v2alpha1.HorizontalPodAutoscaler)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -83,12 +85,12 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscaler(in interface{}, out interface{}, 
 
 func DeepCopy_v2alpha1_HorizontalPodAutoscalerList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerList)
-		out := out.(*HorizontalPodAutoscalerList)
+		in := in.(*v2alpha1.HorizontalPodAutoscalerList)
+		out := out.(*v2alpha1.HorizontalPodAutoscalerList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]HorizontalPodAutoscaler, len(*in))
+			*out = make([]v2alpha1.HorizontalPodAutoscaler, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v2alpha1_HorizontalPodAutoscaler(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -101,8 +103,8 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscalerList(in interface{}, out interface
 
 func DeepCopy_v2alpha1_HorizontalPodAutoscalerSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerSpec)
-		out := out.(*HorizontalPodAutoscalerSpec)
+		in := in.(*v2alpha1.HorizontalPodAutoscalerSpec)
+		out := out.(*v2alpha1.HorizontalPodAutoscalerSpec)
 		*out = *in
 		if in.MinReplicas != nil {
 			in, out := &in.MinReplicas, &out.MinReplicas
@@ -111,7 +113,7 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscalerSpec(in interface{}, out interface
 		}
 		if in.Metrics != nil {
 			in, out := &in.Metrics, &out.Metrics
-			*out = make([]MetricSpec, len(*in))
+			*out = make([]v2alpha1.MetricSpec, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v2alpha1_MetricSpec(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -124,8 +126,8 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscalerSpec(in interface{}, out interface
 
 func DeepCopy_v2alpha1_HorizontalPodAutoscalerStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*HorizontalPodAutoscalerStatus)
-		out := out.(*HorizontalPodAutoscalerStatus)
+		in := in.(*v2alpha1.HorizontalPodAutoscalerStatus)
+		out := out.(*v2alpha1.HorizontalPodAutoscalerStatus)
 		*out = *in
 		if in.ObservedGeneration != nil {
 			in, out := &in.ObservedGeneration, &out.ObservedGeneration
@@ -139,7 +141,7 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscalerStatus(in interface{}, out interfa
 		}
 		if in.CurrentMetrics != nil {
 			in, out := &in.CurrentMetrics, &out.CurrentMetrics
-			*out = make([]MetricStatus, len(*in))
+			*out = make([]v2alpha1.MetricStatus, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v2alpha1_MetricStatus(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -152,26 +154,26 @@ func DeepCopy_v2alpha1_HorizontalPodAutoscalerStatus(in interface{}, out interfa
 
 func DeepCopy_v2alpha1_MetricSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*MetricSpec)
-		out := out.(*MetricSpec)
+		in := in.(*v2alpha1.MetricSpec)
+		out := out.(*v2alpha1.MetricSpec)
 		*out = *in
 		if in.Object != nil {
 			in, out := &in.Object, &out.Object
-			*out = new(ObjectMetricSource)
+			*out = new(v2alpha1.ObjectMetricSource)
 			if err := DeepCopy_v2alpha1_ObjectMetricSource(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Pods != nil {
 			in, out := &in.Pods, &out.Pods
-			*out = new(PodsMetricSource)
+			*out = new(v2alpha1.PodsMetricSource)
 			if err := DeepCopy_v2alpha1_PodsMetricSource(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Resource != nil {
 			in, out := &in.Resource, &out.Resource
-			*out = new(ResourceMetricSource)
+			*out = new(v2alpha1.ResourceMetricSource)
 			if err := DeepCopy_v2alpha1_ResourceMetricSource(*in, *out, c); err != nil {
 				return err
 			}
@@ -182,26 +184,26 @@ func DeepCopy_v2alpha1_MetricSpec(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v2alpha1_MetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*MetricStatus)
-		out := out.(*MetricStatus)
+		in := in.(*v2alpha1.MetricStatus)
+		out := out.(*v2alpha1.MetricStatus)
 		*out = *in
 		if in.Object != nil {
 			in, out := &in.Object, &out.Object
-			*out = new(ObjectMetricStatus)
+			*out = new(v2alpha1.ObjectMetricStatus)
 			if err := DeepCopy_v2alpha1_ObjectMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Pods != nil {
 			in, out := &in.Pods, &out.Pods
-			*out = new(PodsMetricStatus)
+			*out = new(v2alpha1.PodsMetricStatus)
 			if err := DeepCopy_v2alpha1_PodsMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
 		}
 		if in.Resource != nil {
 			in, out := &in.Resource, &out.Resource
-			*out = new(ResourceMetricStatus)
+			*out = new(v2alpha1.ResourceMetricStatus)
 			if err := DeepCopy_v2alpha1_ResourceMetricStatus(*in, *out, c); err != nil {
 				return err
 			}
@@ -212,8 +214,8 @@ func DeepCopy_v2alpha1_MetricStatus(in interface{}, out interface{}, c *conversi
 
 func DeepCopy_v2alpha1_ObjectMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ObjectMetricSource)
-		out := out.(*ObjectMetricSource)
+		in := in.(*v2alpha1.ObjectMetricSource)
+		out := out.(*v2alpha1.ObjectMetricSource)
 		*out = *in
 		out.TargetValue = in.TargetValue.DeepCopy()
 		return nil
@@ -222,8 +224,8 @@ func DeepCopy_v2alpha1_ObjectMetricSource(in interface{}, out interface{}, c *co
 
 func DeepCopy_v2alpha1_ObjectMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ObjectMetricStatus)
-		out := out.(*ObjectMetricStatus)
+		in := in.(*v2alpha1.ObjectMetricStatus)
+		out := out.(*v2alpha1.ObjectMetricStatus)
 		*out = *in
 		out.CurrentValue = in.CurrentValue.DeepCopy()
 		return nil
@@ -232,8 +234,8 @@ func DeepCopy_v2alpha1_ObjectMetricStatus(in interface{}, out interface{}, c *co
 
 func DeepCopy_v2alpha1_PodsMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodsMetricSource)
-		out := out.(*PodsMetricSource)
+		in := in.(*v2alpha1.PodsMetricSource)
+		out := out.(*v2alpha1.PodsMetricSource)
 		*out = *in
 		out.TargetAverageValue = in.TargetAverageValue.DeepCopy()
 		return nil
@@ -242,8 +244,8 @@ func DeepCopy_v2alpha1_PodsMetricSource(in interface{}, out interface{}, c *conv
 
 func DeepCopy_v2alpha1_PodsMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodsMetricStatus)
-		out := out.(*PodsMetricStatus)
+		in := in.(*v2alpha1.PodsMetricStatus)
+		out := out.(*v2alpha1.PodsMetricStatus)
 		*out = *in
 		out.CurrentAverageValue = in.CurrentAverageValue.DeepCopy()
 		return nil
@@ -252,8 +254,8 @@ func DeepCopy_v2alpha1_PodsMetricStatus(in interface{}, out interface{}, c *conv
 
 func DeepCopy_v2alpha1_ResourceMetricSource(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ResourceMetricSource)
-		out := out.(*ResourceMetricSource)
+		in := in.(*v2alpha1.ResourceMetricSource)
+		out := out.(*v2alpha1.ResourceMetricSource)
 		*out = *in
 		if in.TargetAverageUtilization != nil {
 			in, out := &in.TargetAverageUtilization, &out.TargetAverageUtilization
@@ -271,8 +273,8 @@ func DeepCopy_v2alpha1_ResourceMetricSource(in interface{}, out interface{}, c *
 
 func DeepCopy_v2alpha1_ResourceMetricStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ResourceMetricStatus)
-		out := out.(*ResourceMetricStatus)
+		in := in.(*v2alpha1.ResourceMetricStatus)
+		out := out.(*v2alpha1.ResourceMetricStatus)
 		*out = *in
 		if in.CurrentAverageUtilization != nil {
 			in, out := &in.CurrentAverageUtilization, &out.CurrentAverageUtilization

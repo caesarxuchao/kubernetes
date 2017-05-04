@@ -21,11 +21,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	reflect "reflect"
+
 	core_v1 "k8s.io/api/core/v1"
+	"k8s.io/api/settings/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -36,16 +38,16 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPreset, InType: reflect.TypeOf(&PodPreset{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPresetList, InType: reflect.TypeOf(&PodPresetList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPresetSpec, InType: reflect.TypeOf(&PodPresetSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPreset, InType: reflect.TypeOf(&v1alpha1.PodPreset{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPresetList, InType: reflect.TypeOf(&v1alpha1.PodPresetList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_PodPresetSpec, InType: reflect.TypeOf(&v1alpha1.PodPresetSpec{})},
 	)
 }
 
 func DeepCopy_v1alpha1_PodPreset(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodPreset)
-		out := out.(*PodPreset)
+		in := in.(*v1alpha1.PodPreset)
+		out := out.(*v1alpha1.PodPreset)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -61,12 +63,12 @@ func DeepCopy_v1alpha1_PodPreset(in interface{}, out interface{}, c *conversion.
 
 func DeepCopy_v1alpha1_PodPresetList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodPresetList)
-		out := out.(*PodPresetList)
+		in := in.(*v1alpha1.PodPresetList)
+		out := out.(*v1alpha1.PodPresetList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]PodPreset, len(*in))
+			*out = make([]v1alpha1.PodPreset, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1alpha1_PodPreset(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -79,8 +81,8 @@ func DeepCopy_v1alpha1_PodPresetList(in interface{}, out interface{}, c *convers
 
 func DeepCopy_v1alpha1_PodPresetSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodPresetSpec)
-		out := out.(*PodPresetSpec)
+		in := in.(*v1alpha1.PodPresetSpec)
+		out := out.(*v1alpha1.PodPresetSpec)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.Selector); err != nil {
 			return err

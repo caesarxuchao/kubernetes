@@ -21,12 +21,14 @@ limitations under the License.
 package v1beta1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/apps/v1beta1"
 	core_v1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	reflect "reflect"
 )
 
 func init() {
@@ -37,29 +39,29 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Deployment, InType: reflect.TypeOf(&Deployment{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentCondition, InType: reflect.TypeOf(&DeploymentCondition{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentList, InType: reflect.TypeOf(&DeploymentList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentRollback, InType: reflect.TypeOf(&DeploymentRollback{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentSpec, InType: reflect.TypeOf(&DeploymentSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentStatus, InType: reflect.TypeOf(&DeploymentStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentStrategy, InType: reflect.TypeOf(&DeploymentStrategy{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_RollbackConfig, InType: reflect.TypeOf(&RollbackConfig{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_RollingUpdateDeployment, InType: reflect.TypeOf(&RollingUpdateDeployment{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Scale, InType: reflect.TypeOf(&Scale{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ScaleSpec, InType: reflect.TypeOf(&ScaleSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ScaleStatus, InType: reflect.TypeOf(&ScaleStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSet, InType: reflect.TypeOf(&StatefulSet{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetList, InType: reflect.TypeOf(&StatefulSetList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetSpec, InType: reflect.TypeOf(&StatefulSetSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetStatus, InType: reflect.TypeOf(&StatefulSetStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Deployment, InType: reflect.TypeOf(&v1beta1.Deployment{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentCondition, InType: reflect.TypeOf(&v1beta1.DeploymentCondition{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentList, InType: reflect.TypeOf(&v1beta1.DeploymentList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentRollback, InType: reflect.TypeOf(&v1beta1.DeploymentRollback{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentSpec, InType: reflect.TypeOf(&v1beta1.DeploymentSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentStatus, InType: reflect.TypeOf(&v1beta1.DeploymentStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_DeploymentStrategy, InType: reflect.TypeOf(&v1beta1.DeploymentStrategy{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_RollbackConfig, InType: reflect.TypeOf(&v1beta1.RollbackConfig{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_RollingUpdateDeployment, InType: reflect.TypeOf(&v1beta1.RollingUpdateDeployment{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Scale, InType: reflect.TypeOf(&v1beta1.Scale{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ScaleSpec, InType: reflect.TypeOf(&v1beta1.ScaleSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ScaleStatus, InType: reflect.TypeOf(&v1beta1.ScaleStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSet, InType: reflect.TypeOf(&v1beta1.StatefulSet{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetList, InType: reflect.TypeOf(&v1beta1.StatefulSetList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetSpec, InType: reflect.TypeOf(&v1beta1.StatefulSetSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StatefulSetStatus, InType: reflect.TypeOf(&v1beta1.StatefulSetStatus{})},
 	)
 }
 
 func DeepCopy_v1beta1_Deployment(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Deployment)
-		out := out.(*Deployment)
+		in := in.(*v1beta1.Deployment)
+		out := out.(*v1beta1.Deployment)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -78,8 +80,8 @@ func DeepCopy_v1beta1_Deployment(in interface{}, out interface{}, c *conversion.
 
 func DeepCopy_v1beta1_DeploymentCondition(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentCondition)
-		out := out.(*DeploymentCondition)
+		in := in.(*v1beta1.DeploymentCondition)
+		out := out.(*v1beta1.DeploymentCondition)
 		*out = *in
 		out.LastUpdateTime = in.LastUpdateTime.DeepCopy()
 		out.LastTransitionTime = in.LastTransitionTime.DeepCopy()
@@ -89,12 +91,12 @@ func DeepCopy_v1beta1_DeploymentCondition(in interface{}, out interface{}, c *co
 
 func DeepCopy_v1beta1_DeploymentList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentList)
-		out := out.(*DeploymentList)
+		in := in.(*v1beta1.DeploymentList)
+		out := out.(*v1beta1.DeploymentList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]Deployment, len(*in))
+			*out = make([]v1beta1.Deployment, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1beta1_Deployment(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -107,8 +109,8 @@ func DeepCopy_v1beta1_DeploymentList(in interface{}, out interface{}, c *convers
 
 func DeepCopy_v1beta1_DeploymentRollback(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentRollback)
-		out := out.(*DeploymentRollback)
+		in := in.(*v1beta1.DeploymentRollback)
+		out := out.(*v1beta1.DeploymentRollback)
 		*out = *in
 		if in.UpdatedAnnotations != nil {
 			in, out := &in.UpdatedAnnotations, &out.UpdatedAnnotations
@@ -123,8 +125,8 @@ func DeepCopy_v1beta1_DeploymentRollback(in interface{}, out interface{}, c *con
 
 func DeepCopy_v1beta1_DeploymentSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentSpec)
-		out := out.(*DeploymentSpec)
+		in := in.(*v1beta1.DeploymentSpec)
+		out := out.(*v1beta1.DeploymentSpec)
 		*out = *in
 		if in.Replicas != nil {
 			in, out := &in.Replicas, &out.Replicas
@@ -152,7 +154,7 @@ func DeepCopy_v1beta1_DeploymentSpec(in interface{}, out interface{}, c *convers
 		}
 		if in.RollbackTo != nil {
 			in, out := &in.RollbackTo, &out.RollbackTo
-			*out = new(RollbackConfig)
+			*out = new(v1beta1.RollbackConfig)
 			**out = **in
 		}
 		if in.ProgressDeadlineSeconds != nil {
@@ -166,12 +168,12 @@ func DeepCopy_v1beta1_DeploymentSpec(in interface{}, out interface{}, c *convers
 
 func DeepCopy_v1beta1_DeploymentStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentStatus)
-		out := out.(*DeploymentStatus)
+		in := in.(*v1beta1.DeploymentStatus)
+		out := out.(*v1beta1.DeploymentStatus)
 		*out = *in
 		if in.Conditions != nil {
 			in, out := &in.Conditions, &out.Conditions
-			*out = make([]DeploymentCondition, len(*in))
+			*out = make([]v1beta1.DeploymentCondition, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1beta1_DeploymentCondition(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -184,12 +186,12 @@ func DeepCopy_v1beta1_DeploymentStatus(in interface{}, out interface{}, c *conve
 
 func DeepCopy_v1beta1_DeploymentStrategy(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*DeploymentStrategy)
-		out := out.(*DeploymentStrategy)
+		in := in.(*v1beta1.DeploymentStrategy)
+		out := out.(*v1beta1.DeploymentStrategy)
 		*out = *in
 		if in.RollingUpdate != nil {
 			in, out := &in.RollingUpdate, &out.RollingUpdate
-			*out = new(RollingUpdateDeployment)
+			*out = new(v1beta1.RollingUpdateDeployment)
 			if err := DeepCopy_v1beta1_RollingUpdateDeployment(*in, *out, c); err != nil {
 				return err
 			}
@@ -200,8 +202,8 @@ func DeepCopy_v1beta1_DeploymentStrategy(in interface{}, out interface{}, c *con
 
 func DeepCopy_v1beta1_RollbackConfig(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RollbackConfig)
-		out := out.(*RollbackConfig)
+		in := in.(*v1beta1.RollbackConfig)
+		out := out.(*v1beta1.RollbackConfig)
 		*out = *in
 		return nil
 	}
@@ -209,8 +211,8 @@ func DeepCopy_v1beta1_RollbackConfig(in interface{}, out interface{}, c *convers
 
 func DeepCopy_v1beta1_RollingUpdateDeployment(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*RollingUpdateDeployment)
-		out := out.(*RollingUpdateDeployment)
+		in := in.(*v1beta1.RollingUpdateDeployment)
+		out := out.(*v1beta1.RollingUpdateDeployment)
 		*out = *in
 		if in.MaxUnavailable != nil {
 			in, out := &in.MaxUnavailable, &out.MaxUnavailable
@@ -228,8 +230,8 @@ func DeepCopy_v1beta1_RollingUpdateDeployment(in interface{}, out interface{}, c
 
 func DeepCopy_v1beta1_Scale(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Scale)
-		out := out.(*Scale)
+		in := in.(*v1beta1.Scale)
+		out := out.(*v1beta1.Scale)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -245,8 +247,8 @@ func DeepCopy_v1beta1_Scale(in interface{}, out interface{}, c *conversion.Clone
 
 func DeepCopy_v1beta1_ScaleSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ScaleSpec)
-		out := out.(*ScaleSpec)
+		in := in.(*v1beta1.ScaleSpec)
+		out := out.(*v1beta1.ScaleSpec)
 		*out = *in
 		return nil
 	}
@@ -254,8 +256,8 @@ func DeepCopy_v1beta1_ScaleSpec(in interface{}, out interface{}, c *conversion.C
 
 func DeepCopy_v1beta1_ScaleStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ScaleStatus)
-		out := out.(*ScaleStatus)
+		in := in.(*v1beta1.ScaleStatus)
+		out := out.(*v1beta1.ScaleStatus)
 		*out = *in
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
@@ -270,8 +272,8 @@ func DeepCopy_v1beta1_ScaleStatus(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1beta1_StatefulSet(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StatefulSet)
-		out := out.(*StatefulSet)
+		in := in.(*v1beta1.StatefulSet)
+		out := out.(*v1beta1.StatefulSet)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -290,12 +292,12 @@ func DeepCopy_v1beta1_StatefulSet(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1beta1_StatefulSetList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StatefulSetList)
-		out := out.(*StatefulSetList)
+		in := in.(*v1beta1.StatefulSetList)
+		out := out.(*v1beta1.StatefulSetList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]StatefulSet, len(*in))
+			*out = make([]v1beta1.StatefulSet, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1beta1_StatefulSet(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -308,8 +310,8 @@ func DeepCopy_v1beta1_StatefulSetList(in interface{}, out interface{}, c *conver
 
 func DeepCopy_v1beta1_StatefulSetSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StatefulSetSpec)
-		out := out.(*StatefulSetSpec)
+		in := in.(*v1beta1.StatefulSetSpec)
+		out := out.(*v1beta1.StatefulSetSpec)
 		*out = *in
 		if in.Replicas != nil {
 			in, out := &in.Replicas, &out.Replicas
@@ -342,8 +344,8 @@ func DeepCopy_v1beta1_StatefulSetSpec(in interface{}, out interface{}, c *conver
 
 func DeepCopy_v1beta1_StatefulSetStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StatefulSetStatus)
-		out := out.(*StatefulSetStatus)
+		in := in.(*v1beta1.StatefulSetStatus)
+		out := out.(*v1beta1.StatefulSetStatus)
 		*out = *in
 		if in.ObservedGeneration != nil {
 			in, out := &in.ObservedGeneration, &out.ObservedGeneration

@@ -21,10 +21,12 @@ limitations under the License.
 package v1alpha1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/imagepolicy/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,17 +37,17 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReview, InType: reflect.TypeOf(&ImageReview{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewContainerSpec, InType: reflect.TypeOf(&ImageReviewContainerSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewSpec, InType: reflect.TypeOf(&ImageReviewSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewStatus, InType: reflect.TypeOf(&ImageReviewStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReview, InType: reflect.TypeOf(&v1alpha1.ImageReview{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewContainerSpec, InType: reflect.TypeOf(&v1alpha1.ImageReviewContainerSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewSpec, InType: reflect.TypeOf(&v1alpha1.ImageReviewSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1alpha1_ImageReviewStatus, InType: reflect.TypeOf(&v1alpha1.ImageReviewStatus{})},
 	)
 }
 
 func DeepCopy_v1alpha1_ImageReview(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ImageReview)
-		out := out.(*ImageReview)
+		in := in.(*v1alpha1.ImageReview)
+		out := out.(*v1alpha1.ImageReview)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -61,8 +63,8 @@ func DeepCopy_v1alpha1_ImageReview(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v1alpha1_ImageReviewContainerSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ImageReviewContainerSpec)
-		out := out.(*ImageReviewContainerSpec)
+		in := in.(*v1alpha1.ImageReviewContainerSpec)
+		out := out.(*v1alpha1.ImageReviewContainerSpec)
 		*out = *in
 		return nil
 	}
@@ -70,12 +72,12 @@ func DeepCopy_v1alpha1_ImageReviewContainerSpec(in interface{}, out interface{},
 
 func DeepCopy_v1alpha1_ImageReviewSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ImageReviewSpec)
-		out := out.(*ImageReviewSpec)
+		in := in.(*v1alpha1.ImageReviewSpec)
+		out := out.(*v1alpha1.ImageReviewSpec)
 		*out = *in
 		if in.Containers != nil {
 			in, out := &in.Containers, &out.Containers
-			*out = make([]ImageReviewContainerSpec, len(*in))
+			*out = make([]v1alpha1.ImageReviewContainerSpec, len(*in))
 			copy(*out, *in)
 		}
 		if in.Annotations != nil {
@@ -91,8 +93,8 @@ func DeepCopy_v1alpha1_ImageReviewSpec(in interface{}, out interface{}, c *conve
 
 func DeepCopy_v1alpha1_ImageReviewStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ImageReviewStatus)
-		out := out.(*ImageReviewStatus)
+		in := in.(*v1alpha1.ImageReviewStatus)
+		out := out.(*v1alpha1.ImageReviewStatus)
 		*out = *in
 		return nil
 	}

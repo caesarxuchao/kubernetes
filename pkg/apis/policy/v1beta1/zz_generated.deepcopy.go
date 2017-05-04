@@ -21,10 +21,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/policy/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,18 +37,18 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Eviction, InType: reflect.TypeOf(&Eviction{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudget, InType: reflect.TypeOf(&PodDisruptionBudget{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetList, InType: reflect.TypeOf(&PodDisruptionBudgetList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetSpec, InType: reflect.TypeOf(&PodDisruptionBudgetSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetStatus, InType: reflect.TypeOf(&PodDisruptionBudgetStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_Eviction, InType: reflect.TypeOf(&v1beta1.Eviction{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudget, InType: reflect.TypeOf(&v1beta1.PodDisruptionBudget{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetList, InType: reflect.TypeOf(&v1beta1.PodDisruptionBudgetList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetSpec, InType: reflect.TypeOf(&v1beta1.PodDisruptionBudgetSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_PodDisruptionBudgetStatus, InType: reflect.TypeOf(&v1beta1.PodDisruptionBudgetStatus{})},
 	)
 }
 
 func DeepCopy_v1beta1_Eviction(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*Eviction)
-		out := out.(*Eviction)
+		in := in.(*v1beta1.Eviction)
+		out := out.(*v1beta1.Eviction)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -67,8 +69,8 @@ func DeepCopy_v1beta1_Eviction(in interface{}, out interface{}, c *conversion.Cl
 
 func DeepCopy_v1beta1_PodDisruptionBudget(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodDisruptionBudget)
-		out := out.(*PodDisruptionBudget)
+		in := in.(*v1beta1.PodDisruptionBudget)
+		out := out.(*v1beta1.PodDisruptionBudget)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -87,12 +89,12 @@ func DeepCopy_v1beta1_PodDisruptionBudget(in interface{}, out interface{}, c *co
 
 func DeepCopy_v1beta1_PodDisruptionBudgetList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodDisruptionBudgetList)
-		out := out.(*PodDisruptionBudgetList)
+		in := in.(*v1beta1.PodDisruptionBudgetList)
+		out := out.(*v1beta1.PodDisruptionBudgetList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]PodDisruptionBudget, len(*in))
+			*out = make([]v1beta1.PodDisruptionBudget, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1beta1_PodDisruptionBudget(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -105,8 +107,8 @@ func DeepCopy_v1beta1_PodDisruptionBudgetList(in interface{}, out interface{}, c
 
 func DeepCopy_v1beta1_PodDisruptionBudgetSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodDisruptionBudgetSpec)
-		out := out.(*PodDisruptionBudgetSpec)
+		in := in.(*v1beta1.PodDisruptionBudgetSpec)
+		out := out.(*v1beta1.PodDisruptionBudgetSpec)
 		*out = *in
 		if in.Selector != nil {
 			in, out := &in.Selector, &out.Selector
@@ -122,8 +124,8 @@ func DeepCopy_v1beta1_PodDisruptionBudgetSpec(in interface{}, out interface{}, c
 
 func DeepCopy_v1beta1_PodDisruptionBudgetStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*PodDisruptionBudgetStatus)
-		out := out.(*PodDisruptionBudgetStatus)
+		in := in.(*v1beta1.PodDisruptionBudgetStatus)
+		out := out.(*v1beta1.PodDisruptionBudgetStatus)
 		*out = *in
 		if in.DisruptedPods != nil {
 			in, out := &in.DisruptedPods, &out.DisruptedPods

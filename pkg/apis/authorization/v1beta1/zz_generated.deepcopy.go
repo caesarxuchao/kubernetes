@@ -21,10 +21,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/authorization/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,21 +37,21 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_LocalSubjectAccessReview, InType: reflect.TypeOf(&LocalSubjectAccessReview{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_NonResourceAttributes, InType: reflect.TypeOf(&NonResourceAttributes{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ResourceAttributes, InType: reflect.TypeOf(&ResourceAttributes{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SelfSubjectAccessReview, InType: reflect.TypeOf(&SelfSubjectAccessReview{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SelfSubjectAccessReviewSpec, InType: reflect.TypeOf(&SelfSubjectAccessReviewSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReview, InType: reflect.TypeOf(&SubjectAccessReview{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReviewSpec, InType: reflect.TypeOf(&SubjectAccessReviewSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReviewStatus, InType: reflect.TypeOf(&SubjectAccessReviewStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_LocalSubjectAccessReview, InType: reflect.TypeOf(&v1beta1.LocalSubjectAccessReview{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_NonResourceAttributes, InType: reflect.TypeOf(&v1beta1.NonResourceAttributes{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_ResourceAttributes, InType: reflect.TypeOf(&v1beta1.ResourceAttributes{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SelfSubjectAccessReview, InType: reflect.TypeOf(&v1beta1.SelfSubjectAccessReview{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SelfSubjectAccessReviewSpec, InType: reflect.TypeOf(&v1beta1.SelfSubjectAccessReviewSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReview, InType: reflect.TypeOf(&v1beta1.SubjectAccessReview{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReviewSpec, InType: reflect.TypeOf(&v1beta1.SubjectAccessReviewSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_SubjectAccessReviewStatus, InType: reflect.TypeOf(&v1beta1.SubjectAccessReviewStatus{})},
 	)
 }
 
 func DeepCopy_v1beta1_LocalSubjectAccessReview(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*LocalSubjectAccessReview)
-		out := out.(*LocalSubjectAccessReview)
+		in := in.(*v1beta1.LocalSubjectAccessReview)
+		out := out.(*v1beta1.LocalSubjectAccessReview)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -65,8 +67,8 @@ func DeepCopy_v1beta1_LocalSubjectAccessReview(in interface{}, out interface{}, 
 
 func DeepCopy_v1beta1_NonResourceAttributes(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*NonResourceAttributes)
-		out := out.(*NonResourceAttributes)
+		in := in.(*v1beta1.NonResourceAttributes)
+		out := out.(*v1beta1.NonResourceAttributes)
 		*out = *in
 		return nil
 	}
@@ -74,8 +76,8 @@ func DeepCopy_v1beta1_NonResourceAttributes(in interface{}, out interface{}, c *
 
 func DeepCopy_v1beta1_ResourceAttributes(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*ResourceAttributes)
-		out := out.(*ResourceAttributes)
+		in := in.(*v1beta1.ResourceAttributes)
+		out := out.(*v1beta1.ResourceAttributes)
 		*out = *in
 		return nil
 	}
@@ -83,8 +85,8 @@ func DeepCopy_v1beta1_ResourceAttributes(in interface{}, out interface{}, c *con
 
 func DeepCopy_v1beta1_SelfSubjectAccessReview(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*SelfSubjectAccessReview)
-		out := out.(*SelfSubjectAccessReview)
+		in := in.(*v1beta1.SelfSubjectAccessReview)
+		out := out.(*v1beta1.SelfSubjectAccessReview)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -100,17 +102,17 @@ func DeepCopy_v1beta1_SelfSubjectAccessReview(in interface{}, out interface{}, c
 
 func DeepCopy_v1beta1_SelfSubjectAccessReviewSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*SelfSubjectAccessReviewSpec)
-		out := out.(*SelfSubjectAccessReviewSpec)
+		in := in.(*v1beta1.SelfSubjectAccessReviewSpec)
+		out := out.(*v1beta1.SelfSubjectAccessReviewSpec)
 		*out = *in
 		if in.ResourceAttributes != nil {
 			in, out := &in.ResourceAttributes, &out.ResourceAttributes
-			*out = new(ResourceAttributes)
+			*out = new(v1beta1.ResourceAttributes)
 			**out = **in
 		}
 		if in.NonResourceAttributes != nil {
 			in, out := &in.NonResourceAttributes, &out.NonResourceAttributes
-			*out = new(NonResourceAttributes)
+			*out = new(v1beta1.NonResourceAttributes)
 			**out = **in
 		}
 		return nil
@@ -119,8 +121,8 @@ func DeepCopy_v1beta1_SelfSubjectAccessReviewSpec(in interface{}, out interface{
 
 func DeepCopy_v1beta1_SubjectAccessReview(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*SubjectAccessReview)
-		out := out.(*SubjectAccessReview)
+		in := in.(*v1beta1.SubjectAccessReview)
+		out := out.(*v1beta1.SubjectAccessReview)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -136,17 +138,17 @@ func DeepCopy_v1beta1_SubjectAccessReview(in interface{}, out interface{}, c *co
 
 func DeepCopy_v1beta1_SubjectAccessReviewSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*SubjectAccessReviewSpec)
-		out := out.(*SubjectAccessReviewSpec)
+		in := in.(*v1beta1.SubjectAccessReviewSpec)
+		out := out.(*v1beta1.SubjectAccessReviewSpec)
 		*out = *in
 		if in.ResourceAttributes != nil {
 			in, out := &in.ResourceAttributes, &out.ResourceAttributes
-			*out = new(ResourceAttributes)
+			*out = new(v1beta1.ResourceAttributes)
 			**out = **in
 		}
 		if in.NonResourceAttributes != nil {
 			in, out := &in.NonResourceAttributes, &out.NonResourceAttributes
-			*out = new(NonResourceAttributes)
+			*out = new(v1beta1.NonResourceAttributes)
 			**out = **in
 		}
 		if in.Groups != nil {
@@ -156,12 +158,12 @@ func DeepCopy_v1beta1_SubjectAccessReviewSpec(in interface{}, out interface{}, c
 		}
 		if in.Extra != nil {
 			in, out := &in.Extra, &out.Extra
-			*out = make(map[string]ExtraValue)
+			*out = make(map[string]v1beta1.ExtraValue)
 			for key, val := range *in {
 				if newVal, err := c.DeepCopy(&val); err != nil {
 					return err
 				} else {
-					(*out)[key] = *newVal.(*ExtraValue)
+					(*out)[key] = *newVal.(*v1beta1.ExtraValue)
 				}
 			}
 		}
@@ -171,8 +173,8 @@ func DeepCopy_v1beta1_SubjectAccessReviewSpec(in interface{}, out interface{}, c
 
 func DeepCopy_v1beta1_SubjectAccessReviewStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*SubjectAccessReviewStatus)
-		out := out.(*SubjectAccessReviewStatus)
+		in := in.(*v1beta1.SubjectAccessReviewStatus)
+		out := out.(*v1beta1.SubjectAccessReviewStatus)
 		*out = *in
 		return nil
 	}

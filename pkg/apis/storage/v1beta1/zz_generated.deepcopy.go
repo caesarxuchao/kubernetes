@@ -21,10 +21,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/storage/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,15 +37,15 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StorageClass, InType: reflect.TypeOf(&StorageClass{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StorageClassList, InType: reflect.TypeOf(&StorageClassList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StorageClass, InType: reflect.TypeOf(&v1beta1.StorageClass{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_StorageClassList, InType: reflect.TypeOf(&v1beta1.StorageClassList{})},
 	)
 }
 
 func DeepCopy_v1beta1_StorageClass(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StorageClass)
-		out := out.(*StorageClass)
+		in := in.(*v1beta1.StorageClass)
+		out := out.(*v1beta1.StorageClass)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -63,12 +65,12 @@ func DeepCopy_v1beta1_StorageClass(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v1beta1_StorageClassList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*StorageClassList)
-		out := out.(*StorageClassList)
+		in := in.(*v1beta1.StorageClassList)
+		out := out.(*v1beta1.StorageClassList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]StorageClass, len(*in))
+			*out = make([]v1beta1.StorageClass, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v1beta1_StorageClass(&(*in)[i], &(*out)[i], c); err != nil {
 					return err

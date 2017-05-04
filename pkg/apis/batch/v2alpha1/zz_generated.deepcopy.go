@@ -21,12 +21,14 @@ limitations under the License.
 package v2alpha1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/batch/v2alpha1"
 	core_v1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	batch_v1 "k8s.io/kubernetes/pkg/apis/batch/v1"
-	reflect "reflect"
 )
 
 func init() {
@@ -37,19 +39,19 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJob, InType: reflect.TypeOf(&CronJob{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobList, InType: reflect.TypeOf(&CronJobList{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobSpec, InType: reflect.TypeOf(&CronJobSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobStatus, InType: reflect.TypeOf(&CronJobStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_JobTemplate, InType: reflect.TypeOf(&JobTemplate{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_JobTemplateSpec, InType: reflect.TypeOf(&JobTemplateSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJob, InType: reflect.TypeOf(&v2alpha1.CronJob{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobList, InType: reflect.TypeOf(&v2alpha1.CronJobList{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobSpec, InType: reflect.TypeOf(&v2alpha1.CronJobSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_CronJobStatus, InType: reflect.TypeOf(&v2alpha1.CronJobStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_JobTemplate, InType: reflect.TypeOf(&v2alpha1.JobTemplate{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v2alpha1_JobTemplateSpec, InType: reflect.TypeOf(&v2alpha1.JobTemplateSpec{})},
 	)
 }
 
 func DeepCopy_v2alpha1_CronJob(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CronJob)
-		out := out.(*CronJob)
+		in := in.(*v2alpha1.CronJob)
+		out := out.(*v2alpha1.CronJob)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -68,12 +70,12 @@ func DeepCopy_v2alpha1_CronJob(in interface{}, out interface{}, c *conversion.Cl
 
 func DeepCopy_v2alpha1_CronJobList(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CronJobList)
-		out := out.(*CronJobList)
+		in := in.(*v2alpha1.CronJobList)
+		out := out.(*v2alpha1.CronJobList)
 		*out = *in
 		if in.Items != nil {
 			in, out := &in.Items, &out.Items
-			*out = make([]CronJob, len(*in))
+			*out = make([]v2alpha1.CronJob, len(*in))
 			for i := range *in {
 				if err := DeepCopy_v2alpha1_CronJob(&(*in)[i], &(*out)[i], c); err != nil {
 					return err
@@ -86,8 +88,8 @@ func DeepCopy_v2alpha1_CronJobList(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v2alpha1_CronJobSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CronJobSpec)
-		out := out.(*CronJobSpec)
+		in := in.(*v2alpha1.CronJobSpec)
+		out := out.(*v2alpha1.CronJobSpec)
 		*out = *in
 		if in.StartingDeadlineSeconds != nil {
 			in, out := &in.StartingDeadlineSeconds, &out.StartingDeadlineSeconds
@@ -118,8 +120,8 @@ func DeepCopy_v2alpha1_CronJobSpec(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v2alpha1_CronJobStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*CronJobStatus)
-		out := out.(*CronJobStatus)
+		in := in.(*v2alpha1.CronJobStatus)
+		out := out.(*v2alpha1.CronJobStatus)
 		*out = *in
 		if in.Active != nil {
 			in, out := &in.Active, &out.Active
@@ -137,8 +139,8 @@ func DeepCopy_v2alpha1_CronJobStatus(in interface{}, out interface{}, c *convers
 
 func DeepCopy_v2alpha1_JobTemplate(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobTemplate)
-		out := out.(*JobTemplate)
+		in := in.(*v2alpha1.JobTemplate)
+		out := out.(*v2alpha1.JobTemplate)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -154,8 +156,8 @@ func DeepCopy_v2alpha1_JobTemplate(in interface{}, out interface{}, c *conversio
 
 func DeepCopy_v2alpha1_JobTemplateSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*JobTemplateSpec)
-		out := out.(*JobTemplateSpec)
+		in := in.(*v2alpha1.JobTemplateSpec)
+		out := out.(*v2alpha1.JobTemplateSpec)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err

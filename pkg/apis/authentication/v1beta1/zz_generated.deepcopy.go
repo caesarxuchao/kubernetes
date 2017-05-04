@@ -21,10 +21,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	reflect "reflect"
+
+	"k8s.io/api/authentication/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	reflect "reflect"
 )
 
 func init() {
@@ -35,17 +37,17 @@ func init() {
 // to allow building arbitrary schemes.
 func RegisterDeepCopies(scheme *runtime.Scheme) error {
 	return scheme.AddGeneratedDeepCopyFuncs(
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReview, InType: reflect.TypeOf(&TokenReview{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReviewSpec, InType: reflect.TypeOf(&TokenReviewSpec{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReviewStatus, InType: reflect.TypeOf(&TokenReviewStatus{})},
-		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_UserInfo, InType: reflect.TypeOf(&UserInfo{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReview, InType: reflect.TypeOf(&v1beta1.TokenReview{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReviewSpec, InType: reflect.TypeOf(&v1beta1.TokenReviewSpec{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_TokenReviewStatus, InType: reflect.TypeOf(&v1beta1.TokenReviewStatus{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_v1beta1_UserInfo, InType: reflect.TypeOf(&v1beta1.UserInfo{})},
 	)
 }
 
 func DeepCopy_v1beta1_TokenReview(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*TokenReview)
-		out := out.(*TokenReview)
+		in := in.(*v1beta1.TokenReview)
+		out := out.(*v1beta1.TokenReview)
 		*out = *in
 		if newVal, err := c.DeepCopy(&in.ObjectMeta); err != nil {
 			return err
@@ -61,8 +63,8 @@ func DeepCopy_v1beta1_TokenReview(in interface{}, out interface{}, c *conversion
 
 func DeepCopy_v1beta1_TokenReviewSpec(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*TokenReviewSpec)
-		out := out.(*TokenReviewSpec)
+		in := in.(*v1beta1.TokenReviewSpec)
+		out := out.(*v1beta1.TokenReviewSpec)
 		*out = *in
 		return nil
 	}
@@ -70,8 +72,8 @@ func DeepCopy_v1beta1_TokenReviewSpec(in interface{}, out interface{}, c *conver
 
 func DeepCopy_v1beta1_TokenReviewStatus(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*TokenReviewStatus)
-		out := out.(*TokenReviewStatus)
+		in := in.(*v1beta1.TokenReviewStatus)
+		out := out.(*v1beta1.TokenReviewStatus)
 		*out = *in
 		if err := DeepCopy_v1beta1_UserInfo(&in.User, &out.User, c); err != nil {
 			return err
@@ -82,8 +84,8 @@ func DeepCopy_v1beta1_TokenReviewStatus(in interface{}, out interface{}, c *conv
 
 func DeepCopy_v1beta1_UserInfo(in interface{}, out interface{}, c *conversion.Cloner) error {
 	{
-		in := in.(*UserInfo)
-		out := out.(*UserInfo)
+		in := in.(*v1beta1.UserInfo)
+		out := out.(*v1beta1.UserInfo)
 		*out = *in
 		if in.Groups != nil {
 			in, out := &in.Groups, &out.Groups
@@ -92,12 +94,12 @@ func DeepCopy_v1beta1_UserInfo(in interface{}, out interface{}, c *conversion.Cl
 		}
 		if in.Extra != nil {
 			in, out := &in.Extra, &out.Extra
-			*out = make(map[string]ExtraValue)
+			*out = make(map[string]v1beta1.ExtraValue)
 			for key, val := range *in {
 				if newVal, err := c.DeepCopy(&val); err != nil {
 					return err
 				} else {
-					(*out)[key] = *newVal.(*ExtraValue)
+					(*out)[key] = *newVal.(*v1beta1.ExtraValue)
 				}
 			}
 		}
