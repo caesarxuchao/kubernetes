@@ -19,7 +19,7 @@ package upgrades
 import (
 	"fmt"
 
-	autoscalingv1 "k8s.io/kubernetes/pkg/apis/autoscaling/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/kubernetes/test/e2e/common"
 	"k8s.io/kubernetes/test/e2e/framework"
 
