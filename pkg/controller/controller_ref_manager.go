@@ -21,13 +21,13 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
 )
 
 // GetControllerOf returns the controllerRef if controllee has a controller,
