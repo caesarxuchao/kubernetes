@@ -24,13 +24,14 @@ import (
 	"sort"
 	"syscall"
 
+	"k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/v1"
+	k8s_api_v1 "k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/apis/apps"
 	appsv1beta1 "k8s.io/kubernetes/pkg/apis/apps/v1beta1"
 	"k8s.io/kubernetes/pkg/apis/extensions"
@@ -181,7 +182,7 @@ func simpleDryRun(deployment *extensions.Deployment, c clientset.Interface, toRe
 		}
 		buf := bytes.NewBuffer([]byte{})
 		internalTemplate := &api.PodTemplateSpec{}
-		if err := v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
+		if err := k8s_api_v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
 			return "", fmt.Errorf("failed to convert podtemplate, %v", err)
 		}
 		w := printersinternal.NewPrefixWriter(buf)
@@ -200,7 +201,7 @@ func simpleDryRun(deployment *extensions.Deployment, c clientset.Interface, toRe
 	buf := bytes.NewBuffer([]byte{})
 	buf.WriteString("\n")
 	internalTemplate := &api.PodTemplateSpec{}
-	if err := v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
+	if err := k8s_api_v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
 		return "", fmt.Errorf("failed to convert podtemplate, %v", err)
 	}
 	w := printersinternal.NewPrefixWriter(buf)
@@ -294,7 +295,7 @@ func getInternalTemplate(toHistory *appsv1beta1.ControllerRevision) (*api.PodTem
 		return nil, err
 	}
 	internalTemplate := &api.PodTemplateSpec{}
-	if err := v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
+	if err := k8s_api_v1.Convert_v1_PodTemplateSpec_To_api_PodTemplateSpec(template, internalTemplate, nil); err != nil {
 		return nil, fmt.Errorf("failed to convert podtemplate, %v", err)
 	}
 	return internalTemplate, nil
