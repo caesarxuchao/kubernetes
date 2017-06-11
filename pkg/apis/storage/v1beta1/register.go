@@ -17,8 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -44,4 +43,3 @@ func init() {
 	// makes the code compile even when the generated files are missing.
 	localSchemeBuilder.Register(storagev1beta1.AddKnownTypes, RegisterDefaults)
 }
-

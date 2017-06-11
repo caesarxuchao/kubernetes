@@ -17,8 +17,7 @@ limitations under the License.
 package v2alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -44,4 +43,3 @@ func init() {
 	// makes the code compile even when the generated files are missing.
 	localSchemeBuilder.Register(batchv2alpha1.AddKnownTypes, addDefaultingFuncs, addConversionFuncs)
 }
-

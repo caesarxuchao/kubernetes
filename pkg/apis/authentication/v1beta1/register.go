@@ -17,8 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	authenticationv1beta1 "k8s.io/api/authentication/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -44,4 +43,3 @@ func init() {
 	// makes the code compile even when the generated files are missing.
 	localSchemeBuilder.Register(authenticationv1beta1.AddKnownTypes, addDefaultingFuncs, addConversionFuncs)
 }
-
