@@ -83,6 +83,10 @@ for repo in $(ls ${KUBE_ROOT}/staging/src/k8s.io); do
   if [ "${repo}" == "client-go" ]; then
     continue
   fi
+  # we have to skip api because it does not depend on anything
+  if [ "${repo}" == "api" ]; then
+    continue
+  fi
   # we skip metrics because it's synced to the real repo manually
   if [ "${repo}" == "metrics" ]; then
     continue
