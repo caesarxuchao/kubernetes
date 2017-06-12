@@ -79,10 +79,6 @@ function updateGodepManifest() {
 # move into staging and save the dependencies for everything in order
 mkdir -p "${TMP_GOPATH}/src/k8s.io"
 for repo in $(ls ${KUBE_ROOT}/staging/src/k8s.io); do
-  # we have to skip client-go because it does unusual manipulation of its godeps
-  if [ "${repo}" == "client-go" ]; then
-    continue
-  fi
   # we have to skip api because it does not depend on anything
   if [ "${repo}" == "api" ]; then
     continue
