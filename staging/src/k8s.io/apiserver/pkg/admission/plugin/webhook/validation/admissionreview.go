@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package webhook delegates admission checks to dynamically configured webhooks.
-package webhook
+package validation
 
 import (
 	admissionv1alpha1 "k8s.io/api/admission/v1alpha1"

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package webhook checks a webhook for configured operation admission
-package webhook
+package mutating
 
 import (
 	"strings"

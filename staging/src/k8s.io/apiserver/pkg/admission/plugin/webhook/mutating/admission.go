@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package webhook delegates admission checks to dynamically configured webhooks.
-package webhook
+package mutating
 
 import (
 	"context"

@@ -14,9 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package webhook
-
-// AdmissionConfig holds config data that is unique to each API server.
-type AdmissionConfig struct {
-	KubeConfigFile string `json:"kubeConfigFile"`
-}
+// Package webhook checks a webhook for configured operation admission
+package validation // import "k8s.io/apiserver/pkg/admission/plugin/webhook/validation"
