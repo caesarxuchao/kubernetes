@@ -44,7 +44,7 @@ func (c *Config) addFlags() {
 }
 
 // only allow pods to pull images from specific registry.
-func admit(data []byte) *v1alpha1.AdmissionReviewStatus {
+func admit(data []byte) *v1alpha1.AdmissionReview {
 	ar := v1alpha1.AdmissionReview{}
 	if err := json.Unmarshal(data, &ar); err != nil {
 		glog.Error(err)
@@ -62,28 +62,40 @@ func admit(data []byte) *v1alpha1.AdmissionReviewStatus {
 		glog.Error(err)
 		return nil
 	}
-	reviewStatus := v1alpha1.AdmissionReviewStatus{}
-	reviewStatus.Allowed = true
+	ar.Status.Allowed = true
 	// Note: the apiserver encodes the api.Pod. Decoding it as a v1.Pod will
 	// lose the metadata. So the following check on labels will not work
 	// until we let the apiserver encodes the versioned object.
 	for k, v := range pod.Labels {
 		if k == "webhook-e2e-test" && v == "webhook-disallow" {
-			reviewStatus.Allowed = false
-			reviewStatus.Result = &metav1.Status{
+			ar.Status.Allowed = false
+			ar.Status.Result = &metav1.Status{
 				Reason: "the pod contains unwanted label",
 			}
 		}
 	}
 	for _, container := range pod.Spec.Containers {
 		if strings.Contains(container.Name, "webhook-disallow") {
-			reviewStatus.Allowed = false
-			reviewStatus.Result = &metav1.Status{
+			ar.Status.Allowed = false
+			ar.Status.Result = &metav1.Status{
 				Message: "the pod contains unwanted container name",
 			}
 		}
+		if strings.Contains(container.Name, "webhook-mutating") {
+			if _, ok := pod.Labels["webhook-mutating-1"]; ok {
+				pod.Labels["webhook-mutating-2"] = "added"
+			}
+			pod.Labels["webhook-mutating-1"] = "added"
+		}
 	}
-	return &reviewStatus
+	mutatedPodRaw, err := json.Marshal(pod)
+	if err != nil {
+		glog.Errorf("cannot encode the mutated pod")
+		return nil
+	}
+	// TODO: use the new admission response API
+	ar.Spec.Object.Raw = mutatedPodRaw
+	return &ar
 }
 
 func serve(w http.ResponseWriter, r *http.Request) {
@@ -101,10 +113,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reviewStatus := admit(body)
-	ar := v1alpha1.AdmissionReview{
-		Status: *reviewStatus,
-	}
+	ar := admit(body)
 
 	resp, err := json.Marshal(ar)
 	if err != nil {
