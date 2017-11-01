@@ -72,6 +72,27 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 		registerWebhook(f, context)
 		testWebhook(f)
 	})
+
+	It("Should mutate pod", func() {
+		// Make sure the relevant provider supports admission webhook
+		framework.SkipUnlessServerVersionGTE(serverWebhookVersion, f.ClientSet.Discovery())
+		framework.SkipUnlessProviderIs("gce", "gke", "local")
+
+		_, err := f.ClientSet.AdmissionregistrationV1alpha1().ExternalAdmissionHookConfigurations().List(metav1.ListOptions{})
+		if errors.IsNotFound(err) {
+			framework.Skipf("dynamic configuration of webhooks requires the alpha admissionregistration.k8s.io group to be enabled")
+		}
+
+		By("Setting up server cert")
+		namespaceName := f.Namespace.Name
+		context := setupServerCert(namespaceName, serviceName)
+		createAuthReaderRoleBinding(f, namespaceName)
+		// Note that in 1.9 we will have backwards incompatible change to
+		// admission webhooks, so the image will be updated to 1.9 sometime in
+		// the development 1.9 cycle.
+		deployWebhookAndService(f, "gcr.io/kubernetes-e2e-test-images/k8s-sample-admission-webhook-amd64:1.8v1", context)
+		registerWebhook(f, context)
+	})
 })
 
 func createAuthReaderRoleBinding(f *framework.Framework, namespace string) {
@@ -152,7 +173,8 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 				"-v=4",
 				"2>&1",
 			},
-			Image: image,
+			Image:           image,
+			ImagePullPolicy: v1.PullNever,
 		},
 	}
 	d := &extensions.Deployment{
