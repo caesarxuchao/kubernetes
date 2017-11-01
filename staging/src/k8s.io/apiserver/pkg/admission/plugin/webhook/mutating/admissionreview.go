@@ -22,11 +22,12 @@ import (
 	authenticationv1 "k8s.io/api/authentication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/admission"
 )
 
 // createAdmissionReview creates an AdmissionReview for the provided admission.Attributes
-func createAdmissionReview(attr admission.Attributes) admissionv1alpha1.AdmissionReview {
+func createAdmissionReview(convertor runtime.ObjectConvertor, attr admission.Attributes, ir *intermidiateAdmissionResult) (admissionv1alpha1.AdmissionReview, error) {
 	gvk := attr.GetKind()
 	gvr := attr.GetResource()
 	aUserInfo := attr.GetUserInfo()
@@ -42,6 +43,20 @@ func createAdmissionReview(attr admission.Attributes) admissionv1alpha1.Admissio
 		userInfo.Extra[key] = authenticationv1.ExtraValue(val)
 	}
 
+	var err error
+	if ir.versionedOldObject == nil {
+		ir.versionedOldObject, err = convertor.ConvertToVersion(attr.GetOldObject(), schema.GroupVersion{Group: gvr.Group, Version: gvr.Version})
+		if err != nil {
+			return admissionv1alpha1.AdmissionReview{}, err
+		}
+	}
+	if ir.versionedObject == nil {
+		ir.versionedObject, err = convertor.ConvertToVersion(attr.GetObject(), schema.GroupVersion{Group: gvr.Group, Version: gvr.Version})
+		if err != nil {
+			return admissionv1alpha1.AdmissionReview{}, err
+		}
+	}
+
 	return admissionv1alpha1.AdmissionReview{
 		Spec: admissionv1alpha1.AdmissionReviewSpec{
 			Name:      attr.GetName(),
@@ -54,10 +69,12 @@ func createAdmissionReview(attr admission.Attributes) admissionv1alpha1.Admissio
 			SubResource: attr.GetSubresource(),
 			Operation:   admissionv1alpha1.Operation(attr.GetOperation()),
 			Object: runtime.RawExtension{
-				Object: attr.GetObject(),
+				Object: ir.versionedObject,
+				// Note that Raw takes precedence over Object when serialized.
+				Raw: ir.mutatedObjRaw,
 			},
 			OldObject: runtime.RawExtension{
-				Object: attr.GetOldObject(),
+				Object: ir.versionedOldObject,
 			},
 			Kind: metav1.GroupVersionKind{
 				Group:   gvk.Group,
@@ -66,5 +83,5 @@ func createAdmissionReview(attr admission.Attributes) admissionv1alpha1.Admissio
 			},
 			UserInfo: userInfo,
 		},
-	}
+	}, nil
 }

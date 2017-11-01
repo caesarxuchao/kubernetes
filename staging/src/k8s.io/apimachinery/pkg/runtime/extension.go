@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 func (re *RawExtension) UnmarshalJSON(in []byte) error {
@@ -42,6 +43,7 @@ func (re RawExtension) MarshalJSON() ([]byte, error) {
 		// kubectl get on objects not in the scheme needs to be updated to ensure that the
 		// objects that are not part of the scheme are correctly put into the right form.
 		if re.Object != nil {
+			fmt.Println("CHAO: double check if this path is hit")
 			return json.Marshal(re.Object)
 		}
 		return []byte("null"), nil

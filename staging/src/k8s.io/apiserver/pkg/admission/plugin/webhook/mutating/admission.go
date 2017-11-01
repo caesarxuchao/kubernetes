@@ -23,7 +23,6 @@ import (
 	"io"
 	"net/url"
 	"path"
-	"sync"
 
 	"github.com/golang/glog"
 
@@ -33,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	runtimejson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -45,7 +45,7 @@ import (
 
 const (
 	// Name of admission plug-in
-	PluginName = "GenericAdmissionWebhook"
+	PluginName = "MutatingAdmissionWebhook"
 )
 
 type ErrCallingWebhook struct {
@@ -111,9 +111,12 @@ func NewGenericAdmissionWebhook(configFile io.Reader) (*GenericAdmissionWebhook,
 // GenericAdmissionWebhook is an implementation of admission.Interface.
 type GenericAdmissionWebhook struct {
 	*admission.Handler
-	hookSource           WebhookSource
-	serviceResolver      ServiceResolver
+	hookSource      WebhookSource
+	serviceResolver ServiceResolver
+	// TODO: only keep one of two of the three
 	negotiatedSerializer runtime.NegotiatedSerializer
+	convertor            runtime.ObjectConvertor
+	scheme               *runtime.Scheme
 
 	authInfoResolver AuthenticationInfoResolver
 }
@@ -148,6 +151,8 @@ func (a *GenericAdmissionWebhook) SetScheme(scheme *runtime.Scheme) {
 		a.negotiatedSerializer = serializer.NegotiatedSerializerWrapper(runtime.SerializerInfo{
 			Serializer: serializer.NewCodecFactory(scheme).LegacyCodec(admissionv1alpha1.SchemeGroupVersion),
 		})
+		a.convertor = scheme
+		a.scheme = scheme
 	}
 }
 
@@ -188,6 +193,13 @@ func (a *GenericAdmissionWebhook) loadConfiguration(attr admission.Attributes) (
 	return hookConfig, nil
 }
 
+// TODO: update this struct when we get the AdmissionResponse type fixed.
+type intermidiateAdmissionResult struct {
+	versionedObject    runtime.Object
+	versionedOldObject runtime.Object
+	mutatedObjRaw      []byte
+}
+
 // Admit makes an admission decision based on the request attributes.
 func (a *GenericAdmissionWebhook) Admit(attr admission.Attributes) error {
 	hookConfig, err := a.loadConfiguration(attr)
@@ -197,56 +209,33 @@ func (a *GenericAdmissionWebhook) Admit(attr admission.Attributes) error {
 	hooks := hookConfig.ExternalAdmissionHooks
 	ctx := context.TODO()
 
-	errCh := make(chan error, len(hooks))
-	wg := sync.WaitGroup{}
-	wg.Add(len(hooks))
-	for i := range hooks {
-		go func(hook *v1alpha1.ExternalAdmissionHook) {
-			defer wg.Done()
-
-			err := a.callHook(ctx, hook, attr)
-			if err == nil {
-				return
+	ir := &intermidiateAdmissionResult{}
+	for _, hook := range hooks {
+		err = a.callHook(ctx, &hook, attr, ir)
+		ignoreClientCallFailures := hook.FailurePolicy != nil && *hook.FailurePolicy == v1alpha1.Ignore
+		if callErr, ok := err.(*ErrCallingWebhook); ok {
+			if ignoreClientCallFailures {
+				glog.Warningf("Failed calling webhook, failing open %v: %v", hook.Name, callErr)
+				utilruntime.HandleError(callErr)
+				// Since we are failing open to begin with, we do not send an error down the channel
+				continue
 			}
-
-			ignoreClientCallFailures := hook.FailurePolicy != nil && *hook.FailurePolicy == v1alpha1.Ignore
-			if callErr, ok := err.(*ErrCallingWebhook); ok {
-				if ignoreClientCallFailures {
-					glog.Warningf("Failed calling webhook, failing open %v: %v", hook.Name, callErr)
-					utilruntime.HandleError(callErr)
-					// Since we are failing open to begin with, we do not send an error down the channel
-					return
-				}
-
-				glog.Warningf("Failed calling webhook, failing closed %v: %v", hook.Name, err)
-				errCh <- err
-				return
-			}
-
-			glog.Warningf("rejected by webhook %v %t: %v", hook.Name, err, err)
-			errCh <- err
-		}(&hooks[i])
-	}
-	wg.Wait()
-	close(errCh)
-
-	var errs []error
-	for e := range errCh {
-		errs = append(errs, e)
-	}
-	if len(errs) == 0 {
-		return nil
-	}
-	if len(errs) > 1 {
-		for i := 1; i < len(errs); i++ {
-			// TODO: merge status errors; until then, just return the first one.
-			utilruntime.HandleError(errs[i])
+			glog.Warningf("Failed calling webhook, failing closed %v: %v", hook.Name, err)
+			return err
 		}
+		glog.Warningf("rejected by webhook %v %t: %v", hook.Name, err, err)
+		return err
 	}
-	return errs[0]
+	jsonSerializer := runtimejson.NewSerializer(runtimejson.DefaultMetaFactory, a.scheme, a.scheme, false)
+	gvk := attr.GetKind()
+	_, _, err = jsonSerializer.Decode(ir.mutatedObjRaw, &gvk, attr.GetObject())
+	if err != nil {
+		return apierrors.NewInternalError(err)
+	}
+	return nil
 }
 
-func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.ExternalAdmissionHook, attr admission.Attributes) error {
+func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.ExternalAdmissionHook, attr admission.Attributes, ir *intermidiateAdmissionResult) error {
 	matches := false
 	for _, r := range h.Rules {
 		m := RuleMatcher{Rule: r, Attr: attr}
@@ -260,7 +249,10 @@ func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.Exte
 	}
 
 	// Make the webhook request
-	request := createAdmissionReview(attr)
+	request, err := createAdmissionReview(a.convertor, attr, ir)
+	if err != nil {
+		return apierrors.NewInternalError(err)
+	}
 	client, err := a.hookClient(h)
 	if err != nil {
 		return &ErrCallingWebhook{WebhookName: h.Name, Reason: err}
@@ -271,9 +263,12 @@ func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.Exte
 	}
 
 	if response.Status.Allowed {
+		// TODO: use the new field once we have that
+		ir.mutatedObjRaw = response.Spec.Object.Raw
 		return nil
 	}
 
+	// TODO: check if this is needed when we have the new api
 	if response.Status.Result == nil {
 		return fmt.Errorf("admission webhook %q denied the request without explanation", h.Name)
 	}
