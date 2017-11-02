@@ -92,6 +92,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 		// the development 1.9 cycle.
 		deployWebhookAndService(f, "gcr.io/kubernetes-e2e-test-images/k8s-sample-admission-webhook-amd64:1.8v1", context)
 		registerWebhook(f, context)
+		testMutatingWebhook(f)
 	})
 })
 
@@ -286,6 +287,22 @@ func testWebhook(f *framework.Framework) {
 	// the objects, and the apiserver sends the internal objects.
 }
 
+func testMutatingWebhook(f *framework.Framework) {
+	By("create a pod that should be denied by the webhook")
+	client := f.ClientSet
+	// Creating the pod, the request should be rejected
+	pod := toBeMutatedPod(f)
+	_, err := client.CoreV1().Pods(f.Namespace.Name).Create(pod)
+	Expect(err).NotTo(BeNil())
+	expectedErrMsg := "the pod contains unwanted container name"
+	if !strings.Contains(err.Error(), expectedErrMsg) {
+		framework.Failf("expect error contains %q, got %q", expectedErrMsg, err.Error())
+	}
+	// TODO: Test if webhook can detect pod with non-compliant metadata.
+	// Currently metadata is lost because webhook uses the external version of
+	// the objects, and the apiserver sends the internal objects.
+}
+
 func nonCompliantPod(f *framework.Framework) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -305,6 +322,24 @@ func nonCompliantPod(f *framework.Framework) *v1.Pod {
 	}
 }
 
+func toBeMutatedPod(f *framework.Framework) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "mutating-pod",
+			Labels: map[string]string{
+				"webhook-e2e-test": "disallow",
+			},
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "webhook-mutating",
+					Image: framework.GetPauseImageName(f.ClientSet),
+				},
+			},
+		},
+	}
+}
 func cleanWebhookTest(f *framework.Framework) {
 	client := f.ClientSet
 	_ = client.AdmissionregistrationV1alpha1().ExternalAdmissionHookConfigurations().Delete(webhookConfigName, nil)

@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
 	"path"
 
 	"github.com/golang/glog"
@@ -32,13 +31,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	runtimejson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/apiserver/pkg/admission/configuration"
 	genericadmissioninit "k8s.io/apiserver/pkg/admission/initializer"
+	"k8s.io/apiserver/pkg/admission/plugin/webhook/config"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -91,7 +90,7 @@ func NewGenericAdmissionWebhook(configFile io.Reader) (*GenericAdmissionWebhook,
 		}
 		kubeconfigFile = config.KubeConfigFile
 	}
-	authInfoResolver, err := newDefaultAuthenticationInfoResolver(kubeconfigFile)
+	authInfoResolver, err := config.NewDefaultAuthenticationInfoResolver(kubeconfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -112,18 +111,13 @@ func NewGenericAdmissionWebhook(configFile io.Reader) (*GenericAdmissionWebhook,
 type GenericAdmissionWebhook struct {
 	*admission.Handler
 	hookSource      WebhookSource
-	serviceResolver ServiceResolver
+	serviceResolver config.ServiceResolver
 	// TODO: only keep one of two of the three
 	negotiatedSerializer runtime.NegotiatedSerializer
 	convertor            runtime.ObjectConvertor
 	scheme               *runtime.Scheme
 
-	authInfoResolver AuthenticationInfoResolver
-}
-
-// serviceResolver knows how to convert a service reference into an actual location.
-type ServiceResolver interface {
-	ResolveEndpoint(namespace, name string) (*url.URL, error)
+	authInfoResolver config.AuthenticationInfoResolver
 }
 
 var (
@@ -131,7 +125,7 @@ var (
 )
 
 // TODO find a better way wire this, but keep this pull small for now.
-func (a *GenericAdmissionWebhook) SetAuthenticationInfoResolverWrapper(wrapper AuthenticationInfoResolverWrapper) {
+func (a *GenericAdmissionWebhook) SetAuthenticationInfoResolverWrapper(wrapper config.AuthenticationInfoResolverWrapper) {
 	if wrapper != nil {
 		a.authInfoResolver = wrapper(a.authInfoResolver)
 	}
@@ -139,7 +133,7 @@ func (a *GenericAdmissionWebhook) SetAuthenticationInfoResolverWrapper(wrapper A
 
 // SetServiceResolver sets a service resolver for the webhook admission plugin.
 // Passing a nil resolver does not have an effect, instead a default one will be used.
-func (a *GenericAdmissionWebhook) SetServiceResolver(sr ServiceResolver) {
+func (a *GenericAdmissionWebhook) SetServiceResolver(sr config.ServiceResolver) {
 	if sr != nil {
 		a.serviceResolver = sr
 	}
@@ -212,6 +206,9 @@ func (a *GenericAdmissionWebhook) Admit(attr admission.Attributes) error {
 	ir := &intermidiateAdmissionResult{}
 	for _, hook := range hooks {
 		err = a.callHook(ctx, &hook, attr, ir)
+		if err == nil {
+			continue
+		}
 		ignoreClientCallFailures := hook.FailurePolicy != nil && *hook.FailurePolicy == v1alpha1.Ignore
 		if callErr, ok := err.(*ErrCallingWebhook); ok {
 			if ignoreClientCallFailures {
@@ -226,12 +223,21 @@ func (a *GenericAdmissionWebhook) Admit(attr admission.Attributes) error {
 		glog.Warningf("rejected by webhook %v %t: %v", hook.Name, err, err)
 		return err
 	}
-	jsonSerializer := runtimejson.NewSerializer(runtimejson.DefaultMetaFactory, a.scheme, a.scheme, false)
-	gvk := attr.GetKind()
-	_, _, err = jsonSerializer.Decode(ir.mutatedObjRaw, &gvk, attr.GetObject())
+	if len(ir.mutatedObjRaw) == 0 {
+		// no webhook is called
+		return nil
+	}
+	// TODO: don't construct a codec every time.
+	// jsonSerializer := runtimejson.NewSerializer(runtimejson.DefaultMetaFactory, a.scheme, a.scheme, false)
+	// gvk := attr.GetKind()
+	// _, _, err = jsonSerializer.Decode(ir.mutatedObjRaw, &gvk, attr.GetObject())
+	fmt.Printf("CHAO: final mutatedObjRaw=%s\n", ir.mutatedObjRaw)
+	codec := serializer.NewCodecFactory(a.scheme).LegacyCodec()
+	_, _, err = codec.Decode(ir.mutatedObjRaw, nil, attr.GetObject())
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
+	fmt.Printf("CHAO: final attr.GetObject()=%#v\n", attr.GetObject())
 	return nil
 }
 
@@ -247,6 +253,8 @@ func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.Exte
 	if !matches {
 		return nil
 	}
+
+	fmt.Println("CHAO: going create admission review")
 
 	// Make the webhook request
 	request, err := createAdmissionReview(a.convertor, attr, ir)
@@ -264,6 +272,7 @@ func (a *GenericAdmissionWebhook) callHook(ctx context.Context, h *v1alpha1.Exte
 
 	if response.Status.Allowed {
 		// TODO: use the new field once we have that
+		fmt.Printf("CHAO: setting the mutatedObjRaw to %s\n", response.Spec.Object.Raw)
 		ir.mutatedObjRaw = response.Spec.Object.Raw
 		return nil
 	}

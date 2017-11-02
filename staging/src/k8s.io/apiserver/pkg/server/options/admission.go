@@ -26,7 +26,8 @@ import (
 	"k8s.io/apiserver/pkg/admission/initializer"
 	"k8s.io/apiserver/pkg/admission/plugin/initialization"
 	"k8s.io/apiserver/pkg/admission/plugin/namespace/lifecycle"
-	"k8s.io/apiserver/pkg/admission/plugin/webhook"
+	"k8s.io/apiserver/pkg/admission/plugin/webhook/mutating"
+	"k8s.io/apiserver/pkg/admission/plugin/webhook/validation"
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -56,8 +57,8 @@ func NewAdmissionOptions() *AdmissionOptions {
 	options := &AdmissionOptions{
 		Plugins:                &admission.Plugins{},
 		PluginNames:            []string{},
-		RecommendedPluginOrder: []string{lifecycle.PluginName, initialization.PluginName, webhook.PluginName},
-		DefaultOffPlugins:      []string{initialization.PluginName, webhook.PluginName},
+		RecommendedPluginOrder: []string{mutating.PluginName, lifecycle.PluginName, initialization.PluginName, validation.PluginName},
+		DefaultOffPlugins:      []string{mutating.PluginName, initialization.PluginName, validation.PluginName},
 	}
 	server.RegisterAllAdmissionPlugins(options.Plugins)
 	return options

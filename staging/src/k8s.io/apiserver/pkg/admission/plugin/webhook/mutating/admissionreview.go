@@ -44,13 +44,13 @@ func createAdmissionReview(convertor runtime.ObjectConvertor, attr admission.Att
 	}
 
 	var err error
-	if ir.versionedOldObject == nil {
+	if ir.versionedOldObject == nil && attr.GetOldObject() != nil {
 		ir.versionedOldObject, err = convertor.ConvertToVersion(attr.GetOldObject(), schema.GroupVersion{Group: gvr.Group, Version: gvr.Version})
 		if err != nil {
 			return admissionv1alpha1.AdmissionReview{}, err
 		}
 	}
-	if ir.versionedObject == nil {
+	if ir.versionedObject == nil && attr.GetObject() != nil {
 		ir.versionedObject, err = convertor.ConvertToVersion(attr.GetObject(), schema.GroupVersion{Group: gvr.Group, Version: gvr.Version})
 		if err != nil {
 			return admissionv1alpha1.AdmissionReview{}, err

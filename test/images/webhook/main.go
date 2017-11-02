@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -116,6 +117,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 	ar := admit(body)
 
 	resp, err := json.Marshal(ar)
+	fmt.Printf("CHAO: resp=%s\n", resp)
 	if err != nil {
 		glog.Error(err)
 	}

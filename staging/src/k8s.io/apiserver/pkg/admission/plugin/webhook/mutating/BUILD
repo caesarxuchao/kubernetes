@@ -5,7 +5,7 @@ go_library(
     srcs = [
         "admission.go",
         "admissionreview.go",
-        "authentication.go",
+        "config.go",
         "config.go",
         "doc.go",
         "rules.go",
