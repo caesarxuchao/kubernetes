@@ -33,6 +33,6 @@ const (
 	EventInvolvedNameField            = "involvedObject.name"
 	EventInvolvedUIDField             = "involvedObject.uid"
 	EventInvolvedAPIVersionField      = "involvedObject.apiVersion"
-	EventInvolvedResourceVersionField = "involvdObject.resourceVersion"
+	EventInvolvedResourceVersionField = "involvedObject.resourceVersion"
 	EventInvolvedFieldPathField       = "involvedObject.fieldPath"
 )

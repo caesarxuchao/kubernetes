@@ -3916,7 +3916,7 @@ type Event struct {
 	// +optional
 	metav1.ObjectMeta
 
-	// Required. The object that this event is about. Mapped to events.Event.Regarding
+	// Required. The object that this event is about. Mapped to events.Event.regarding
 	// +optional
 	InvolvedObject ObjectReference
 
@@ -3928,7 +3928,7 @@ type Event struct {
 	Reason string
 
 	// Optional. A human-readable description of the status of this operation.
-	// TODO: decide on maximum length. Mapped to events.Event.Note
+	// TODO: decide on maximum length. Mapped to events.Event.note
 	// +optional
 	Message string
 

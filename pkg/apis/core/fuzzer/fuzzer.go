@@ -32,8 +32,6 @@ import (
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/kubernetes/pkg/apis/core"
-
-	"k8s.io/kubernetes/pkg/api"
 )
 
 // Funcs returns the fuzzer functions for the core core group.
@@ -487,7 +485,7 @@ var Funcs = func(codecs runtimeserializer.CodecFactory) []interface{} {
 			c.FuzzNoCustom(s)
 			s.Allocatable = s.Capacity
 		},
-		func(e *api.Event, c fuzz.Continue) {
+		func(e *core.Event, c fuzz.Continue) {
 			c.FuzzNoCustom(e)
 			e.EventTime = metav1.MicroTime{Time: time.Unix(1, 1000)}
 			if e.Series != nil {

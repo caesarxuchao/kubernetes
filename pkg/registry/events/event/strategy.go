@@ -27,8 +27,9 @@ import (
 	"k8s.io/apiserver/pkg/registry/generic"
 	apistorage "k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/names"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/events/validation"
+	"k8s.io/kubernetes/pkg/api/legacyscheme"
+	"k8s.io/kubernetes/pkg/api/validation"
+	api "k8s.io/kubernetes/pkg/apis/core"
 )
 
 // eventStrategy implements verification logic for Pod Presets.
@@ -38,7 +39,7 @@ type eventStrategy struct {
 }
 
 // Strategy is the default logic that applies when creating and updating Pod Preset objects.
-var Strategy = eventStrategy{api.Scheme, names.SimpleNameGenerator}
+var Strategy = eventStrategy{legacyscheme.Scheme, names.SimpleNameGenerator}
 
 // NamespaceScoped returns true because all Events need to be within a namespace.
 func (eventStrategy) NamespaceScoped() bool {
@@ -55,8 +56,8 @@ func (eventStrategy) PrepareForUpdate(ctx genericapirequest.Context, obj, old ru
 
 // Validate validates a new Event.
 func (eventStrategy) Validate(ctx genericapirequest.Context, obj runtime.Object) field.ErrorList {
-	pip := obj.(*api.Event)
-	return validation.ValidateEvent(pip)
+	event := obj.(*api.Event)
+	return validation.ValidateEvent(event)
 }
 
 // Canonicalize normalizes the object after validation.
