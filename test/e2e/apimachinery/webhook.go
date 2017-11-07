@@ -54,7 +54,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 	It("Should be able to deny pod creation", func() {
 		// Make sure the relevant provider supports admission webhook
 		framework.SkipUnlessServerVersionGTE(serverWebhookVersion, f.ClientSet.Discovery())
-		framework.SkipUnlessProviderIs("gce", "gke")
+		framework.SkipUnlessProviderIs("gce", "gke", "local")
 
 		_, err := f.ClientSet.AdmissionregistrationV1alpha1().ExternalAdmissionHookConfigurations().List(metav1.ListOptions{})
 		if errors.IsNotFound(err) {
@@ -152,7 +152,8 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 				"-v=4",
 				"2>&1",
 			},
-			Image: image,
+			Image:           image,
+			ImagePullPolicy: v1.PullNever,
 		},
 	}
 	d := &extensions.Deployment{
