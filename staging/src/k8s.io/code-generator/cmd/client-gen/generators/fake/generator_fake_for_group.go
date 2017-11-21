@@ -62,7 +62,10 @@ func (g *genFakeForGroup) Namers(c *generator.Context) namer.NameSystems {
 }
 
 func (g *genFakeForGroup) Imports(c *generator.Context) (imports []string) {
-	imports = append(g.imports.ImportLines(), strings.ToLower(fmt.Sprintf("%s \"%s\"", filepath.Base(g.realClientPackage), g.realClientPackage)))
+	imports = g.imports.ImportLines()
+	if len(g.types) != 0 {
+		imports = append(imports, strings.ToLower(fmt.Sprintf("%s \"%s\"", filepath.Base(g.realClientPackage), g.realClientPackage)))
+	}
 	return imports
 }
 
