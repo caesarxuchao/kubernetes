@@ -25,7 +25,7 @@ type EventsInterface interface {
 	RESTClient() rest.Interface
 }
 
-// EventsClient is used to interact with features provided by the events group.
+// EventsClient is used to interact with features provided by the events.k8s.io group.
 type EventsClient struct {
 	restClient rest.Interface
 }
@@ -59,7 +59,7 @@ func New(c rest.Interface) *EventsClient {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	g, err := scheme.Registry.Group("events")
+	g, err := scheme.Registry.Group("events.k8s.io")
 	if err != nil {
 		return err
 	}

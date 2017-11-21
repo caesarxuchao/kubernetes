@@ -14,20 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fake
-
-import (
-	rest "k8s.io/client-go/rest"
-	testing "k8s.io/client-go/testing"
-)
-
-type FakeEvents struct {
-	*testing.Fake
-}
-
-// RESTClient returns a RESTClient that is used to communicate
-// with API server by this client implementation.
-func (c *FakeEvents) RESTClient() rest.Interface {
-	var ret *rest.RESTClient
-	return ret
-}
+// +groupName=events.k8s.io
+package events // import "k8s.io/kubernetes/pkg/apis/events"
