@@ -55,5 +55,8 @@ go install ./cmd/...
 ./hack/install-etcd.sh
 
 make test-cmd
-make test-integration
+# Give integration tests longer to run by default.
+ORIGINAL_KUBE_TIMEOUT="${KUBE_TIMEOUT}"
+KUBE_TIMEOUT='-timeout 600s' && make test-integration
+KUBE_TIMEOUT="${ORIGINAL_KUBE_TIMEOUT}"
 ./hack/test-update-storage-objects.sh
