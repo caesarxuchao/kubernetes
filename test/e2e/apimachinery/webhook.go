@@ -85,6 +85,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 	BeforeEach(func() {
 		client = f.ClientSet
 		namespaceName = f.Namespace.Name
+		namespaceName = "default"
 
 		// Make sure the relevant provider supports admission webhook
 		framework.SkipUnlessServerVersionGTE(serverWebhookVersion, f.ClientSet.Discovery())
@@ -112,6 +113,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 	It("Should be able to deny pod and configmap creation", func() {
 		webhookCleanup := registerWebhook(f, context)
 		defer webhookCleanup()
+		time.Sleep(300 * time.Second)
 		testWebhook(f)
 	})
 
@@ -218,6 +220,7 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 		},
 	}
 	namespace := f.Namespace.Name
+	namespace = "default"
 	_, err := client.CoreV1().Secrets(namespace).Create(secret)
 	framework.ExpectNoError(err, "creating secret %q in namespace %q", secretName, namespace)
 
@@ -251,7 +254,8 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 				"-v=4",
 				"2>&1",
 			},
-			Image: image,
+			Image:           image,
+			ImagePullPolicy: v1.PullNever,
 		},
 	}
 	d := &extensions.Deployment{
@@ -303,8 +307,9 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 			},
 		},
 	}
-	_, err = client.CoreV1().Services(namespace).Create(service)
+	sc, err := client.CoreV1().Services(namespace).Create(service)
 	framework.ExpectNoError(err, "creating service %s in namespace %s", serviceName, namespace)
+	fmt.Println("CHAO: created service=%#v", sc)
 
 	By("Verifying the service has paired with the endpoint")
 	err = framework.WaitForServiceEndpointsNum(client, namespace, serviceName, 1, 1*time.Second, 30*time.Second)

@@ -1,0 +1,8 @@
+kind: AdmissionConfiguration
+apiVersion: apiserver.k8s.io/v1alpha1
+plugins:
+- name: ValidatingAdmissionWebhook
+  configuration:
+    apiVersion: apiserver.config.k8s.io/v1alpha1
+    kind: WebhookAdmission
+    kubeConfigFile: /usr/local/google/home/xuchao/go-workspace/src/k8s.io/kubernetes/validate-webhook-kubeconfig.yaml

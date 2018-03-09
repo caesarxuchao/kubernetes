@@ -1,0 +1,81 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: 2018-03-09T03:29:19Z
+  generation: 1
+  labels:
+    app: sample-webhook
+    webhook: "true"
+  name: sample-webhook-deployment
+  namespace: default
+  resourceVersion: "770"
+  selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/sample-webhook-deployment
+  uid: 0d44cf03-234a-11e8-80b1-64510650ab1c
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: sample-webhook
+      webhook: "true"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sample-webhook
+        webhook: "true"
+    spec:
+      containers:
+      - args:
+        - --tls-cert-file=/webhook.local.config/certificates/tls.crt
+        - --tls-private-key-file=/webhook.local.config/certificates/tls.key
+        - --alsologtostderr
+        - -v=4
+        - 2>&1
+        image: gcr.io/kubernetes-e2e-test-images/k8s-sample-admission-webhook-amd64:latest
+        imagePullPolicy: Never
+        name: sample-webhook
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /webhook.local.config/certificates
+          name: webhook-certs
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: webhook-certs
+        secret:
+          defaultMode: 420
+          secretName: sample-webhook-secret
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2018-03-09T03:29:19Z
+    lastUpdateTime: 2018-03-09T03:29:19Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2018-03-09T03:29:19Z
+    lastUpdateTime: 2018-03-09T03:29:22Z
+    message: ReplicaSet "sample-webhook-deployment-856f945985" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
