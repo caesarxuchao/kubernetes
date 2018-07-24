@@ -114,28 +114,12 @@ func DeleteResource(r rest.GracefulDeleter, allowsOptions bool, scope *RequestSc
 			return
 		}
 
-		trace.Step("About to check admission control")
-		if admit != nil && admit.Handles(admission.Delete) {
-			userInfo, _ := request.UserFrom(ctx)
-			attrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Delete, dryrun.IsDryRun(options.DryRun), userInfo)
-			if mutatingAdmission, ok := admit.(admission.MutationInterface); ok {
-				if err := mutatingAdmission.Admit(attrs, scope); err != nil {
-					scope.err(err, w, req)
-					return
-				}
-			}
-			if validatingAdmission, ok := admit.(admission.ValidationInterface); ok {
-				if err := validatingAdmission.Validate(attrs, scope); err != nil {
-					scope.err(err, w, req)
-					return
-				}
-			}
-		}
-
 		trace.Step("About to delete object from database")
 		wasDeleted := true
+		userInfo, _ := request.UserFrom(ctx)
+		staticAdmissionAttrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, name, scope.Resource, scope.Subresource, admission.Delete, dryrun.IsDryRun(options.DryRun), userInfo)
 		result, err := finishRequest(timeout, func() (runtime.Object, error) {
-			obj, deleted, err := r.Delete(ctx, name, options)
+			obj, deleted, err := r.Delete(ctx, name, rest.AdmissionToValidateObjectDeleteFunc(admit, staticAdmissionAttrs, scope), options)
 			wasDeleted = deleted
 			return obj, err
 		})
@@ -195,6 +179,7 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope *RequestSc
 		ctx := req.Context()
 		ctx = request.WithNamespace(ctx, namespace)
 		ae := request.AuditEventFrom(ctx)
+		admit = admission.WithAudit(admit, ae)
 
 		outputMediaType, _, err := negotiation.NegotiateOutputMediaType(req, scope.Serializer, scope)
 		if err != nil {
@@ -263,29 +248,10 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope *RequestSc
 			return
 		}
 
-		admit = admission.WithAudit(admit, ae)
-		if admit != nil && admit.Handles(admission.Delete) {
-			userInfo, _ := request.UserFrom(ctx)
-			attrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, "", scope.Resource, scope.Subresource, admission.Delete, dryrun.IsDryRun(options.DryRun), userInfo)
-			if mutatingAdmission, ok := admit.(admission.MutationInterface); ok {
-				err = mutatingAdmission.Admit(attrs, scope)
-				if err != nil {
-					scope.err(err, w, req)
-					return
-				}
-			}
-
-			if validatingAdmission, ok := admit.(admission.ValidationInterface); ok {
-				err = validatingAdmission.Validate(attrs, scope)
-				if err != nil {
-					scope.err(err, w, req)
-					return
-				}
-			}
-		}
-
+		userInfo, _ := request.UserFrom(ctx)
+		staticAdmissionAttrs := admission.NewAttributesRecord(nil, nil, scope.Kind, namespace, "", scope.Resource, scope.Subresource, admission.Delete, dryrun.IsDryRun(options.DryRun), userInfo)
 		result, err := finishRequest(timeout, func() (runtime.Object, error) {
-			return r.DeleteCollection(ctx, options, &listOptions)
+			return r.DeleteCollection(ctx, rest.AdmissionToValidateObjectDeleteFunc(admit, staticAdmissionAttrs, scope), options, &listOptions)
 		})
 		if err != nil {
 			scope.err(err, w, req)
