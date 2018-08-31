@@ -121,6 +121,7 @@ func (a *mutatingDispatcher) callAttrMutatingHook(ctx context.Context, h *v1beta
 	if len(patchJS) == 0 {
 		return nil
 	}
+	fmt.Printf("CHAO: patchJS=%s\n", patchJS)
 	patchObj, err := jsonpatch.DecodePatch(patchJS)
 	if err != nil {
 		return apierrors.NewInternalError(err)
@@ -138,7 +139,9 @@ func (a *mutatingDispatcher) callAttrMutatingHook(ctx context.Context, h *v1beta
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
+	fmt.Printf("CHAO: patchObj=%#v\n", patchObj)
 	patchedJS, err := patchObj.Apply(objJS)
+	fmt.Printf("CHAO: patchedJS=%s\n", patchedJS)
 	if err != nil {
 		return apierrors.NewInternalError(err)
 	}
@@ -159,6 +162,7 @@ func (a *mutatingDispatcher) callAttrMutatingHook(ctx context.Context, h *v1beta
 	if _, _, err := a.plugin.jsonSerializer.Decode(patchedJS, nil, newVersionedObject); err != nil {
 		return apierrors.NewInternalError(err)
 	}
+	fmt.Printf("CHAO: newVersionedObject=%#v\n", newVersionedObject)
 	attr.VersionedObject = newVersionedObject
 	a.plugin.scheme.Default(attr.VersionedObject)
 	return nil

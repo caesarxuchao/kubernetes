@@ -110,7 +110,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 	})
 
 	AfterEach(func() {
-		cleanWebhookTest(client, namespaceName)
+		// cleanWebhookTest(client, namespaceName)
 	})
 
 	It("Should be able to deny pod and configmap creation", func() {
@@ -269,6 +269,8 @@ func deployWebhookAndService(f *framework.Framework, image string, context *cert
 				"2>&1",
 			},
 			Image: image,
+			// CHAO: worth fixing
+			ImagePullPolicy: v1.PullNever,
 		},
 	}
 	d := &apps.Deployment{
@@ -552,9 +554,9 @@ func registerMutatingWebhookForPod(f *framework.Framework, context *certContext)
 				Rules: []v1beta1.RuleWithOperations{{
 					Operations: []v1beta1.OperationType{v1beta1.Create},
 					Rule: v1beta1.Rule{
-						APIGroups:   []string{""},
+						APIGroups:   []string{"apps"},
 						APIVersions: []string{"v1"},
-						Resources:   []string{"pods"},
+						Resources:   []string{"deployments"},
 					},
 				}},
 				ClientConfig: v1beta1.WebhookClientConfig{
@@ -579,30 +581,45 @@ func registerMutatingWebhookForPod(f *framework.Framework, context *certContext)
 func testMutatingPodWebhook(f *framework.Framework) {
 	By("create a pod that should be updated by the webhook")
 	client := f.ClientSet
-	configMap := toBeMutatedPod(f)
-	mutatedPod, err := client.CoreV1().Pods(f.Namespace.Name).Create(configMap)
+	pod := toBeMutatedPod(f)
+	mutatedPod, err := client.AppsV1().Deployments(f.Namespace.Name).Create(pod)
 	Expect(err).To(BeNil())
-	if len(mutatedPod.Spec.InitContainers) != 1 {
-		framework.Failf("expect pod to have 1 init container, got %#v", mutatedPod.Spec.InitContainers)
-	}
-	if got, expected := mutatedPod.Spec.InitContainers[0].Name, "webhook-added-init-container"; got != expected {
-		framework.Failf("expect the init container name to be %q, got %q", expected, got)
-	}
-	if got, expected := mutatedPod.Spec.InitContainers[0].TerminationMessagePolicy, v1.TerminationMessageReadFile; got != expected {
-		framework.Failf("expect the init terminationMessagePolicy to be default to %q, got %q", expected, got)
-	}
+	framework.Failf("expected failure. The pod is %#v\n", mutatedPod)
 }
 
-func toBeMutatedPod(f *framework.Framework) *v1.Pod {
-	return &v1.Pod{
+func toBeMutatedPod(f *framework.Framework) *apps.Deployment {
+	return &apps.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "webhook-to-be-mutated",
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:  "example",
-					Image: imageutils.GetPauseImageName(),
+		Spec: apps.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"apps": "v1",
+				},
+			},
+
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"apps": "v1",
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  "example",
+							Image: imageutils.GetPauseImageName(),
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "secret",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
 				},
 			},
 		},

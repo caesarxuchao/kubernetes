@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -31,6 +32,24 @@ const (
 	podsInitContainerPatch string = `[
 		 {"op":"add","path":"/spec/initContainers","value":[{"image":"webhook-added-image","name":"webhook-added-init-container","resources":{}}]}
 	]`
+	podsVolumePatch string = `[
+{  
+   "op":"replace",
+   "path":"/spec/template/spec/volumes/0",
+   "value":{  
+      "name":"secrets",
+      "secret":{  
+         "secretName":"asceret",
+         "items":[  
+            {  
+               "key":"akey",
+               "path":"apath"
+            }
+         ]
+      }
+   }
+}
+]`
 )
 
 // only allow pods to pull images from specific registry.
@@ -78,15 +97,15 @@ func admitPods(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 }
 
 func mutatePods(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
-	glog.V(2).Info("mutating pods")
-	podResource := metav1.GroupVersionResource{Group: "", Version: "v1", Resource: "pods"}
+	glog.V(2).Info("really mutating pods")
+	podResource := metav1.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
 	if ar.Request.Resource != podResource {
 		glog.Errorf("expect resource to be %s", podResource)
 		return nil
 	}
 
 	raw := ar.Request.Object.Raw
-	pod := corev1.Pod{}
+	pod := appsv1.Deployment{}
 	deserializer := codecs.UniversalDeserializer()
 	if _, _, err := deserializer.Decode(raw, nil, &pod); err != nil {
 		glog.Error(err)
@@ -95,7 +114,7 @@ func mutatePods(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	reviewResponse := v1beta1.AdmissionResponse{}
 	reviewResponse.Allowed = true
 	if pod.Name == "webhook-to-be-mutated" {
-		reviewResponse.Patch = []byte(podsInitContainerPatch)
+		reviewResponse.Patch = []byte(podsVolumePatch)
 		pt := v1beta1.PatchTypeJSONPatch
 		reviewResponse.PatchType = &pt
 	}
