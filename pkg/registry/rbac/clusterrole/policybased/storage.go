@@ -37,13 +37,15 @@ var groupResource = rbac.Resource("clusterroles")
 type Storage struct {
 	rest.StandardStorage
 
+	rest.StorageVersionProvider
+
 	authorizer authorizer.Authorizer
 
 	ruleResolver rbacregistryvalidation.AuthorizationRuleResolver
 }
 
-func NewStorage(s rest.StandardStorage, authorizer authorizer.Authorizer, ruleResolver rbacregistryvalidation.AuthorizationRuleResolver) *Storage {
-	return &Storage{s, authorizer, ruleResolver}
+func NewStorage(s rest.StandardStorage, svp rest.StorageVersionProvider, authorizer authorizer.Authorizer, ruleResolver rbacregistryvalidation.AuthorizationRuleResolver) *Storage {
+	return &Storage{s, svp, authorizer, ruleResolver}
 }
 
 func (r *Storage) NamespaceScoped() bool {

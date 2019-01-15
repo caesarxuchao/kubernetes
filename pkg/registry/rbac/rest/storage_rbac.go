@@ -98,16 +98,16 @@ func (p RESTStorageProvider) storage(version schema.GroupVersion, apiResourceCon
 	)
 
 	// roles
-	storage["roles"] = rolepolicybased.NewStorage(rolesStorage, p.Authorizer, authorizationRuleResolver)
+	storage["roles"] = rolepolicybased.NewStorage(rolesStorage, rolesStorage, p.Authorizer, authorizationRuleResolver)
 
 	// rolebindings
-	storage["rolebindings"] = rolebindingpolicybased.NewStorage(roleBindingsStorage, p.Authorizer, authorizationRuleResolver)
+	storage["rolebindings"] = rolebindingpolicybased.NewStorage(roleBindingsStorage, roleBindingsStorage, p.Authorizer, authorizationRuleResolver)
 
 	// clusterroles
-	storage["clusterroles"] = clusterrolepolicybased.NewStorage(clusterRolesStorage, p.Authorizer, authorizationRuleResolver)
+	storage["clusterroles"] = clusterrolepolicybased.NewStorage(clusterRolesStorage, clusterRolesStorage, p.Authorizer, authorizationRuleResolver)
 
 	// clusterrolebindings
-	storage["clusterrolebindings"] = clusterrolebindingpolicybased.NewStorage(clusterRoleBindingsStorage, p.Authorizer, authorizationRuleResolver)
+	storage["clusterrolebindings"] = clusterrolebindingpolicybased.NewStorage(clusterRoleBindingsStorage, clusterRoleBindingsStorage, p.Authorizer, authorizationRuleResolver)
 
 	return storage
 }

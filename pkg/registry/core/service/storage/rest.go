@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -77,6 +78,7 @@ type ServiceStorage interface {
 	rest.Watcher
 	rest.TableConvertor
 	rest.Exporter
+	rest.StorageVersionProvider
 }
 
 type EndpointsStorage interface {
@@ -108,10 +110,15 @@ func NewREST(
 }
 
 var (
-	_ ServiceStorage          = &REST{}
-	_ rest.CategoriesProvider = &REST{}
-	_ rest.ShortNamesProvider = &REST{}
+	_ ServiceStorage              = &REST{}
+	_ rest.CategoriesProvider     = &REST{}
+	_ rest.ShortNamesProvider     = &REST{}
+	_ rest.StorageVersionProvider = &REST{}
 )
+
+func (rs *REST) StorageVersion() schema.GroupVersion {
+	return rs.services.StorageVersion()
+}
 
 // ShortNames implements the ShortNamesProvider interface. Returns a list of short names for a resource.
 func (rs *REST) ShortNames() []string {
