@@ -279,6 +279,7 @@ func (s *DefaultStorageFactory) NewConfig(groupResource schema.GroupResource) (*
 	codecConfig.Config = storageConfig
 
 	storageConfig.Codec, err = s.newStorageCodecFn(codecConfig)
+	storageConfig.DiscoverableStorageVersion = codecConfig.StorageVersion
 	if err != nil {
 		return nil, err
 	}

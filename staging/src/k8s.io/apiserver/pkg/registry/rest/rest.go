@@ -334,3 +334,11 @@ type StorageMetadata interface {
 	// it is not nil. Only the type of the return object matters, the value will be ignored.
 	ProducesObject(verb string) interface{}
 }
+
+// StorageVersionProvider is an optional interface that a storage object can
+// impelment if it wishes to disclose its storage version.
+type StorageVersionProvider interface {
+	// StorageVersion returns the storage version, the version to which
+	// objects are converted to before stored to the storage.
+	StorageVersion() schema.GroupVersion
+}

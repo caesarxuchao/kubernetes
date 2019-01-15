@@ -177,6 +177,11 @@ type Store struct {
 	// resource. It is wrapped into a "DryRunnableStorage" that will
 	// either pass-through or simply dry-run.
 	Storage DryRunnableStorage
+	// DiscoverableStorageVersion decides what version will be listed as
+	// the storage version in the apiserver's discovery document. It should
+	// either be set to the storage version, or left empty if you want the
+	// storage version to remain undiscoverable.
+	DiscoverableStorageVersion schema.GroupVersion
 	// Called to cleanup clients used by the underlying Storage; optional.
 	DestroyFunc func()
 }
@@ -1391,6 +1396,7 @@ func (e *Store) CompleteWithOptions(options *generic.StoreOptions) error {
 			attrFunc,
 			triggerFunc,
 		)
+		e.DiscoverableStorageVersion = opts.StorageConfig.DiscoverableStorageVersion
 
 		if opts.CountMetricPollPeriod > 0 {
 			stopFunc := e.startObservingCount(opts.CountMetricPollPeriod)
@@ -1430,4 +1436,8 @@ func (e *Store) ConvertToTable(ctx context.Context, object runtime.Object, table
 		return e.TableConvertor.ConvertToTable(ctx, object, tableOptions)
 	}
 	return rest.NewDefaultTableConvertor(e.qualifiedResourceFromContext(ctx)).ConvertToTable(ctx, object, tableOptions)
+}
+
+func (e *Store) StorageVersion() schema.GroupVersion {
+	return e.DiscoverableStorageVersion
 }

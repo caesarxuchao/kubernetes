@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/storage/value"
 )
 
@@ -57,6 +58,11 @@ type Config struct {
 	Paging bool
 
 	Codec runtime.Codec
+	// DiscoverableStorageVersion decides what version will be listed as
+	// the storage version in the apiserver's discovery document. It should
+	// either be set to the storage version, or left empty if you want the
+	// storage version to remain undiscoverable.
+	DiscoverableStorageVersion schema.GroupVersion
 	// Transformer allows the value to be transformed prior to persisting into etcd.
 	Transformer value.Transformer
 

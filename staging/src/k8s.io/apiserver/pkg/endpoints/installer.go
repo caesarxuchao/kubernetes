@@ -17,6 +17,7 @@ limitations under the License.
 package endpoints
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	gpath "path"
@@ -225,6 +226,7 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	watcher, isWatcher := storage.(rest.Watcher)
 	connecter, isConnecter := storage.(rest.Connecter)
 	storageMeta, isMetadata := storage.(rest.StorageMetadata)
+	storageVersionProvider, isStorageVersionProvider := storage.(rest.StorageVersionProvider)
 	if !isMetadata {
 		storageMeta = defaultStorageMetadata{}
 	}
@@ -359,6 +361,10 @@ func (a *APIInstaller) registerResourceHandlers(path string, storage rest.Storag
 	tableProvider, _ := storage.(rest.TableConvertor)
 
 	var apiResource metav1.APIResource
+	if isStorageVersionProvider {
+		apiResource.StorageVersionHash = fmt.Sprintf("%x",
+			sha256.Sum256([]byte(storageVersionProvider.StorageVersion().String())))
+	}
 	// Get the list of actions for the given scope.
 	switch {
 	case !namespaceScoped:
