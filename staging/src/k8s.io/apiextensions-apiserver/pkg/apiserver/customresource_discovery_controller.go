@@ -17,6 +17,7 @@ limitations under the License.
 package apiserver
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"sort"
 	"time"
@@ -95,6 +96,7 @@ func (c *DiscoveryController) sync(version schema.GroupVersion) error {
 		}
 
 		foundThisVersion := false
+		var storageVersionHash string
 		for _, v := range crd.Spec.Versions {
 			if !v.Served {
 				continue
@@ -113,6 +115,10 @@ func (c *DiscoveryController) sync(version schema.GroupVersion) error {
 			if v.Name == version.Version {
 				foundThisVersion = true
 			}
+			if v.Storage {
+				storageVersionHash = fmt.Sprintf("%x",
+					sha256.Sum256([]byte(gv.String())))
+			}
 		}
 
 		if !foundThisVersion {
@@ -127,13 +133,14 @@ func (c *DiscoveryController) sync(version schema.GroupVersion) error {
 		}
 
 		apiResourcesForDiscovery = append(apiResourcesForDiscovery, metav1.APIResource{
-			Name:         crd.Status.AcceptedNames.Plural,
-			SingularName: crd.Status.AcceptedNames.Singular,
-			Namespaced:   crd.Spec.Scope == apiextensions.NamespaceScoped,
-			Kind:         crd.Status.AcceptedNames.Kind,
-			Verbs:        verbs,
-			ShortNames:   crd.Status.AcceptedNames.ShortNames,
-			Categories:   crd.Status.AcceptedNames.Categories,
+			Name:               crd.Status.AcceptedNames.Plural,
+			SingularName:       crd.Status.AcceptedNames.Singular,
+			Namespaced:         crd.Spec.Scope == apiextensions.NamespaceScoped,
+			Kind:               crd.Status.AcceptedNames.Kind,
+			Verbs:              verbs,
+			ShortNames:         crd.Status.AcceptedNames.ShortNames,
+			Categories:         crd.Status.AcceptedNames.Categories,
+			StorageVersionHash: storageVersionHash,
 		})
 
 		subresources, err := getSubresourcesForVersion(crd, version.Version)
