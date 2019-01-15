@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -40,6 +41,7 @@ import (
 	"k8s.io/apiserver/pkg/server/options"
 	serverstorage "k8s.io/apiserver/pkg/server/storage"
 	etcdtesting "k8s.io/apiserver/pkg/storage/etcd/testing"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -106,7 +108,6 @@ func setUp(t *testing.T) (*etcdtesting.EtcdTestServer, Config, *assert.Assertion
 	config.GenericConfig.LoopbackClientConfig = &restclient.Config{APIPath: "/api", ContentConfig: restclient.ContentConfig{NegotiatedSerializer: legacyscheme.Codecs}}
 	config.GenericConfig.PublicAddress = net.ParseIP("192.168.10.4")
 	config.GenericConfig.LegacyAPIGroupPrefixes = sets.NewString("/api")
-	config.GenericConfig.LoopbackClientConfig = &restclient.Config{APIPath: "/api", ContentConfig: restclient.ContentConfig{NegotiatedSerializer: legacyscheme.Codecs}}
 	config.ExtraConfig.KubeletClientConfig = kubeletclient.KubeletClientConfig{Port: 10250}
 	config.ExtraConfig.ProxyTransport = utilnet.SetTransportDefaults(&http.Transport{
 		DialContext:     func(ctx context.Context, network, addr string) (net.Conn, error) { return nil, nil },
@@ -381,6 +382,134 @@ func TestAPIVersionOfDiscoveryEndpoints(t *testing.T) {
 	assert.NoError(decodeResponse(resp, &resourceList))
 	assert.Equal(resourceList.APIVersion, "v1")
 
+}
+
+// TODO: convert to an e2e test. APIs like authorization.k8s.io aren't
+// straightforward to turn on.
+func TestGeneralStorageVersionHash(t *testing.T) {
+	exceptions := sets.NewString(
+		"bindings",
+		"componentstatuses",
+		"tokenreviews",
+		"extensions/v1beta1/replicationcontrollers",
+		// TODO: add the authorization resources.
+	)
+	master, etcdserver, _, _ := newMaster(t)
+	defer etcdserver.Terminate(t)
+
+	server := httptest.NewServer(master.GenericAPIServer.Handler.GoRestfulContainer.ServeMux)
+
+	c := &restclient.Config{
+		Host:          server.URL,
+		APIPath:       "/api",
+		ContentConfig: restclient.ContentConfig{NegotiatedSerializer: legacyscheme.Codecs},
+	}
+	discover := discovery.NewDiscoveryClientForConfigOrDie(c)
+	all, err := discover.ServerResources()
+	if err != nil {
+		t.Error(err)
+	}
+	for _, g := range all {
+		for _, r := range g.APIResources {
+			fmt.Printf("CHAO: %s/%s\n", g.GroupVersion, r.Name)
+			if strings.Contains(r.Name, "/") && r.StorageVersionHash != "" {
+				t.Errorf("expect subresources to have empty storageVersionHash, but resource %q/%q has hash %q", g.GroupVersion, r.Name, r.StorageVersionHash)
+			}
+			if !strings.Contains(r.Name, "/") && r.StorageVersionHash == "" {
+				if exceptions.Has(r.Name) {
+					continue
+				}
+				if exceptions.Has(g.GroupVersion + "/" + r.Name) {
+					continue
+				}
+				t.Errorf("expect all main resources to have storageVersionHash, but resource %q/%q has empty hash", g.GroupVersion, r.Name)
+			}
+		}
+	}
+}
+
+func TestStorageVersionHash(t *testing.T) {
+	master, etcdserver, _, assert := newMaster(t)
+	defer etcdserver.Terminate(t)
+
+	server := httptest.NewServer(master.GenericAPIServer.Handler.GoRestfulContainer.ServeMux)
+
+	// Test 1: extensions/v1beta1/replicasets and apps/v1/deployments have
+	// the same storage version hash.
+	resp, err := http.Get(server.URL + "/apis/extensions/v1beta1")
+	assert.Empty(err)
+	extList := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &extList))
+	var extReplicasetHash string
+	for _, r := range extList.APIResources {
+		if r.Name == "replicasets" {
+			extReplicasetHash = r.StorageVersionHash
+		}
+	}
+	assert.NotEmpty(extReplicasetHash)
+
+	resp, err = http.Get(server.URL + "/apis/apps/v1")
+	assert.Empty(err)
+	appsList := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &appsList))
+	var appsDeploymentHash string
+	for _, r := range appsList.APIResources {
+		if r.Name == "deployments" {
+			appsDeploymentHash = r.StorageVersionHash
+		}
+	}
+	assert.Equal(extReplicasetHash, appsDeploymentHash)
+
+	// Test 2: batch/v1/jobs and batch/v1beta1/cronjobs have different
+	// storage version hashes.
+	resp, err = http.Get(server.URL + "/apis/batch/v1")
+	assert.Empty(err)
+	batchv1 := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &batchv1))
+	var jobsHash string
+	for _, r := range batchv1.APIResources {
+		if r.Name == "jobs" {
+			jobsHash = r.StorageVersionHash
+		}
+	}
+	assert.NotEmpty(jobsHash)
+
+	resp, err = http.Get(server.URL + "/apis/batch/v1beta1")
+	assert.Empty(err)
+	batchv1beta1 := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &batchv1beta1))
+	var cronjobsHash string
+	for _, r := range batchv1beta1.APIResources {
+		if r.Name == "cronjobs" {
+			cronjobsHash = r.StorageVersionHash
+		}
+	}
+	assert.NotEmpty(cronjobsHash)
+	assert.NotEqual(jobsHash, cronjobsHash)
+
+	// Test 3: resources that are not persisted does not have storage version hashes.
+	resp, err = http.Get(server.URL + "/apis/authorization.k8s.io/v1")
+	assert.Empty(err)
+	authorization := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &authorization))
+	for _, r := range authorization.APIResources {
+		assert.Empty(r.StorageVersionHash)
+	}
+
+	resp, err = http.Get(server.URL + "/apis/authentication.k8s.io/v1")
+	assert.Empty(err)
+	authentication := metav1.APIResourceList{}
+	assert.NoError(decodeResponse(resp, &authentication))
+	for _, r := range authentication.APIResources {
+		assert.Empty(r.StorageVersionHash)
+	}
+
+	// Test 4: subresources do not have storage version hashes.
+	for _, r := range appsList.APIResources {
+		if strings.Contains(r.Name, "/") {
+			assert.Empty(r.StorageVersionHash)
+		}
+	}
 }
 
 func TestNoAlphaVersionsEnabledByDefault(t *testing.T) {
