@@ -25,6 +25,6 @@ function cleanup {
 trap cleanup EXIT
 
 pushd "${KUBE_ROOT}/vendor/k8s.io/sample-apiserver"
-cp -v ../../../../_output/local/bin/linux/amd64/sample-apiserver ./artifacts/simple-image/kube-sample-apiserver
+cp -v ../../../../bazel-bin/staging/src/k8s.io/sample-apiserver/linux_amd64_stripped/sample-apiserver ./artifacts/simple-image/kube-sample-apiserver
 docker build -t kube-sample-apiserver:latest ./artifacts/simple-image
 popd
