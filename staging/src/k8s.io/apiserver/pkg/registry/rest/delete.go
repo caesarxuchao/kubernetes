@@ -153,13 +153,15 @@ func AdmissionToValidateObjectDeleteFunc(admit admission.Interface, staticAttrib
 		}
 		finalAttributes := admission.NewAttributesRecord(
 			nil,
-			old,
+			// Deep copy the object to avoid accidentally changing the object.
+			old.DeepCopyObject(),
 			staticAttributes.GetKind(),
 			staticAttributes.GetNamespace(),
 			staticAttributes.GetName(),
 			staticAttributes.GetResource(),
 			staticAttributes.GetSubresource(),
 			staticAttributes.GetOperation(),
+			staticAttributes.IsDryRun(),
 			staticAttributes.GetUserInfo(),
 		)
 		if isMutatingAdmission && mutatingAdmission.Handles(finalAttributes.GetOperation()) {

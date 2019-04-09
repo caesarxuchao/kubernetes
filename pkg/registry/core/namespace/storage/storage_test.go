@@ -162,7 +162,7 @@ func TestDeleteNamespaceWithIncompleteFinalizers(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if _, _, err := storage.Delete(ctx, "foo", rest.ValidateAllObjectFunc, nil); err == nil {
-		t.Errorf("unexpected error: %v", err)
+		t.Errorf("unexpected no error")
 	}
 }
 
