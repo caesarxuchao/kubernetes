@@ -719,18 +719,18 @@ func TestTransformationFailure(t *testing.T) {
 
 	// List should fail
 	var got example.PodList
-	if err := store.List(ctx, "/", "", storage.Everything, &got); !storage.IsInternalError(err) {
+	if err := store.List(ctx, "/", "", storage.Everything, &got); !storage.IsTransformerError(err) {
 		t.Errorf("Unexpected error %v", err)
 	}
 
 	// Get should fail
-	if err := store.Get(ctx, preset[1].key, "", &example.Pod{}, false); !storage.IsInternalError(err) {
+	if err := store.Get(ctx, preset[1].key, "", &example.Pod{}, false); !storage.IsTransformerError(err) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	// GuaranteedUpdate without suggestion should return an error
 	if err := store.GuaranteedUpdate(ctx, preset[1].key, &example.Pod{}, false, nil, func(input runtime.Object, res storage.ResponseMeta) (output runtime.Object, ttl *uint64, err error) {
 		return input, nil, nil
-	}); !storage.IsInternalError(err) {
+	}); !storage.IsTransformerError(err) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	// GuaranteedUpdate with suggestion should return an error if we don't change the object
@@ -741,10 +741,10 @@ func TestTransformationFailure(t *testing.T) {
 	}
 
 	// Delete succeeds but reports an error because we cannot access the body
-	if err := store.Delete(ctx, preset[1].key, &example.Pod{}, nil, storage.ValidateAllObjectFunc); !storage.IsInternalError(err) {
+	if err := store.Delete(ctx, preset[1].key, &example.Pod{}, nil, storage.ValidateAllObjectFunc); !storage.IsTransformerError(err) {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if err := store.Get(ctx, preset[1].key, "", &example.Pod{}, false); !storage.IsInternalError(err) {
+	if err := store.Get(ctx, preset[1].key, "", &example.Pod{}, false); !storage.IsNotFound(err) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }

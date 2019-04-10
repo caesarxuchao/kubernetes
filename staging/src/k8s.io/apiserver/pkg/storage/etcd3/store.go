@@ -129,7 +129,7 @@ func (s *store) Get(ctx context.Context, key string, resourceVersion string, out
 
 	data, _, err := s.transformer.TransformFromStorage(kv.Value, authenticatedDataString(key))
 	if err != nil {
-		return storage.NewInternalError(err.Error())
+		return storage.NewTransformerError(err.Error())
 	}
 
 	return decode(s.codec, s.versioner, data, out, kv.ModRevision)
@@ -156,7 +156,7 @@ func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object,
 
 	newData, err := s.transformer.TransformToStorage(data, authenticatedDataString(key))
 	if err != nil {
-		return storage.NewInternalError(err.Error())
+		return storage.NewTransformerError(err.Error())
 	}
 
 	startTime := time.Now()
@@ -199,7 +199,26 @@ func (s *store) conditionalDelete(ctx context.Context, key string, out runtime.O
 	}
 	for {
 		origState, err := s.getState(getResp, key, v, false)
-		if err != nil {
+		if err != nil && !storage.IsTransformerError(err) {
+			return err
+		}
+		if err != nil && storage.IsTransformerError(err) && preconditions != nil {
+			return err
+		}
+		if err != nil && storage.IsTransformerError(err) && preconditions == nil {
+			// in this rare case, we skip checking
+			// validateDeletion, to give user a way to delete the
+			// key via the apiserver in case of data corruption.
+			startTime := time.Now()
+			// We don't check the transaction response as we know
+			// the transformer cannot interpret it anyway.
+			_, txnErr := s.client.KV.Txn(ctx).If().Then(
+				clientv3.OpDelete(key),
+			).Commit()
+			metrics.RecordEtcdRequestLatency("delete", getTypeName(out), startTime)
+			if txnErr != nil {
+				return txnErr
+			}
 			return err
 		}
 		if preconditions != nil {
@@ -320,7 +339,7 @@ func (s *store) GuaranteedUpdate(
 
 		newData, err := s.transformer.TransformToStorage(data, transformContext)
 		if err != nil {
-			return storage.NewInternalError(err.Error())
+			return storage.NewTransformerError(err.Error())
 		}
 
 		opts, err := s.ttlOpts(ctx, int64(ttl))
@@ -383,7 +402,7 @@ func (s *store) GetToList(ctx context.Context, key string, resourceVersion strin
 	if len(getResp.Kvs) > 0 {
 		data, _, err := s.transformer.TransformFromStorage(getResp.Kvs[0].Value, authenticatedDataString(key))
 		if err != nil {
-			return storage.NewInternalError(err.Error())
+			return storage.NewTransformerError(err.Error())
 		}
 		if err := appendListItem(v, data, uint64(getResp.Kvs[0].ModRevision), pred, s.codec, s.versioner); err != nil {
 			return err
@@ -584,7 +603,7 @@ func (s *store) List(ctx context.Context, key, resourceVersion string, pred stor
 
 			data, _, err := s.transformer.TransformFromStorage(kv.Value, authenticatedDataString(kv.Key))
 			if err != nil {
-				return storage.NewInternalErrorf("unable to transform key %q: %v", kv.Key, err)
+				return storage.NewTransformerErrorf("unable to transform key %q: %v", kv.Key, err)
 			}
 
 			if err := appendListItem(v, data, uint64(kv.ModRevision), pred, s.codec, s.versioner); err != nil {
@@ -688,7 +707,7 @@ func (s *store) getState(getResp *clientv3.GetResponse, key string, v reflect.Va
 	} else {
 		data, stale, err := s.transformer.TransformFromStorage(getResp.Kvs[0].Value, authenticatedDataString(key))
 		if err != nil {
-			return nil, storage.NewInternalError(err.Error())
+			return nil, storage.NewTransformerError(err.Error())
 		}
 		state.rev = getResp.Kvs[0].ModRevision
 		state.meta.ResourceVersion = uint64(state.rev)

@@ -145,6 +145,30 @@ func NewInvalidError(errors field.ErrorList) InvalidError {
 	return InvalidError{errors}
 }
 
+// TransformerError is generated if an error occurs during transforming the
+// returned etcd value.
+type TransformerError struct {
+	Reason string
+}
+
+func (e TransformerError) Error() string {
+	return e.Reason
+}
+
+// IsTransformerError returns true if and only if err is an TransformerError.
+func IsTransformerError(err error) bool {
+	_, ok := err.(TransformerError)
+	return ok
+}
+
+func NewTransformerError(reason string) TransformerError {
+	return TransformerError{reason}
+}
+
+func NewTransformerErrorf(format string, a ...interface{}) TransformerError {
+	return TransformerError{fmt.Sprintf(format, a...)}
+}
+
 // InternalError is generated when an error occurs in the storage package, i.e.,
 // not from the underlying storage backend (e.g., etcd).
 type InternalError struct {
