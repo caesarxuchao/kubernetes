@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/api/admissionregistration/v1beta1"
 	apps "k8s.io/api/apps/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -44,6 +44,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+
 	// ensure libs have a chance to initialize
 	_ "github.com/stretchr/testify/assert"
 )
@@ -70,19 +71,20 @@ const (
 	crdWebhookConfigName                   = "e2e-test-webhook-config-crd"
 	slowWebhookConfigName                  = "e2e-test-webhook-config-slow"
 
-	skipNamespaceLabelKey   = "skip-webhook-admission"
-	skipNamespaceLabelValue = "yes"
-	skippedNamespaceName    = "exempted-namesapce"
-	disallowedPodName       = "disallowed-pod"
-	toBeAttachedPodName     = "to-be-attached-pod"
-	hangingPodName          = "hanging-pod"
-	disallowedConfigMapName = "disallowed-configmap"
-	allowedConfigMapName    = "allowed-configmap"
-	failNamespaceLabelKey   = "fail-closed-webhook"
-	failNamespaceLabelValue = "yes"
-	failNamespaceName       = "fail-closed-namesapce"
-	addedLabelKey           = "added-label"
-	addedLabelValue         = "yes"
+	skipNamespaceLabelKey     = "skip-webhook-admission"
+	skipNamespaceLabelValue   = "yes"
+	skippedNamespaceName      = "exempted-namesapce"
+	disallowedPodName         = "disallowed-pod"
+	toBeAttachedPodName       = "to-be-attached-pod"
+	hangingPodName            = "hanging-pod"
+	disallowedConfigMapName   = "disallowed-configmap"
+	nonDeletableConfigmapName = "nondeletable-configmap"
+	allowedConfigMapName      = "allowed-configmap"
+	failNamespaceLabelKey     = "fail-closed-webhook"
+	failNamespaceLabelValue   = "yes"
+	failNamespaceName         = "fail-closed-namesapce"
+	addedLabelKey             = "added-label"
+	addedLabelValue           = "yes"
 )
 
 var serverWebhookVersion = utilversion.MustParseSemantic("v1.8.0")
@@ -133,7 +135,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 		testAttachingPodWebhook(f)
 	})
 
-	ginkgo.It("Should be able to deny custom resource creation", func() {
+	ginkgo.It("Should be able to deny custom resource creation and deletion", func() {
 		testcrd, err := crd.CreateTestCRD(f)
 		if err != nil {
 			return
@@ -142,6 +144,7 @@ var _ = SIGDescribe("AdmissionWebhook", func() {
 		webhookCleanup := registerWebhookForCustomResource(f, context, testcrd)
 		defer webhookCleanup()
 		testCustomResourceWebhook(f, testcrd.Crd, testcrd.GetV1DynamicClient())
+		testBlockingCustomResourceDeletion(f, testcrd.Crd, testcrd.GetV1DynamicClient())
 	})
 
 	ginkgo.It("Should unconditionally reject operations on fail closed webhook", func() {
@@ -426,7 +429,7 @@ func registerWebhook(f *framework.Framework, context *certContext) func() {
 			{
 				Name: "deny-unwanted-configmap-data.k8s.io",
 				Rules: []v1beta1.RuleWithOperations{{
-					Operations: []v1beta1.OperationType{v1beta1.Create, v1beta1.Update},
+					Operations: []v1beta1.OperationType{v1beta1.Create, v1beta1.Update, v1beta1.Delete},
 					Rule: v1beta1.Rule{
 						APIGroups:   []string{""},
 						APIVersions: []string{"v1"},
@@ -754,6 +757,36 @@ func testWebhook(f *framework.Framework) {
 	configmap = nonCompliantConfigMap(f)
 	_, err = client.CoreV1().ConfigMaps(skippedNamespaceName).Create(configmap)
 	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create configmap %s in namespace: %s", configmap.Name, skippedNamespaceName)
+}
+
+func testBlockingConfigmapDeletion(f *framework.Framework) {
+	ginkgo.By("create a configmap that should be denied by the webhook when deleting")
+	client := f.ClientSet
+	configmap := nonDeletableConfigmap(f)
+	_, err := client.CoreV1().ConfigMaps(f.Namespace.Name).Create(configmap)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create configmap %s in namespace: %s", configmap.Name, f.Namespace.Name)
+
+	ginkgo.By("deleting the configmap should be denied by the webhook")
+	err = client.CoreV1().ConfigMaps(f.Namespace.Name).Delete(configmap.Name, &metav1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.HaveOccurred(), "deleting configmap %s in namespace: %s should be denied", configmap.Name, f.Namespace.Name)
+	expectedErrMsg1 := "the configmap cannot be deleted because it contains unwanted key and value"
+	if !strings.Contains(err.Error(), expectedErrMsg1) {
+		framework.Failf("expect error contains %q, got %q", expectedErrMsg1, err.Error())
+	}
+
+	ginkgo.By("remove the offending key and value from the configmap data")
+	toCompliantFn := func(cm *v1.ConfigMap) {
+		if cm.Data == nil {
+			cm.Data = map[string]string{}
+		}
+		cm.Data["webhook-e2e-test"] = "webhook-allow"
+	}
+	_, err = updateConfigMap(client, f.Namespace.Name, configmap.Name, toCompliantFn)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to update configmap %s in namespace: %s", configmap.Name, f.Namespace.Name)
+
+	ginkgo.By("deleting the updated configmap should be successful")
+	err = client.CoreV1().ConfigMaps(f.Namespace.Name).Delete(configmap.Name, &metav1.DeleteOptions{})
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to delete configmap %s in namespace: %s", configmap.Name, f.Namespace.Name)
 }
 
 func testAttachingPodWebhook(f *framework.Framework) {
@@ -1155,6 +1188,17 @@ func nonCompliantConfigMap(f *framework.Framework) *v1.ConfigMap {
 	}
 }
 
+func nonDeletableConfigmap(f *framework.Framework) *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nonDeletableConfigmapName,
+		},
+		Data: map[string]string{
+			"webhook-e2e-test": "webhook-nondeletable",
+		},
+	}
+}
+
 func toBeMutatedConfigMap(f *framework.Framework) *v1.ConfigMap {
 	return &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1192,6 +1236,28 @@ func updateConfigMap(c clientset.Interface, ns, name string, update updateConfig
 	return cm, pollErr
 }
 
+type updateCustomResourceFn func(cm *unstructured.Unstructured)
+
+func updateCustomResource(c dynamic.ResourceInterface, ns, name string, update updateCustomResourceFn) (*unstructured.Unstructured, error) {
+	var cr *unstructured.Unstructured
+	pollErr := wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
+		var err error
+		if cr, err = c.Get(name, metav1.GetOptions{}); err != nil {
+			return false, err
+		}
+		update(cr)
+		if cr, err = c.Update(cr, metav1.UpdateOptions{}); err == nil {
+			return true, nil
+		}
+		// Only retry update on conflict
+		if !errors.IsConflict(err) {
+			return false, err
+		}
+		return false, nil
+	})
+	return cr, pollErr
+}
+
 func cleanWebhookTest(client clientset.Interface, namespaceName string) {
 	_ = client.CoreV1().Services(namespaceName).Delete(serviceName, nil)
 	_ = client.AppsV1().Deployments(namespaceName).Delete(deploymentName, nil)
@@ -1213,7 +1279,7 @@ func registerWebhookForCustomResource(f *framework.Framework, context *certConte
 			{
 				Name: "deny-unwanted-custom-resource-data.k8s.io",
 				Rules: []v1beta1.RuleWithOperations{{
-					Operations: []v1beta1.OperationType{v1beta1.Create, v1beta1.Update},
+					Operations: []v1beta1.OperationType{v1beta1.Create, v1beta1.Update, v1beta1.Delete},
 					Rule: v1beta1.Rule{
 						APIGroups:   []string{testcrd.APIGroup},
 						APIVersions: testcrd.GetAPIVersions(),
@@ -1324,6 +1390,50 @@ func testCustomResourceWebhook(f *framework.Framework, crd *apiextensionsv1beta1
 	if !strings.Contains(err.Error(), expectedErrMsg) {
 		framework.Failf("expect error contains %q, got %q", expectedErrMsg, err.Error())
 	}
+}
+
+func testBlockingCustomResourceDeletion(f *framework.Framework, crd *apiextensionsv1beta1.CustomResourceDefinition, customResourceClient dynamic.ResourceInterface) {
+	ginkgo.By("Creating a custom resource whose deletion would be denied by the webhook")
+	crInstanceName := "cr-instance-2"
+	crInstance := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"kind":       crd.Spec.Names.Kind,
+			"apiVersion": crd.Spec.Group + "/" + crd.Spec.Version,
+			"metadata": map[string]interface{}{
+				"name":      crInstanceName,
+				"namespace": f.Namespace.Name,
+			},
+			"data": map[string]interface{}{
+				"webhook-e2e-test": "webhook-nondeletable",
+			},
+		},
+	}
+	_, err := customResourceClient.Create(crInstance, metav1.CreateOptions{})
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to create custom resource %s in namespace: %s", crInstanceName, f.Namespace.Name)
+
+	ginkgo.By("Deleting the custom resource should be denied")
+	err = customResourceClient.Delete(crInstanceName, &metav1.DeleteOptions{})
+	gomega.Expect(err).To(gomega.HaveOccurred(), "deleting custom resource %s in namespace: %s should be denied", crInstanceName, f.Namespace.Name)
+	expectedErrMsg1 := "the custom resource cannot be deleted because it contains unwanted key and value"
+	if !strings.Contains(err.Error(), expectedErrMsg1) {
+		framework.Failf("expect error contains %q, got %q", expectedErrMsg1, err.Error())
+	}
+
+	ginkgo.By("Remove the offending key and value from the custom resource data")
+	toCompliantFn := func(cr *unstructured.Unstructured) {
+		if _, ok := cr.Object["data"]; !ok {
+			cr.Object["data"] = map[string]interface{}{}
+		}
+		data := cr.Object["data"].(map[string]interface{})
+		data["webhook-e2e-test"] = "webhook-allow"
+	}
+	_, err = updateCustomResource(customResourceClient, f.Namespace.Name, crInstanceName, toCompliantFn)
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to update custom resource %s in namespace: %s", crInstanceName, f.Namespace.Name)
+
+	ginkgo.By("Deleting the updated custom resource should be successful")
+	err = customResourceClient.Delete(crInstanceName, &metav1.DeleteOptions{})
+	gomega.Expect(err).NotTo(gomega.HaveOccurred(), "failed to delete custom resource %s in namespace: %s", crInstanceName, f.Namespace.Name)
+
 }
 
 func testMutatingCustomResourceWebhook(f *framework.Framework, crd *apiextensionsv1beta1.CustomResourceDefinition, customResourceClient dynamic.ResourceInterface) {
