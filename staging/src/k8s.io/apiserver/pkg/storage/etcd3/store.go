@@ -205,30 +205,24 @@ func (s *store) conditionalDelete(ctx context.Context, key string, out runtime.O
 		if err != nil && storage.IsTransformerError(err) && preconditions != nil {
 			return err
 		}
-		if err != nil && storage.IsTransformerError(err) && preconditions == nil {
-			// in this rare case, we skip checking
-			// validateDeletion, to give user a way to delete the
-			// key via the apiserver in case of data corruption.
-			startTime := time.Now()
-			// We don't check the transaction response as we know
-			// the transformer cannot interpret it anyway.
-			_, txnErr := s.client.KV.Txn(ctx).If().Then(
-				clientv3.OpDelete(key),
-			).Commit()
-			metrics.RecordEtcdRequestLatency("delete", getTypeName(out), startTime)
-			if txnErr != nil {
-				return txnErr
-			}
-			return err
-		}
+		// In this rare case, we skip checking validateDeletion to give
+		// user a way to delete the key via the apiserver in case of
+		// data corruption.
+		skipValidation := (err != nil && storage.IsTransformerError(err) && preconditions == nil)
+		transformerErr := err
+
 		if preconditions != nil {
 			if err := preconditions.Check(key, origState.obj); err != nil {
 				return err
 			}
 		}
-		if err := validateDeletion(origState.obj); err != nil {
-			return err
+
+		if !skipValidation {
+			if err := validateDeletion(origState.obj); err != nil {
+				return err
+			}
 		}
+
 		startTime := time.Now()
 		txnResp, err := s.client.KV.Txn(ctx).If(
 			clientv3.Compare(clientv3.ModRevision(key), "=", origState.rev),
@@ -245,6 +239,12 @@ func (s *store) conditionalDelete(ctx context.Context, key string, out runtime.O
 			getResp = (*clientv3.GetResponse)(txnResp.Responses[0].GetResponseRange())
 			klog.V(4).Infof("deletion of %s failed because of a conflict, going to retry", key)
 			continue
+		}
+		if transformerErr != nil {
+			// Successfully delete the non-transformable key, but as
+			// we can't populate the `out` object, we still return
+			// the transformer error.
+			return transformerErr
 		}
 		return decode(s.codec, s.versioner, origState.data, out, origState.rev)
 	}
@@ -705,12 +705,12 @@ func (s *store) getState(getResp *clientv3.GetResponse, key string, v reflect.Va
 			return nil, err
 		}
 	} else {
-		data, stale, err := s.transformer.TransformFromStorage(getResp.Kvs[0].Value, authenticatedDataString(key))
-		if err != nil {
-			return nil, storage.NewTransformerError(err.Error())
-		}
 		state.rev = getResp.Kvs[0].ModRevision
 		state.meta.ResourceVersion = uint64(state.rev)
+		data, stale, err := s.transformer.TransformFromStorage(getResp.Kvs[0].Value, authenticatedDataString(key))
+		if err != nil {
+			return state, storage.NewTransformerError(err.Error())
+		}
 		state.data = data
 		state.stale = stale
 		if err := decode(s.codec, s.versioner, state.data, state.obj, state.rev); err != nil {
