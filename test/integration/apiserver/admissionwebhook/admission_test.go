@@ -706,15 +706,6 @@ func testNamespaceDelete(c *testContext) {
 		return
 	}
 
-	// then run the final delete and make sure admission is called again
-	c.admissionHolder.expect(c.gvr, gvk(c.resource.Group, c.resource.Version, c.resource.Kind), v1beta1.Delete, obj.GetName(), obj.GetNamespace(), false, false)
-	err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Delete(obj.GetName(), &metav1.DeleteOptions{GracePeriodSeconds: &zero, PropagationPolicy: &background})
-	if err != nil {
-		c.t.Error(err)
-		return
-	}
-	c.admissionHolder.verify(c.t)
-
 	// verify namespace is gone
 	obj, err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Get(obj.GetName(), metav1.GetOptions{})
 	if err == nil || !errors.IsNotFound(err) {

@@ -24,7 +24,7 @@ import (
 
 	"k8s.io/klog"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -151,11 +151,6 @@ func (d *namespacedResourcesDeleter) Delete(nsName string) error {
 			return nil
 		}
 		return err
-	}
-
-	// Check if we can delete now.
-	if d.deleteNamespaceWhenDone && finalized(namespace) {
-		return d.deleteNamespace(namespace)
 	}
 	return nil
 }
