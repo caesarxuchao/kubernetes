@@ -402,7 +402,8 @@ func (e *Store) shouldDeleteDuringUpdate(ctx context.Context, key string, obj, e
 		utilruntime.HandleError(err)
 		return false
 	}
-	return len(newMeta.GetFinalizers()) == 0 && oldMeta.GetDeletionGracePeriodSeconds() != nil && *oldMeta.GetDeletionGracePeriodSeconds() == 0
+	noGracePeriod := oldMeta.GetDeletionGracePeriodSeconds() == nil || *oldMeta.GetDeletionGracePeriodSeconds() == 0
+	return len(newMeta.GetFinalizers()) == 0 && oldMeta.GetDeletionTimestamp() != nil && noGracePeriod
 }
 
 // deleteWithoutFinalizers handles deleting an object ignoring its finalizer list.
