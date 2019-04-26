@@ -384,7 +384,7 @@ func TestDeleteWithGCFinalizers(t *testing.T) {
 		}
 		var obj runtime.Object
 		var err error
-		if obj, _, err = storage.Delete(ctx, test.name, test.deleteOptions); err != nil {
+		if obj, _, err = storage.Delete(ctx, test.name, rest.ValidateAllObjectFunc, test.deleteOptions); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		ns, ok := obj.(*api.Namespace)

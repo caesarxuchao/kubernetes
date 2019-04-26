@@ -38,7 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/features"
-	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"k8s.io/client-go/tools/cache"
@@ -403,7 +402,7 @@ func (c *Cacher) Create(ctx context.Context, key string, obj, out runtime.Object
 }
 
 // Delete implements storage.Interface.
-func (c *Cacher) Delete(ctx context.Context, key string, out runtime.Object, preconditions *storage.Preconditions, validateDeletion rest.ValidateObjectFunc) error {
+func (c *Cacher) Delete(ctx context.Context, key string, out runtime.Object, preconditions *storage.Preconditions, validateDeletion storage.ValidateObjectFunc) error {
 	return c.storage.Delete(ctx, key, out, preconditions, validateDeletion)
 }
 

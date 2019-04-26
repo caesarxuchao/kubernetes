@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage"
 )
 
@@ -45,7 +44,7 @@ func (s *DryRunnableStorage) Create(ctx context.Context, key string, obj, out ru
 	return s.Storage.Create(ctx, key, obj, out, ttl)
 }
 
-func (s *DryRunnableStorage) Delete(ctx context.Context, key string, out runtime.Object, preconditions *storage.Preconditions, deleteValidation rest.ValidateObjectFunc, dryRun bool) error {
+func (s *DryRunnableStorage) Delete(ctx context.Context, key string, out runtime.Object, preconditions *storage.Preconditions, deleteValidation storage.ValidateObjectFunc, dryRun bool) error {
 	if dryRun {
 		if err := s.Storage.Get(ctx, key, "", out, false); err != nil {
 			return err

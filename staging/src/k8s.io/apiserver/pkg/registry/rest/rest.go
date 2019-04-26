@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/apiserver/pkg/storage"
 )
 
 //TODO:
@@ -211,7 +210,7 @@ type UpdatedObjectInfo interface {
 // ValidateObjectFunc is a function to act on a given object. An error may be returned
 // if the hook cannot be completed. An ObjectFunc may NOT transform the provided
 // object.
-type ValidateObjectFunc = storage.ValidateObjectFunc
+type ValidateObjectFunc func(obj runtime.Object) error
 
 // ValidateAllObjectFunc is a "admit everything" instance of ValidateObjectFunc.
 func ValidateAllObjectFunc(obj runtime.Object) error {
