@@ -37,6 +37,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -49,8 +50,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
-	"k8s.io/kubernetes/cmd/kube-apiserver/app/options"
+	kubeapiservertesting "k8s.io/kubernetes/cmd/kube-apiserver/app/testing"
 	"k8s.io/kubernetes/test/integration/etcd"
+	"k8s.io/kubernetes/test/integration/framework"
 )
 
 const (
@@ -324,33 +326,40 @@ func TestWebhookV1beta1(t *testing.T) {
 	defer webhookServer.Close()
 
 	// start API server
-	master := etcd.StartRealMasterOrDie(t, func(opts *options.ServerRunOptions) {
+	etcdConfig := framework.SharedEtcd()
+	server := kubeapiservertesting.StartTestServerOrDie(t, nil, []string{
 		// turn off admission plugins that add finalizers
-		opts.Admission.GenericAdmission.DisablePlugins = []string{"ServiceAccount", "StorageObjectInUseProtection"}
-
+		"--disable-admission-plugins=ServiceAccount,StorageObjectInUseProtection",
 		// force enable all resources so we can check storage.
 		// TODO: drop these once we stop allowing them to be served.
-		opts.APIEnablement.RuntimeConfig["extensions/v1beta1/deployments"] = "true"
-		opts.APIEnablement.RuntimeConfig["extensions/v1beta1/daemonsets"] = "true"
-		opts.APIEnablement.RuntimeConfig["extensions/v1beta1/replicasets"] = "true"
-		opts.APIEnablement.RuntimeConfig["extensions/v1beta1/podsecuritypolicies"] = "true"
-		opts.APIEnablement.RuntimeConfig["extensions/v1beta1/networkpolicies"] = "true"
-	})
-	defer master.Cleanup()
+		"--runtime-config=api/all=true,extensions/v1beta1/deployments=true,extensions/v1beta1/daemonsets=true,extensions/v1beta1/replicasets=true,extensions/v1beta1/podsecuritypolicies=true,extensions/v1beta1/networkpolicies=true",
+	}, etcdConfig)
+	defer server.TearDownFn()
 
-	if _, err := master.Client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testNamespace}}); err != nil {
+	clientset, err := kubernetes.NewForConfig(server.ClientConfig)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// create CRDs
+	etcd.CreateTestCRDs(t, apiextensionsclientset.NewForConfigOrDie(server.ClientConfig), false, etcd.GetCustomResourceDefinitionData()...)
+
+	if _, err := clientset.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testNamespace}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := createV1beta1MutationWebhook(master.Client, webhookServer.URL+"/"+mutation); err != nil {
+	if err := createV1beta1MutationWebhook(clientset, webhookServer.URL+"/"+mutation); err != nil {
 		t.Fatal(err)
 	}
-	if err := createV1beta1ValidationWebhook(master.Client, webhookServer.URL+"/"+validation); err != nil {
+	if err := createV1beta1ValidationWebhook(clientset, webhookServer.URL+"/"+validation); err != nil {
 		t.Fatal(err)
 	}
 
 	// gather resources to test
-	dynamicClient := master.Dynamic
-	_, resources, err := master.Client.Discovery().ServerGroupsAndResources()
+	dynamicClient, err := dynamic.NewForConfig(server.ClientConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, resources, err := clientset.Discovery().ServerGroupsAndResources()
 	if err != nil {
 		t.Fatalf("Failed to get ServerGroupsAndResources with error: %+v", err)
 	}
@@ -414,7 +423,7 @@ func TestWebhookV1beta1(t *testing.T) {
 							t:               t,
 							admissionHolder: holder,
 							client:          dynamicClient,
-							clientset:       master.Client,
+							clientset:       clientset,
 							verb:            verb,
 							gvr:             gvr,
 							resource:        resource,
