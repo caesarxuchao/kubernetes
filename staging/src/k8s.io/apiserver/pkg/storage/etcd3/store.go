@@ -203,11 +203,19 @@ func (s *store) conditionalDelete(ctx context.Context, key string, out runtime.O
 			return err
 		}
 		if err != nil && storage.IsTransformerError(err) && preconditions != nil {
+			// Checking preconditions requires origState.obj, which
+			// is not set in case of TransformerError.
+			// conditionalDelete fails closed in this case. If the
+			// user still wants to delete the object, they can
+			// retry the delete with empty preconditions.
 			return err
 		}
-		// In this rare case, we skip checking validateDeletion to give
-		// user a way to delete the key via the apiserver in case of
-		// data corruption.
+		// In this case, if conditionalDelete still fails closed,
+		// because validateDeletion is not optional, a user will never
+		// be able to delete the key, unless they interact directly
+		// with the etcd.
+		// Thus, we let conditionalDelete skip validateDeletion, delete
+		// the key, and return the TransformerError.
 		skipValidation := (err != nil && storage.IsTransformerError(err) && preconditions == nil)
 		transformerErr := err
 
@@ -692,6 +700,9 @@ func (s *store) watch(ctx context.Context, key string, rv string, pred storage.S
 	return s.watcher.Watch(ctx, key, int64(rev), recursive, pred)
 }
 
+// When getState returns a TransformerError, it still populates the
+// objState.rev and objState.meta.ResourceVersion, but not other fields in
+// objState.
 func (s *store) getState(getResp *clientv3.GetResponse, key string, v reflect.Value, ignoreNotFound bool) (*objState, error) {
 	state := &objState{
 		obj:  reflect.New(v.Type()).Interface().(runtime.Object),
