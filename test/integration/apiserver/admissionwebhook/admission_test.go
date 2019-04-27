@@ -49,6 +49,7 @@ import (
 	dynamic "k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 	kubeapiservertesting "k8s.io/kubernetes/cmd/kube-apiserver/app/testing"
 	"k8s.io/kubernetes/test/integration/etcd"
@@ -336,13 +337,14 @@ func TestWebhookV1beta1(t *testing.T) {
 	}, etcdConfig)
 	defer server.TearDownFn()
 
-	clientset, err := kubernetes.NewForConfig(server.ClientConfig)
+	clientConfig := rest.AddUserAgent(server.ClientConfig, "webhook-integration-test")
+	clientset, err := kubernetes.NewForConfig(clientConfig)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	// create CRDs
-	etcd.CreateTestCRDs(t, apiextensionsclientset.NewForConfigOrDie(server.ClientConfig), false, etcd.GetCustomResourceDefinitionData()...)
+	etcd.CreateTestCRDs(t, apiextensionsclientset.NewForConfigOrDie(clientConfig), false, etcd.GetCustomResourceDefinitionData()...)
 
 	if _, err := clientset.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testNamespace}}); err != nil {
 		t.Fatal(err)
@@ -355,7 +357,7 @@ func TestWebhookV1beta1(t *testing.T) {
 	}
 
 	// gather resources to test
-	dynamicClient, err := dynamic.NewForConfig(server.ClientConfig)
+	dynamicClient, err := dynamic.NewForConfig(clientConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,6 +417,7 @@ func TestWebhookV1beta1(t *testing.T) {
 		resource := resourcesByGVR[gvr]
 		t.Run(gvr.Group+"."+gvr.Version+"."+strings.ReplaceAll(resource.Name, "/", "."), func(t *testing.T) {
 			for _, verb := range []string{"create", "update", "patch", "connect", "delete", "deletecollection"} {
+				// for _, verb := range []string{"delete"} {
 				if shouldTestResourceVerb(gvr, resource, verb) {
 					t.Run(verb, func(t *testing.T) {
 						holder.reset(t)
@@ -494,41 +497,41 @@ func testResourcePatch(c *testContext) {
 }
 
 func testResourceDelete(c *testContext) {
-	// Verify that an immediate delete triggers the webhook and populates the admisssionRequest.oldObject.
-	obj, err := createOrGetResource(c.client, c.gvr, c.resource)
-	if err != nil {
-		c.t.Error(err)
-		return
-	}
+	// // Verify that an immediate delete triggers the webhook and populates the admisssionRequest.oldObject.
+	// obj, err := createOrGetResource(c.client, c.gvr, c.resource)
+	// if err != nil {
+	// 	c.t.Error(err)
+	// 	return
+	// }
 	background := metav1.DeletePropagationBackground
 	zero := int64(0)
-	c.admissionHolder.expect(c.gvr, gvk(c.resource.Group, c.resource.Version, c.resource.Kind), v1beta1.Delete, obj.GetName(), obj.GetNamespace(), false, true)
-	err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Delete(obj.GetName(), &metav1.DeleteOptions{GracePeriodSeconds: &zero, PropagationPolicy: &background})
-	if err != nil {
-		c.t.Error(err)
-		return
-	}
-	c.admissionHolder.verify(c.t)
+	// c.admissionHolder.expect(c.gvr, gvk(c.resource.Group, c.resource.Version, c.resource.Kind), v1beta1.Delete, obj.GetName(), obj.GetNamespace(), false, true)
+	// err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Delete(obj.GetName(), &metav1.DeleteOptions{GracePeriodSeconds: &zero, PropagationPolicy: &background})
+	// if err != nil {
+	// 	c.t.Error(err)
+	// 	return
+	// }
+	// c.admissionHolder.verify(c.t)
 
-	// wait for the item to be gone
-	err = wait.PollImmediate(100*time.Millisecond, 10*time.Second, func() (bool, error) {
-		obj, err := c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Get(obj.GetName(), metav1.GetOptions{})
-		if errors.IsNotFound(err) {
-			return true, nil
-		}
-		if err == nil {
-			c.t.Logf("waiting for %#v to be deleted (name: %s, finalizers: %v)...\n", c.gvr, obj.GetName(), obj.GetFinalizers())
-			return false, nil
-		}
-		return false, err
-	})
-	if err != nil {
-		c.t.Error(err)
-		return
-	}
+	// // wait for the item to be gone
+	// err = wait.PollImmediate(100*time.Millisecond, 10*time.Second, func() (bool, error) {
+	// 	obj, err := c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Get(obj.GetName(), metav1.GetOptions{})
+	// 	if errors.IsNotFound(err) {
+	// 		return true, nil
+	// 	}
+	// 	if err == nil {
+	// 		c.t.Logf("waiting for %#v to be deleted (name: %s, finalizers: %v)...\n", c.gvr, obj.GetName(), obj.GetFinalizers())
+	// 		return false, nil
+	// 	}
+	// 	return false, err
+	// })
+	// if err != nil {
+	// 	c.t.Error(err)
+	// 	return
+	// }
 
 	// Verify that an update-on-delete triggers the webhook and populates the admisssionRequest.oldObject.
-	obj, err = createOrGetResource(c.client, c.gvr, c.resource)
+	obj, err := createOrGetResource(c.client, c.gvr, c.resource)
 	if err != nil {
 		c.t.Error(err)
 		return
@@ -537,7 +540,7 @@ func testResourceDelete(c *testContext) {
 	// We don't add finalizers by setting DeleteOptions.PropagationPolicy
 	// because some resource (e.g., events) do not support garbage
 	// collector finalizers.
-	_, err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Patch(
+	patched, err := c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Patch(
 		obj.GetName(),
 		types.MergePatchType,
 		[]byte(`{"metadata":{"finalizers":["test/k8s.io"]}}`),
@@ -546,6 +549,12 @@ func testResourceDelete(c *testContext) {
 		c.t.Error(err)
 		return
 	}
+	patcheddata, err := json.Marshal(patched)
+	if err != nil {
+		c.t.Error(err)
+		return
+	}
+	c.t.Logf("CHAO: patched obj is: %s", patcheddata)
 	c.admissionHolder.expect(c.gvr, gvk(c.resource.Group, c.resource.Version, c.resource.Kind), v1beta1.Delete, obj.GetName(), obj.GetNamespace(), false, true)
 	err = c.client.Resource(c.gvr).Namespace(obj.GetNamespace()).Delete(obj.GetName(), &metav1.DeleteOptions{GracePeriodSeconds: &zero, PropagationPolicy: &background})
 	if err != nil {

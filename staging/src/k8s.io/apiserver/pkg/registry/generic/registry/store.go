@@ -392,6 +392,8 @@ func (e *Store) Create(ctx context.Context, obj runtime.Object, createValidation
 // finalizers. If so, it further checks if the object's
 // DeletionGracePeriodSeconds is 0.
 func (e *Store) shouldDeleteDuringUpdate(ctx context.Context, key string, obj, existing runtime.Object) bool {
+	ns, _ := genericapirequest.NamespaceFrom(ctx)
+	shouldLog := (ns == "webhook-integration")
 	newMeta, err := meta.Accessor(obj)
 	if err != nil {
 		utilruntime.HandleError(err)
@@ -403,7 +405,15 @@ func (e *Store) shouldDeleteDuringUpdate(ctx context.Context, key string, obj, e
 		return false
 	}
 	noGracePeriod := oldMeta.GetDeletionGracePeriodSeconds() == nil || *oldMeta.GetDeletionGracePeriodSeconds() == 0
-	return len(newMeta.GetFinalizers()) == 0 && oldMeta.GetDeletionTimestamp() != nil && noGracePeriod
+	ret := (len(newMeta.GetFinalizers()) == 0 && oldMeta.GetDeletionTimestamp() != nil && noGracePeriod)
+	if shouldLog {
+		fmt.Printf("CHAO: in shoudlDeleteDuringUpdate for %v/%s\n", e.qualifiedResourceFromContext(ctx), newMeta.GetName())
+		fmt.Printf("CHAO: len(newMeta.GetFinalizers())=%d\n", len(newMeta.GetFinalizers()))
+		fmt.Printf("CHAO: oldMeta.GetDeletionTimestamp()=%v\n", oldMeta.GetDeletionTimestamp())
+		fmt.Printf("CHAO: noGracePeriod=%v\n", noGracePeriod)
+		fmt.Printf("CHAO: ret=%v\n", ret)
+	}
+	return ret
 }
 
 // deleteWithoutFinalizers handles deleting an object ignoring its finalizer list.
@@ -440,6 +450,9 @@ func (e *Store) Update(ctx context.Context, name string, objInfo rest.UpdatedObj
 	if err != nil {
 		return nil, false, err
 	}
+
+	ns, _ := genericapirequest.NamespaceFrom(ctx)
+	shouldLog := (ns == "webhook-integration")
 
 	var (
 		creatingObj runtime.Object
@@ -552,6 +565,9 @@ func (e *Store) Update(ctx context.Context, name string, objInfo rest.UpdatedObj
 	if err != nil {
 		// delete the object
 		if err == errEmptiedFinalizers {
+			if shouldLog {
+				fmt.Printf("CHAO: going to deleteWithoutFinalizers for %v/%s\n", qualifiedResource, name)
+			}
 			return e.deleteWithoutFinalizers(ctx, name, key, deleteObj, storagePreconditions, dryrun.IsDryRun(options.DryRun))
 		}
 		if creating {
@@ -873,6 +889,8 @@ func (e *Store) Delete(ctx context.Context, name string, deleteValidation rest.V
 	if err != nil {
 		return nil, false, err
 	}
+	ns, _ := genericapirequest.NamespaceFrom(ctx)
+	shouldLog := (ns == "webhook-integration")
 	obj := e.NewFunc()
 	qualifiedResource := e.qualifiedResourceFromContext(ctx)
 	if err = e.Storage.Get(ctx, key, "", obj, false); err != nil {
@@ -902,6 +920,10 @@ func (e *Store) Delete(ctx context.Context, name string, deleteValidation rest.V
 	if err != nil {
 		return nil, false, kubeerr.NewInternalError(err)
 	}
+
+	if shouldLog {
+		fmt.Printf("CHAO: finalizer for %v/%s is %v\n", qualifiedResource, name, accessor.GetFinalizers())
+	}
 	pendingFinalizers := len(accessor.GetFinalizers()) != 0
 	var ignoreNotFound bool
 	var deleteImmediately bool = true
@@ -915,6 +937,9 @@ func (e *Store) Delete(ctx context.Context, name string, deleteValidation rest.V
 		err, ignoreNotFound, deleteImmediately, out, lastExisting = e.updateForGracefulDeletionAndFinalizers(ctx, name, key, options, preconditions, deleteValidation, obj)
 	}
 
+	if shouldLog {
+		fmt.Printf("CHAO: for %v/%s, ignoreNotFound=%v\n deleteImmediately=%v\n out=%v\n lastExisting=%v\n", qualifiedResource, name, ignoreNotFound, deleteImmediately, out, lastExisting)
+	}
 	// !deleteImmediately covers all cases where err != nil. We keep both to be future-proof.
 	if !deleteImmediately || err != nil {
 		return out, false, err

@@ -288,18 +288,18 @@ runTests() {
 
   verifyPathsToPackagesUnderTest "$@"
 
+  set -x
   # If we're not collecting coverage, run all requested tests with one 'go test'
   # command, which is much faster.
   if [[ ! ${KUBE_COVER} =~ ^[yY]$ ]]; then
     kube::log::status "Running tests without code coverage"
-    go test "${goflags[@]:+${goflags[@]}}" \
-      ${KUBE_RACE} ${KUBE_TIMEOUT} "${@}" \
-     "${testargs[@]:+${testargs[@]}}" \
+    go test -v -race --timeout 3500s --count 10 "k8s.io/kubernetes/test/integration/apiserver/admissionwebhook" --alsologtostderr=true \
      | tee ${junit_filename_prefix:+"${junit_filename_prefix}.stdout"} \
      | grep --binary-files=text "${go_test_grep_pattern}" && rc=$? || rc=$?
     produceJUnitXMLReport "${junit_filename_prefix}"
     return ${rc}
   fi
+  set +x
 
   # Create coverage report directories.
   KUBE_TEST_API_HASH="$(echo -n "${KUBE_TEST_API//\//-}"| ${SHA1SUM} |awk '{print $1}')"
@@ -328,6 +328,7 @@ runTests() {
       echo -e "skipped\tk8s.io/kubernetes/${path}"
   done
 
+  set -x
   printf "%s\n" "${@}" \
     | grep -Ev ${cover_ignore_dirs} \
     | xargs -I{} -n 1 -P ${KUBE_COVERPROCS} \
@@ -343,6 +344,7 @@ runTests() {
       | grep \"${go_test_grep_pattern}\"" \
     {} \
     && test_result=$? || test_result=$?
+  set +x
 
   produceJUnitXMLReport "${junit_filename_prefix}"
 
