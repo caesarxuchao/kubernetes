@@ -417,7 +417,7 @@ func TestWebhookV1beta1(t *testing.T) {
 		resource := resourcesByGVR[gvr]
 		t.Run(gvr.Group+"."+gvr.Version+"."+strings.ReplaceAll(resource.Name, "/", "."), func(t *testing.T) {
 			for _, verb := range []string{"create", "update", "patch", "connect", "delete", "deletecollection"} {
-				// for _, verb := range []string{"delete"} {
+				//	for _, verb := range []string{"delete"} {
 				if shouldTestResourceVerb(gvr, resource, verb) {
 					t.Run(verb, func(t *testing.T) {
 						holder.reset(t)
