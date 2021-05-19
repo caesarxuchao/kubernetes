@@ -71,6 +71,7 @@ function start-kube-apiserver {
   params+=" --allow-privileged=true"
   params+=" --cloud-provider=gce"
   params+=" --client-ca-file=${CA_CERT_BUNDLE_PATH}"
+  params+=" --profiling=true"
 
   # params is passed by reference, so no "$"
   configure-etcd-params params

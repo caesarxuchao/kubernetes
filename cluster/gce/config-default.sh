@@ -29,7 +29,7 @@ RELEASE_REGION_FALLBACK=${RELEASE_REGION_FALLBACK:-false}
 REGIONAL_KUBE_ADDONS=${REGIONAL_KUBE_ADDONS:-true}
 # TODO: Migrate to e2-standard machine family.
 NODE_SIZE=${NODE_SIZE:-n1-standard-2}
-NUM_NODES=${NUM_NODES:-3}
+NUM_NODES=${NUM_NODES:-1}
 NUM_WINDOWS_NODES=${NUM_WINDOWS_NODES:-0}
 # TODO: Migrate to e2-standard machine family.
 MASTER_SIZE=${MASTER_SIZE:-n1-standard-$(get-master-size)}
@@ -532,6 +532,7 @@ export GCE_PRIVATE_CLUSTER_PORTS_PER_VM="${KUBE_GCE_PRIVATE_CLUSTER_PORTS_PER_VM
 # When KUBE_ENABLE_KONNECTIVITY_SERVICE is enabled, the three variables below will
 # default to true to enable the konnectivity network proxy and start the required pods.
 # Their values can be overridden for more granular control of the proxy.
+export KUBE_ENABLE_KONNECTIVITY_SERVICE=true
 
 # Optional: Whether to do the setup for the konnectivity service
 # Includes setting up kubeconfig, tokens, egress files, and firewall rules

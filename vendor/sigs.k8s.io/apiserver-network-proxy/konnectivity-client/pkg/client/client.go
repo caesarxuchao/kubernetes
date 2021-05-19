@@ -86,7 +86,12 @@ func CreateSingleUseGrpcTunnel(address string, opts ...grpc.DialOption) (Tunnel,
 }
 
 func (t *grpcTunnel) serve(c clientConn) {
-	defer c.Close()
+	defer func() {
+		err := c.Close()
+		if err != nil {
+			klog.V(1).Infof("CHAO: failed to close clientConn: %v", err)
+		}
+	}()
 
 	for {
 		pkt, err := t.stream.Recv()
@@ -118,6 +123,7 @@ func (t *grpcTunnel) serve(c clientConn) {
 
 			if resp.Error != "" {
 				// On dial error, avoid leaking serve goroutine.
+				klog.V(1).Infof("CHAO: got resp error: %v", resp.Error)
 				return
 			}
 
@@ -129,7 +135,12 @@ func (t *grpcTunnel) serve(c clientConn) {
 			t.connsLock.RUnlock()
 
 			if ok {
-				conn.readCh <- resp.Data
+				select {
+				case conn.readCh <- resp.Data:
+				case <-time.After(30 * time.Second):
+					klog.V(1).Infof("CHAO: timed out waiting to send to readCh, close the connection")
+					return
+				}
 			} else {
 				klog.V(1).InfoS("connection not recognized", "connectionID", resp.ConnectID)
 			}
